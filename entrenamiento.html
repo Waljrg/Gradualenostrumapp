@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maestro Auditivo | Pro Academy</title>
+    <style>
+        :root {
+            --gold: #d4af37; --dark: #1a1a1a; --crema: #f4f1ea;
+            --accent: #8e735b; --success: #2ecc71; --error: #e74c3c;
+        }
+        body { font-family: 'Century Gothic', sans-serif; background: #121212; color: var(--dark); margin: 0; overflow-x: hidden; }
+        
+        .app-container { max-width: 600px; margin: 20px auto; background: var(--crema); border-radius: 20px; min-height: 90vh; display: flex; flex-direction: column; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .header { padding: 20px; background: var(--dark); color: white; border-radius: 20px 20px 0 0; text-align: center; }
+        .screen { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
+        .hidden { display: none !important; }
+
+        .xp-bar-bg { background: #333; height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden; }
+        .xp-bar-fill { background: var(--gold); height: 100%; width: 0%; transition: 0.5s; }
+
+        .btn { padding: 15px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 1em; margin: 5px 0; }
+        .btn-gold { background: var(--gold); color: white; }
+        .btn-gold:disabled { background: #666; cursor: not-allowed; opacity: 0.7; }
+        .btn-outline { border: 2px solid #ccc; background: transparent; color: #999; cursor: not-allowed; }
+        .btn-timer { background: #2c3e50; color: white; border: 2px solid var(--gold); }
+
+        .piano { display: flex; justify-content: center; margin: 20px 0; height: 120px; }
+        .key { width: 35px; border: 1px solid #000; background: white; border-radius: 0 0 5px 5px; cursor: pointer; position: relative; }
+        .key.black { background: #000; height: 70px; width: 25px; margin: 0 -12.5px; z-index: 2; }
+        .key:active { background: #eee; }
+
+        .grid-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0; }
+        .opt-card { padding: 15px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; text-align: center; background: white; font-size: 0.8em; }
+        .opt-card.selected { border-color: var(--gold); background: #fff9e6; transform: translateY(-3px); }
+
+        .stat-box { display: flex; justify-content: space-around; background: #eee; padding: 10px; border-radius: 10px; margin-bottom: 15px; }
+        .lives-container { color: var(--error); font-size: 1.2em; letter-spacing: 2px; }
+        #timer-display { color: var(--error); font-weight: bold; font-size: 1.2em; }
+        
+        .ranking-list { width: 100%; text-align: left; margin-top: 10px; font-size: 0.9em; }
+        .ranking-item { display: flex; justify-content: space-between; padding: 5px 10px; border-bottom: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <h2 style="margin:0; letter-spacing: 2px;">MAESTRO AUDITIVO</h2>
+        <div style="font-size: 0.8em; color: var(--gold);">NIVEL <span id="user-level">1</span> | <span id="user-xp">0</span> XP</div>
+        <div class="xp-bar-bg"><div id="xp-fill" class="xp-bar-fill"></div></div>
+    </div>
+
+    <div id="scr-home" class="screen">
+        <h3>Tu Academia Musical</h3>
+        <div class="stat-box">
+            <span>🔥 Racha: <b id="stat-streak">0</b></span>
+            <span>🏆 Récord: <b id="stat-best">0</b></span>
+        </div>
+        
+        <div id="level-list" style="display: flex; flex-direction: column;">
+            <button class="btn btn-gold" onclick="startLevel(1)">Nivel 1: Escala Blanca</button>
+            <button id="lock-2" class="btn btn-outline" onclick="startLevel(2)">Nivel 2: Cromatismo (10k XP)</button>
+            <button id="lock-3" class="btn btn-outline" onclick="startLevel(3)">Nivel 3: Intervalos (100k XP)</button>
+            <button class="btn btn-timer" onclick="startTimerMode()">⏱️ MODO TIEMPO (1 MIN)</button>
+        </div>
+        
+        <hr style="width:100%; margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
+        <p style="font-size: 0.8em; color: #666;">Práctica Libre:</p>
+        <div class="piano" id="piano-practice"></div>
+    </div>
+
+    <div id="scr-game" class="screen hidden">
+        <div class="stat-box">
+            <span id="game-status">Pregunta 1/10</span>
+            <span id="timer-display" class="hidden">60s</span>
+            <span class="lives-container" id="game-lives">❤️❤️❤️</span>
+        </div>
+        <button class="btn btn-gold" style="font-size: 2em;" onclick="playQuestionAudio()">🔊</button>
+        <div id="game-options" class="grid-options"></div>
+        <div id="game-feedback" style="height:30px; text-align:center; font-weight:bold; margin:10px;"></div>
+        <button class="btn btn-gold" onclick="checkAnswer()">Confirmar</button>
+        <button class="btn" style="color: #999;" onclick="cancelGame()">Abandonar</button>
+    </div>
+
+    <div id="scr-results" class="screen hidden">
+        <h2 id="res-title">¡Examen Terminado!</h2>
+        <div id="res-stats" class="stat-box" style="flex-direction: column; align-items: center; padding: 20px;"></div>
+        <div id="res-ranking" class="hidden" style="width:100%; margin-top:15px;">
+            <h4 style="margin:5px 0">🏆 TOP 5 MODALIDAD TIEMPO</h4>
+            <div id="ranking-container" class="ranking-list"></div>
+        </div>
+        <button class="btn btn-gold" onclick="goHome()">Volver al Menú</button>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    const reverb = audioCtx.createConvolver();
+    const impulseLength = 2 * audioCtx.sampleRate;
+    const impulse = audioCtx.createBuffer(2, impulseLength, audioCtx.sampleRate);
+    for (let channel = 0; channel < 2; channel++) {
+        const channelData = impulse.getChannelData(channel);
+        for (let i = 0; i < impulseLength; i++) {
+            channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / impulseLength, 2);
+        }
+    }
+    reverb.buffer = impulse;
+    reverb.connect(audioCtx.destination);
+
+    const NOTES = { "Do": 261.63, "Do#": 277.18, "Re": 293.66, "Re#": 311.13, "Mi": 329.63, "Fa": 349.23, "Fa#": 369.99, "Sol": 392.00, "Sol#": 415.30, "La": 440.00, "La#": 466.16, "Si": 493.88, "Do2": 523.25 };
+    const INTERVALS = { "2da Menor": 1, "2da Mayor": 2, "3ra Menor": 3, "3ra Mayor": 4, "4ta Justa": 5, "Tritono": 6, "5ta Justa": 7, "Octava": 12 };
+
+    let user = { level: 1, xp: 0, best: 0, streak: 0 };
+    let gameState = { currentLvl: 0, step: 0, score: 0, correct: '', selected: '', errors: [], lives: 3, isTimerMode: false, timeLeft: 60 };
+    let gameInterval;
+
+    function synth(freq, time, dur = 1.5) {
+        const osc = audioCtx.createOscillator();
+        const masterGain = audioCtx.createGain();
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, time);
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(freq * 2, time);
+        masterGain.gain.setValueAtTime(0, time);
+        masterGain.gain.linearRampToValueAtTime(0.3, time + 0.02);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+        gain2.gain.setValueAtTime(0.1, time);
+        osc.connect(masterGain);
+        osc2.connect(gain2);
+        gain2.connect(masterGain);
+        masterGain.connect(reverb); 
+        masterGain.connect(audioCtx.destination);
+        osc.start(time);
+        osc2.start(time);
+        osc.stop(time + dur);
+        osc2.stop(time + dur);
+    }
+
+    const pianoDiv = document.getElementById('piano-practice');
+    Object.keys(NOTES).forEach(n => {
+        const k = document.createElement('div');
+        k.className = `key ${n.includes('#') ? 'black' : ''}`;
+        k.onclick = () => { if(audioCtx.state==='suspended') audioCtx.resume(); synth(NOTES[n], audioCtx.currentTime); };
+        pianoDiv.appendChild(k);
+    });
+
+    function updateUI() {
+        document.getElementById('user-level').innerText = user.level;
+        document.getElementById('user-xp').innerText = user.xp;
+        document.getElementById('stat-best').innerText = user.best;
+        document.getElementById('stat-streak').innerText = user.streak;
+        
+        // Lógica de barra de progreso basada en los nuevos hitos
+        let progress = 0;
+        if (user.xp < 10000) {
+            progress = (user.xp / 10000) * 100;
+        } else if (user.xp < 100000) {
+            progress = ((user.xp - 10000) / 90000) * 100;
+        } else {
+            progress = 100;
+        }
+        document.getElementById('xp-fill').style.width = `${progress}%`;
+        
+        const btn2 = document.getElementById('lock-2');
+        const btn3 = document.getElementById('lock-3');
+
+        if (user.xp >= 10000) { 
+            user.level = Math.max(user.level, 2);
+            btn2.disabled = false; 
+            btn2.classList.replace('btn-outline', 'btn-gold'); 
+            btn2.innerText = "Nivel 2: Cromatismo"; 
+        }
+        if (user.xp >= 100000) { 
+            user.level = 3;
+            btn3.disabled = false; 
+            btn3.classList.replace('btn-outline', 'btn-gold'); 
+            btn3.innerText = "Nivel 3: Intervalos"; 
+        }
+    }
+
+    function startLevel(lvl) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (lvl === 2 && user.xp < 10000) { alert("Necesitas 10,000 XP para el Nivel 2"); return; }
+        if (lvl === 3 && user.xp < 100000) { alert("Necesitas 100,000 XP para el Nivel 3"); return; }
+        setupGame(lvl, false);
+    }
+
+    function startTimerMode() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        setupGame(2, true);
+    }
+
+    function setupGame(lvl, isTimer) {
+        gameState = { currentLvl: lvl, step: 1, score: 0, correct: '', selected: '', errors: [], lives: 3, isTimerMode: isTimer, timeLeft: 60 };
+        showScreen('scr-game');
+        document.getElementById('res-ranking').classList.add('hidden');
+        
+        const timerDisp = document.getElementById('timer-display');
+        const livesDisp = document.getElementById('game-lives');
+        
+        if (isTimer) {
+            timerDisp.classList.remove('hidden');
+            livesDisp.classList.add('hidden');
+            startCountdown();
+        } else {
+            timerDisp.classList.add('hidden');
+            livesDisp.classList.remove('hidden');
+            updateLivesUI();
+        }
+        newQuestion();
+    }
+
+    function startCountdown() {
+        gameInterval = setInterval(() => {
+            gameState.timeLeft--;
+            document.getElementById('timer-display').innerText = gameState.timeLeft + "s";
+            if (gameState.timeLeft <= 0) {
+                clearInterval(gameInterval);
+                finishGame("¡TIEMPO AGOTADO!");
+            }
+        }, 1000);
+    }
+
+    function updateLivesUI() { document.getElementById('game-lives').innerText = "❤️".repeat(gameState.lives); }
+
+    function newQuestion() {
+        gameState.selected = '';
+        document.getElementById('game-feedback').innerText = "";
+        document.getElementById('game-status').innerText = gameState.isTimerMode ? `Aciertos: ${gameState.score/10}` : `Reto ${gameState.step}/10`;
+        
+        let options = (gameState.currentLvl === 1) ? ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"] : 
+                      (gameState.currentLvl === 2) ? Object.keys(NOTES) : Object.keys(INTERVALS);
+        
+        gameState.correct = options[Math.floor(Math.random() * options.length)];
+        const grid = document.getElementById('game-options');
+        grid.innerHTML = "";
+        options.sort(() => Math.random() - 0.5).forEach(opt => {
+            const d = document.createElement('div');
+            d.className = 'opt-card';
+            d.innerText = opt;
+            d.onclick = () => {
+                gameState.selected = opt;
+                document.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+                d.classList.add('selected');
+                if(gameState.currentLvl < 3) synth(NOTES[opt], audioCtx.currentTime);
+            };
+            grid.appendChild(d);
+        });
+        playQuestionAudio();
+    }
+
+    function playQuestionAudio() {
+        const now = audioCtx.currentTime;
+        if (gameState.currentLvl < 3) {
+            synth(NOTES[gameState.correct], now);
+        } else {
+            synth(NOTES["Do"], now, 1.2);
+            synth(NOTES["Do"] * Math.pow(2, INTERVALS[gameState.correct]/12), now + 0.6, 1.5);
+        }
+    }
+
+    function checkAnswer() {
+        if (!gameState.selected) return;
+        const feedback = document.getElementById('game-feedback');
+        
+        if (gameState.selected === gameState.correct) {
+            gameState.score += 10;
+            user.streak++;
+            feedback.innerText = "¡BIEN!";
+            feedback.style.color = "var(--success)";
+            synth(880, audioCtx.currentTime, 0.2);
+        } else {
+            gameState.errors.push({q: gameState.correct, a: gameState.selected});
+            user.streak = 0;
+            if (!gameState.isTimerMode) gameState.lives--;
+            feedback.innerText = `ERA ${gameState.correct}`;
+            feedback.style.color = "var(--error)";
+            synth(110, audioCtx.currentTime, 0.4);
+        }
+
+        setTimeout(() => {
+            if (!gameState.isTimerMode && gameState.lives <= 0) {
+                finishGame("GAME OVER");
+            } else if (!gameState.isTimerMode && gameState.step >= 10) {
+                finishGame("¡EXAMEN TERMINADO!");
+            } else {
+                gameState.step++;
+                newQuestion();
+            }
+        }, 800);
+    }
+
+    function saveRanking(score) {
+        let scores = JSON.parse(localStorage.getItem('maestro_auditivo_timer_scores') || "[]");
+        scores.push({score: score, date: new Date().toLocaleDateString()});
+        scores.sort((a, b) => b.score - a.score);
+        scores = scores.slice(0, 5);
+        localStorage.setItem('maestro_auditivo_timer_scores', JSON.stringify(scores));
+        return scores;
+    }
+
+    function finishGame(title) {
+        clearInterval(gameInterval);
+        showScreen('scr-results');
+        document.getElementById('res-title').innerText = title;
+        user.xp += gameState.score;
+        
+        // El nivel se actualiza en updateUI() basado en los nuevos requisitos
+        if (gameState.score > user.best) user.best = gameState.score;
+        
+        document.getElementById('res-stats').innerHTML = `<h1>${gameState.score} PUNTOS</h1><p>XP Ganada: +${gameState.score}</p>`;
+        
+        if (gameState.isTimerMode) {
+            const ranking = saveRanking(gameState.score);
+            const container = document.getElementById('ranking-container');
+            document.getElementById('res-ranking').classList.remove('hidden');
+            container.innerHTML = ranking.map((s, i) => `<div class="ranking-item"><span>${i+1}. ${s.date}</span><b>${s.score} pts</b></div>`).join('');
+        }
+        updateUI();
+    }
+
+    function cancelGame() { clearInterval(gameInterval); goHome(); }
+    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+    function goHome() { showScreen('scr-home'); updateUI(); }
+    updateUI();
+</script>
+</body>
+</html>

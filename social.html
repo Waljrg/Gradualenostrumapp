@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Comunidad | Graduale Nostrum</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://static.filestackapi.com/filestack-js/3.x.x/filestack.min.js"></script>
+    <style>
+        :root {
+            --primary: #2C211F; 
+            --accent: #B8860B;  
+            --bg: #FDFBF7;
+            --surface: #FFFFFF;
+            --text: #3E322E;
+            --shadow: 0 10px 30px rgba(78, 52, 46, 0.1);
+            --border: 1px solid rgba(184, 134, 11, 0.2);
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding-bottom: 80px; overflow-x: hidden; }
+        
+        header { 
+            background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%); 
+            color: white; padding: 15px; text-align: center; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; z-index: 100;
+        }
+
+        .container { max-width: 500px; margin: auto; padding: 15px; box-sizing: border-box; }
+
+        .profile-container {
+            background: var(--surface); border-radius: 25px; 
+            border: var(--border); box-shadow: var(--shadow);
+            overflow: hidden; margin-bottom: 20px; position: relative;
+        }
+
+        .cover-wrapper {
+            width: 100%; height: 120px; background: #4E342E; 
+            position: relative; overflow: hidden;
+        }
+        #userCover { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+        .btn-edit-cover {
+            position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.5);
+            color: white; border: none; border-radius: 20px; padding: 5px 10px;
+            font-size: 0.7rem; cursor: pointer; backdrop-filter: blur(3px);
+        }
+
+        .avatar-wrapper {
+            position: absolute; top: 70px; left: 20px; z-index: 10;
+        }
+        .avatar-main {
+            width: 90px; height: 90px; border-radius: 50%; 
+            border: 4px solid var(--surface); object-fit: cover; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .btn-edit-avatar {
+            position: absolute; bottom: 0; right: 0; background: var(--accent);
+            color: white; border: none; border-radius: 50%; width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: 2px solid var(--surface);
+        }
+
+        .profile-header-info { padding: 50px 20px 15px; border-bottom: 1px solid #eee; }
+        #viewNombre { font-family: 'Cinzel'; font-size: 1.3rem; font-weight: 700; margin: 0; }
+        #viewVozBadge { 
+            display: inline-block; background: var(--primary); color: white; 
+            padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; 
+            text-transform: uppercase; font-weight: 600; margin-top: 5px;
+        }
+
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
+        .data-item { display: flex; flex-direction: column; gap: 3px; }
+        .data-label { font-size: 0.65rem; color: var(--accent); font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .data-value { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+
+        .edit-block { display: none; padding: 20px; border-top: 1px solid #eee; background: #fafafa; }
+        .form-group { margin-bottom: 12px; }
+        .form-label { font-size: 0.7rem; color: var(--accent); font-weight: bold; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .input-styled {
+            width: 100%; border: 1px solid #ddd; background: white; padding: 10px;
+            border-radius: 10px; resize: none; outline: none; box-sizing: border-box; font-family: inherit; font-size: 0.85rem;
+        }
+        .row-edit { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        .btn-gold { 
+            background: var(--accent); color: white; border: none; 
+            padding: 12px 20px; border-radius: 10px; font-weight: bold; cursor: pointer;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;
+            transition: 0.3s; width: 100%; margin-top: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+
+        .user-item {
+            display: flex; align-items: center; gap: 15px;
+            background: white; padding: 12px; border-radius: 15px;
+            margin-bottom: 10px; border: var(--border); box-shadow: var(--shadow);
+        }
+        .user-item img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
+        .user-info b { font-family: 'Cinzel'; font-size: 0.9rem; display: block; }
+        .user-info span { font-size: 0.75rem; color: var(--accent); font-weight: 600; }
+
+        .post-card {
+            background: var(--surface); border-radius: 15px; padding: 15px;
+            margin-bottom: 15px; border: var(--border); box-shadow: var(--shadow);
+            position: relative;
+        }
+        .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .post-header img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+        .post-header b { font-family: 'Cinzel'; font-size: 0.9rem; }
+
+        .audio-player { width: 100%; margin-top: 8px; border-radius: 10px; background: #f1f1f1; height: 35px; }
+
+        #chatOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg); z-index: 2000; display: none;
+            flex-direction: column;
+        }
+        .chat-header { background: var(--primary); color: white; padding: 15px; display: flex; align-items: center; gap: 15px; }
+        #msgList { flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .bubble { padding: 10px 15px; border-radius: 15px; max-width: 80%; font-size: 0.9rem; word-wrap: break-word; position: relative; cursor: pointer; }
+        .mine { background: var(--accent); color: white; align-self: flex-end; }
+        .theirs { background: #eee; align-self: flex-start; }
+
+        .reactions-container { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+        .reaction-badge {
+            background: rgba(184, 134, 11, 0.1); border: 1px solid var(--accent);
+            border-radius: 12px; padding: 2px 6px; font-size: 0.75rem; display: flex; align-items: center; gap: 3px;
+        }
+        .emoji-picker {
+            position: absolute; bottom: 100%; background: white; border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2); display: none; padding: 5px;
+            z-index: 5000; border: var(--border);
+        }
+        .emoji-picker span { font-size: 1.4rem; padding: 5px; cursor: pointer; transition: 0.2s; }
+        .emoji-picker span:hover { transform: scale(1.3); }
+
+        .nav-bottom {
+            position: fixed; bottom: 0; width: 100%; background: var(--primary);
+            display: flex; justify-content: space-around; padding: 15px 0;
+            border-top: 2px solid var(--accent); z-index: 1000;
+        }
+        .nav-bottom i { color: white; font-size: 1.5rem; cursor: pointer; opacity: 0.7; }
+        .nav-bottom i.active { opacity: 1; color: var(--accent); }
+
+        .loading-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%; 
+            background: rgba(255,255,255,0.8); display:none; 
+            align-items:center; justify-content:center; z-index:9999;
+        }
+        
+        .delete-btn { color: #ff4d4d; font-size: 0.8rem; cursor: pointer; margin-left: 10px; }
+        .file-link { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 8px; text-decoration: none; color: inherit; font-size: 0.8rem; margin-top: 5px; border: 1px dashed var(--accent); }
+    </style>
+</head>
+<body>
+
+<div id="loading" class="loading-overlay"><i class="fas fa-spinner fa-spin fa-2x" style="color:var(--accent)"></i></div>
+
+<header>
+    <h1 style="font-family: 'Cinzel'; margin: 0; font-size: 1.1rem; display:inline-block;">COMUNIDAD GRADUALE</h1>
+</header>
+
+<div class="container" id="mainContent">
+    <div id="view-profile" class="section" style="display:none;">
+        <div class="profile-container">
+            <div class="cover-wrapper">
+                <img src="https://via.placeholder.com/500x120" id="userCover">
+                <button class="btn-edit-cover" onclick="triggerInput('coverInput')"><i class="fas fa-image"></i> Portada</button>
+                <input type="file" id="coverInput" style="display:none;" accept="image/*" onchange="subirImagenImgBB(this, 'cover')">
+            </div>
+            <div class="avatar-wrapper">
+                <img src="https://via.placeholder.com/90" id="userPhoto" class="avatar-main">
+                <button class="btn-edit-avatar" onclick="triggerInput('fileInput')"><i class="fas fa-camera"></i></button>
+                <input type="file" id="fileInput" style="display:none;" accept="image/*" onchange="subirImagenImgBB(this, 'avatar')">
+            </div>
+            <div class="profile-header-info">
+                <h2 id="viewNombre">Cargando...</h2>
+                <span id="viewVozBadge">Voz</span>
+            </div>
+            <div class="data-grid" id="dataViewGrid">
+                <div class="data-item"><span class="data-label">Género</span><span class="data-value" id="valGenero">-</span></div>
+                <div class="data-item"><span class="data-label">Edad</span><span class="data-value" id="valEdad">-</span></div>
+                <div class="data-item"><span class="data-label">Ocupación</span><span class="data-value" id="valOcupacion">-</span></div>
+                <div class="data-item"><span class="data-label">Rango Vocal</span><span class="data-value" id="valRango">-</span></div>
+                <div class="data-item" style="grid-column: 1 / -1;"><span class="data-label">Instrumentos</span><span class="data-value" id="valInstrumentos">-</span></div>
+            </div>
+            <div style="padding: 0 20px 20px;">
+                <button class="btn-gold" id="btnEditProfile" onclick="toggleEditMode(true)"><i class="fas fa-user-edit"></i> EDITAR MI FICHA</button>
+                <button class="btn-gold" style="background:#007bff;" onclick="compartirPerfil()"><i class="fas fa-share-alt"></i> COMPARTIR</button>
+                <button class="btn-gold" style="background:#4E342E;" onclick="window.location.href='cantoral.html'"><i class="fas fa-music"></i> CANTORAL</button>
+            </div>
+            <div class="edit-block" id="editBlock">
+                <div class="row-edit">
+                    <div class="form-group"><label class="form-label">Nombres</label><input type="text" id="editNombre" class="input-styled"></div>
+                    <div class="form-group"><label class="form-label">Apellidos</label><input type="text" id="editApellido" class="input-styled"></div>
+                </div>
+                <div class="row-edit">
+                    <div class="form-group"><label class="form-label">Género</label><select id="editGenero" class="input-styled"><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select></div>
+                    <div class="form-group"><label class="form-label">Edad</label><input type="number" id="editEdad" class="input-styled"></div>
+                </div>
+                <div class="form-group"><label class="form-label">Ocupación</label><input type="text" id="editOcupacion" class="input-styled"></div>
+                <div class="row-edit">
+                    <div class="form-group"><label class="form-label">Tipo de Voz</label><select id="editVoz" class="input-styled"><option value="Soprano">Soprano</option><option value="Baritono">Baritono</option><option value="Basso">Basso</option></select></div>
+                    <div class="form-group"><label class="form-label">Rango Vocal</label><input type="text" id="editRango" class="input-styled"></div>
+                </div>
+                <div class="form-group"><label class="form-label">Instrumentos</label><input type="text" id="editInstrumentos" class="input-styled"></div>
+                <div class="row-edit" style="margin-top:20px;">
+                    <button class="btn-gold" style="background:#666" onclick="toggleEditMode(false)">CANCELAR</button>
+                    <button class="btn-gold" onclick="guardarPerfil()">GUARDAR</button>
+                </div>
+            </div>
+            <div style="padding: 0 20px 20px;">
+                <button class="btn-gold" style="background:#444;" onclick="auth.signOut()">CERRAR SESIÓN</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-feed" class="section">
+        <div class="post-box" style="background:white; padding:15px; border-radius:15px; border:var(--border); margin-bottom:15px;">
+            <textarea id="newPostText" class="input-styled" style="width:100%;" placeholder="Aviso o título del audio..."></textarea>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                <button class="btn-gold" style="width:auto; margin:0; background:#4E342E;" onclick="subirAudioFilestack('post')"><i class="fas fa-microphone"></i> SUBIR AUDIO</button>
+                <button class="btn-gold" style="width:auto; margin:0;" onclick="crearPost()">PUBLICAR</button>
+            </div>
+            <div id="audioPreview" style="display:none; margin-top:10px; font-size:0.75rem; color:var(--accent); font-weight:bold;">
+                <i class="fas fa-check-circle"></i> Audio listo para publicar
+            </div>
+        </div>
+        <div id="postsContainer"></div>
+    </div>
+
+    <div id="view-amigos" class="section" style="display:none;">
+        <h3 style="font-family:'Cinzel'; text-align:center;">INTEGRANTES</h3>
+        <div id="listaUsuarios"></div>
+    </div>
+</div>
+
+<div id="chatOverlay">
+    <div class="chat-header"><i class="fas fa-arrow-left" onclick="cerrarChat()"></i><span id="chatTargetName">Mensajes</span></div>
+    <div id="msgList"></div>
+    <div style="padding: 15px; display: flex; flex-direction: column; gap: 8px; background: white; border-top: 1px solid #eee;">
+        <div id="chatFilePreview" style="display:none; font-size:0.7rem; color:var(--accent); font-weight:bold;"><i class="fas fa-check-circle"></i> Archivo cargado</div>
+        <div style="display: flex; gap: 8px;">
+            <button class="btn-gold" style="width:auto; margin:0; background:#4E342E; padding: 10px;" onclick="subirAudioFilestack('chat')"><i class="fas fa-microphone"></i></button>
+            <button class="btn-gold" style="width:auto; margin:0; background:#555; padding: 10px;" onclick="subirDocumentoFilestack()"><i class="fas fa-paperclip"></i></button>
+            <input type="text" id="msgInput" class="input-styled" style="flex-grow:1;" placeholder="Escribe..." onkeypress="if(event.key === 'Enter') enviarMensaje()">
+            <button class="btn-gold" style="width:auto; margin:0; padding: 10px;" onclick="enviarMensaje()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
+
+<div class="nav-bottom">
+    <i class="fas fa-home active" onclick="switchSection('feed')"></i>
+    <i class="fas fa-users" onclick="switchSection('amigos')"></i>
+    <i class="fas fa-user" onclick="verPerfilPropio()"></i>
+</div>
+
+<div id="globalEmojiPicker" class="emoji-picker">
+    <span onclick="reaccionar('👍')">👍</span><span onclick="reaccionar('❤️')">❤️</span><span onclick="reaccionar('😂')">😂</span><span onclick="reaccionar('😮')">😮</span><span onclick="reaccionar('🙏')">🙏</span><span onclick="reaccionar('👏')">👏</span>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCx_3nwwj3mKAEmtNVW0OaKamuaovhcM-w",
+        authDomain: "graduale-nostrum.firebaseapp.com",
+        projectId: "graduale-nostrum",
+        storageBucket: "graduale-nostrum.firebasestorage.app",
+        messagingSenderId: "534378937675",
+        appId: "1:534378937675:web:677bbc4eb55ef3e6ed7cce"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    
+    const IMGBB_API_KEY = "50c9c685ce6d8f81fc02752e8ebceebf";
+    const FILESTACK_CLIENT = filestack.init('AV07KwcqVRg2E3TfVIoezz');
+    
+    let userEmail = "", chatTarget = "", currentReactionTarget = null;
+    let audioUrlPost = "", audioUrlChat = "", fileUrlChat = "", fileNameChat = "";
+
+    auth.onAuthStateChanged(user => {
+        if (user) { 
+            userEmail = user.email.toLowerCase().trim(); 
+            cargarPerfil(userEmail); 
+            escucharMensajesGlobales();
+            switchSection('feed'); 
+        } else { window.location.href = "cantoral.html"; }
+    });
+
+    function subirAudioFilestack(contexto) {
+        FILESTACK_CLIENT.picker({
+            accept: ['audio/*'],
+            maxFiles: 1,
+            onUploadDone: (res) => {
+                const url = res.filesUploaded[0].url;
+                if (contexto === 'post') { audioUrlPost = url; document.getElementById('audioPreview').style.display = 'block'; } 
+                else { audioUrlChat = url; document.getElementById('chatFilePreview').innerText = "Audio cargado"; document.getElementById('chatFilePreview').style.display = 'block'; }
+            }
+        }).open();
+    }
+
+    function subirDocumentoFilestack() {
+        FILESTACK_CLIENT.picker({
+            accept: ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt'],
+            maxFiles: 1,
+            onUploadDone: (res) => {
+                fileUrlChat = res.filesUploaded[0].url;
+                fileNameChat = res.filesUploaded[0].filename;
+                document.getElementById('chatFilePreview').innerText = "Archivo: " + fileNameChat;
+                document.getElementById('chatFilePreview').style.display = 'block';
+            }
+        }).open();
+    }
+
+    async function subirImagenImgBB(input, tipo) {
+        if (!input.files || !input.files[0]) return;
+        document.getElementById('loading').style.display = 'flex';
+        const formData = new FormData();
+        formData.append("image", input.files[0]);
+        try {
+            const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: "POST", body: formData });
+            const data = await res.json();
+            if (data.success) {
+                const url = data.data.url;
+                if (tipo === 'avatar') document.getElementById('userPhoto').src = url;
+                else document.getElementById('userCover').src = url;
+                await db.collection("usuarios").doc(userEmail).set({ [tipo]: url }, { merge: true });
+            }
+        } catch (e) { alert("Error al subir imagen."); }
+        finally { document.getElementById('loading').style.display = 'none'; }
+    }
+
+    async function crearPost() {
+        const text = document.getElementById('newPostText').value;
+        if (!text.trim() && !audioUrlPost) return;
+        const userDoc = await db.collection("usuarios").doc(userEmail).get();
+        const ud = userDoc.data() || {};
+        await db.collection("posts").add({
+            autor: userEmail,
+            texto: text,
+            audio: audioUrlPost,
+            fecha: Date.now(),
+            nombreAutor: ud.nombre || userEmail,
+            fotoAutor: ud.avatar || "",
+            reacciones: {}
+        });
+        document.getElementById('newPostText').value = "";
+        document.getElementById('audioPreview').style.display = 'none';
+        audioUrlPost = "";
+    }
+
+    function escucharPosts() {
+        db.collection("posts").orderBy("fecha", "desc").onSnapshot(snap => {
+            const c = document.getElementById('postsContainer'); c.innerHTML = "";
+            snap.forEach(doc => {
+                const p = doc.data();
+                const canDelete = p.autor === userEmail;
+                let audioHtml = p.audio ? `<audio controls class="audio-player"><source src="${p.audio}"></audio>` : "";
+                c.innerHTML += `<div class="post-card" onclick="mostrarPicker(event, 'post', '${doc.id}')">
+                    <div class="post-header">
+                        <img src="${p.fotoAutor || 'https://ui-avatars.com/api/?name='+p.autor}">
+                        <div style="flex-grow:1;"><b>${p.nombreAutor}</b><br><small>${new Date(p.fecha).toLocaleDateString()}</small></div>
+                        ${canDelete ? `<i class="fas fa-trash delete-btn" onclick="eliminarPost('${doc.id}', event)"></i>` : ''}
+                    </div>
+                    <p>${p.texto}</p>
+                    ${audioHtml}
+                    ${renderReacciones(p.reacciones)}
+                </div>`;
+            });
+        });
+    }
+
+    async function eliminarPost(id, e) {
+        e.stopPropagation();
+        if(confirm("¿Borrar aviso?")) await db.collection("posts").doc(id).delete();
+    }
+
+    async function enviarMensaje() {
+        const input = document.getElementById('msgInput');
+        if (!input.value.trim() && !audioUrlChat && !fileUrlChat) return;
+        const chatId = [userEmail, chatTarget].sort().join("_");
+        const cifrado = CryptoJS.AES.encrypt(input.value.trim() || " ", "GN_Secret_" + chatId).toString();
+        
+        await db.collection("chats").doc(chatId).collection("mensajes").add({
+            de: userEmail,
+            texto: cifrado,
+            audio: audioUrlChat || null,
+            archivo: fileUrlChat || null,
+            nombreArchivo: fileNameChat || null,
+            fecha: Date.now(),
+            cifrado: true,
+            reacciones: {}
+        });
+        
+        input.value = ""; audioUrlChat = ""; fileUrlChat = ""; fileNameChat = "";
+        document.getElementById('chatFilePreview').style.display = 'none';
+    }
+
+    function escucharMensajes() {
+        const chatId = [userEmail, chatTarget].sort().join("_");
+        db.collection("chats").doc(chatId).collection("mensajes").orderBy("fecha", "asc").onSnapshot(snap => {
+            const list = document.getElementById('msgList'); list.innerHTML = "";
+            snap.forEach(doc => { 
+                const m = doc.data(); 
+                let txt = "";
+                if (m.texto) {
+                    try { txt = CryptoJS.AES.decrypt(m.texto, "GN_Secret_" + chatId).toString(CryptoJS.enc.Utf8); } 
+                    catch(e){ txt="..."; }
+                }
+                let audioHtml = m.audio ? `<audio controls class="audio-player"><source src="${m.audio}"></audio>` : "";
+                let fileHtml = m.archivo ? `<a href="${m.archivo}" target="_blank" class="file-link"><i class="fas fa-file-alt"></i> ${m.nombreArchivo}</a>` : "";
+                const isMine = m.de === userEmail;
+
+                list.innerHTML += `<div class="bubble ${isMine ? 'mine' : 'theirs'}" onclick="mostrarPicker(event, 'msg', '${doc.id}', '${chatId}')">
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <span>${txt}</span>
+                        ${isMine ? `<i class="fas fa-trash" style="font-size:0.6rem; margin-left:8px; opacity:0.6;" onclick="eliminarMensaje('${chatId}','${doc.id}', event)"></i>` : ''}
+                    </div>
+                    ${audioHtml} ${fileHtml}
+                    ${renderReacciones(m.reacciones)}
+                </div>`; 
+            });
+            list.scrollTop = list.scrollHeight;
+        });
+    }
+
+    async function eliminarMensaje(chatId, msgId, e) {
+        e.stopPropagation();
+        if(confirm("¿Borrar mensaje?")) await db.collection("chats").doc(chatId).collection("mensajes").doc(msgId).delete();
+    }
+
+    async function cargarPerfil(emailTarget) {
+        const doc = await db.collection("usuarios").doc(emailTarget).get();
+        if (doc.exists) {
+            const data = doc.data();
+            document.getElementById('userPhoto').src = data.avatar || "https://ui-avatars.com/api/?name=" + emailTarget;
+            document.getElementById('userCover').src = data.cover || "https://via.placeholder.com/500x120";
+            document.getElementById('viewNombre').innerText = ((data.nombre || "") + " " + (data.apellido || "")).trim() || emailTarget;
+            document.getElementById('viewVozBadge').innerText = data.voz || "Voz";
+            document.getElementById('valGenero').innerText = data.genero || "-";
+            document.getElementById('valEdad').innerText = data.edad || "-";
+            document.getElementById('valOcupacion').innerText = data.ocupacionCoro || "-";
+            document.getElementById('valRango').innerText = data.rangoVocal || "-";
+            document.getElementById('valInstrumentos').innerText = data.instrumentos || "-";
+            if(emailTarget === userEmail) {
+                document.getElementById('editNombre').value = data.nombre || "";
+                document.getElementById('editApellido').value = data.apellido || "";
+                document.getElementById('editEdad').value = data.edad || "";
+                document.getElementById('editOcupacion').value = data.ocupacionCoro || "";
+                document.getElementById('editRango').value = data.rangoVocal || "";
+                document.getElementById('editInstrumentos').value = data.instrumentos || "";
+                document.getElementById('editVoz').value = data.voz || "Baritono";
+            }
+        }
+    }
+
+    async function guardarPerfil() {
+        await db.collection("usuarios").doc(userEmail).set({
+            nombre: document.getElementById('editNombre').value,
+            apellido: document.getElementById('editApellido').value,
+            genero: document.getElementById('editGenero').value,
+            edad: document.getElementById('editEdad').value,
+            ocupacionCoro: document.getElementById('editOcupacion').value,
+            rangoVocal: document.getElementById('editRango').value,
+            instrumentos: document.getElementById('editInstrumentos').value,
+            voz: document.getElementById('editVoz').value,
+            email: userEmail
+        }, { merge: true });
+        toggleEditMode(false);
+        cargarPerfil(userEmail);
+    }
+
+    function mostrarPicker(e, type, id, chatId = null) {
+        e.preventDefault();
+        currentReactionTarget = { type, id, chatId };
+        const picker = document.getElementById('globalEmojiPicker');
+        picker.style.display = 'flex';
+        picker.style.top = (e.clientY - 50) + 'px';
+        picker.style.left = Math.min(e.clientX, window.innerWidth - 200) + 'px';
+    }
+
+    async function reaccionar(emoji) {
+        const target = currentReactionTarget;
+        document.getElementById('globalEmojiPicker').style.display = 'none';
+        let ref = target.type === 'post' ? db.collection("posts").doc(target.id) : db.collection("chats").doc(target.chatId).collection("mensajes").doc(target.id);
+        const doc = await ref.get();
+        if(!doc.exists) return;
+        let r = doc.data().reacciones || {};
+        if(r[userEmail] === emoji) delete r[userEmail]; else r[userEmail] = emoji;
+        await ref.update({ reacciones: r });
+    }
+
+    function renderReacciones(reacciones) {
+        if(!reacciones || Object.keys(reacciones).length === 0) return "";
+        const conteo = {};
+        Object.values(reacciones).forEach(e => conteo[e] = (conteo[e] || 0) + 1);
+        let html = '<div class="reactions-container">';
+        for(const [emoji, cant] of Object.entries(conteo)) html += `<div class="reaction-badge">${emoji} <span>${cant}</span></div>`;
+        return html + '</div>';
+    }
+
+    function escucharMensajesGlobales() {
+        db.collectionGroup("mensajes").where("fecha", ">", Date.now()).onSnapshot(snap => {
+            snap.docChanges().forEach(change => {
+                if (change.type === "added" && change.doc.data().de !== userEmail) {
+                    if (Notification.permission === "granted") new Notification("Nuevo mensaje Graduale");
+                }
+            });
+        });
+    }
+
+    function triggerInput(id) { document.getElementById(id).click(); }
+    function toggleEditMode(s) { document.getElementById('editBlock').style.display = s ? 'block' : 'none'; document.getElementById('btnEditProfile').style.display = s ? 'none' : 'flex'; }
+    function verPerfilOtros(e) { switchSection('profile'); cargarPerfil(e); }
+    function verPerfilPropio() { switchSection('profile'); cargarPerfil(userEmail); }
+    function cerrarChat() { document.getElementById('chatOverlay').style.display = 'none'; chatTarget = ""; audioUrlChat = ""; fileUrlChat = ""; }
+    function abrirChat(e) { chatTarget = e; document.getElementById('chatTargetName').innerText = e; document.getElementById('chatOverlay').style.display = 'flex'; escucharMensajes(); }
+    
+    function switchSection(s) {
+        document.querySelectorAll('.section').forEach(x => x.style.display = 'none');
+        document.getElementById('view-' + s).style.display = 'block';
+        if (s === 'feed') escucharPosts(); 
+        if (s === 'amigos') cargarIntegrantes();
+        document.querySelectorAll('.nav-bottom i').forEach(i => i.classList.remove('active'));
+        const icon = s === 'feed' ? 'home' : s === 'amigos' ? 'users' : 'user';
+        document.querySelector('.fa-' + icon).classList.add('active');
+    }
+
+    function cargarIntegrantes() {
+        db.collection("usuarios").onSnapshot(snap => {
+            const l = document.getElementById('listaUsuarios'); l.innerHTML = "";
+            snap.forEach(doc => {
+                const u = doc.data();
+                l.innerHTML += `<div class="user-item">
+                    <img src="${u.avatar || 'https://ui-avatars.com/api/?name='+u.nombre}" onclick="verPerfilOtros('${u.email}')">
+                    <div class="user-info" style="flex-grow:1;" onclick="verPerfilOtros('${u.email}')"><b>${u.nombre} ${u.apellido}</b><span>${u.voz}</span></div>
+                    <i class="fas fa-comment-dots" style="color:var(--accent); font-size:1.4rem;" onclick="abrirChat('${u.email}')"></i>
+                </div>`;
+            });
+        });
+    }
+
+    function compartirPerfil() {
+        const n = document.getElementById('viewNombre').innerText;
+        if (navigator.share) navigator.share({ title: 'Perfil Cantor', text: `Conoce a ${n} en Graduale Nostrum`, url: window.location.href });
+    }
+
+    document.addEventListener('click', e => { if(!e.target.closest('.emoji-picker') && !e.target.closest('.bubble') && !e.target.closest('.post-card')) document.getElementById('globalEmojiPicker').style.display = 'none'; });
+</script>
+</body>
+</html>
+
