@@ -6,6 +6,11 @@
     <title>Plataforma Musical | Inicio</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <style>
         :root {
             --primary: #2C211F; 
@@ -18,10 +23,7 @@
             --border-gold: 2px solid #D4AF37;
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -92,69 +94,52 @@
             text-align: center;
             aspect-ratio: 1 / 1;
             width: 100%;
+            cursor: pointer;
         }
 
-        .center-btn {
+        /* Botón especial de Director */
+        #btnDirector {
+            display: none; /* Oculto por defecto */
+            border: 3px double var(--accent) !important;
+        }
+
+        .login-bar {
             grid-column: span 2;
-            justify-self: center;
-            width: calc(50% - 7.5px);
-        }
-
-        .app-card:active {
-            transform: scale(0.95);
-        }
-
-        .app-card i {
-            font-size: 1.5rem;
-            color: var(--accent);
-            margin-bottom: 6px;
-        }
-
-        .app-card span {
+            background: var(--primary);
+            color: var(--text-light);
+            padding: 15px;
+            border-radius: 15px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 5px;
+            border: 1px solid var(--accent);
             font-family: 'Cinzel', serif;
             font-weight: 700;
-            font-size: 0.6rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            line-height: 1.1;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+            cursor: pointer;
         }
 
+        .login-bar:active { opacity: 0.8; transform: scale(0.98); }
+        .app-card:active { transform: scale(0.95); }
+        .app-card i { font-size: 1.5rem; color: var(--accent); margin-bottom: 6px; }
+        .app-card span { font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.1; }
+
         footer {
-            padding: 15px;
-            text-align: center;
+            padding: 15px; text-align: center;
             background: rgba(253, 251, 247, 0.92); 
             border-top: 1px solid rgba(184, 134, 11, 0.2);
             margin-top: 20px;
         }
 
-        .footer-links {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 8px;
-        }
-
-        .footer-links a {
-            text-decoration: none;
-            color: var(--text-dark);
-            font-size: 0.6rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            opacity: 0.8;
-            transition: color 0.3s;
-        }
-
-        .footer-links a:hover {
-            color: var(--accent);
-            opacity: 1;
-        }
-
-        .copyright {
-            font-size: 0.55rem;
-            color: #666;
-            margin: 0;
-            line-height: 1.2;
-        }
+        .footer-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 8px; }
+        .footer-links a { text-decoration: none; color: var(--text-dark); font-size: 0.6rem; font-weight: 600; text-transform: uppercase; opacity: 0.8; }
+        .copyright { font-size: 0.55rem; color: #666; margin: 0; line-height: 1.2; }
     </style>
 </head>
 <body>
@@ -167,30 +152,40 @@
 
 <div class="hub-container">
     <div class="grid-apps">
-        <a href="cantoral.html" class="app-card">
+        <a onclick="accesoProtegido('cantoral.html')" class="app-card">
             <i class="fas fa-book-open"></i>
             <span>Cantoral</span>
         </a>
-
-        <a href="social.html" class="app-card">
+        <a onclick="accesoProtegido('social.html')" class="app-card">
             <i class="fas fa-users"></i>
             <span>Social</span>
         </a>
-
-        <a href="oraciones.html" class="app-card center-btn">
+        <a onclick="accesoProtegido('oraciones.html')" class="app-card">
             <i class="fas fa-hands-praying"></i>
             <span>Oraciones</span>
         </a>
-
-        <a href="entrenamiento.html" class="app-card">
+        <a onclick="accesoProtegido('agenda.html')" class="app-card">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Agenda</span>
+        </a>
+        <a onclick="accesoProtegido('entrenamiento.html')" class="app-card">
             <i class="fas fa-dumbbell"></i>
             <span>Entrenamiento</span>
         </a>
-
-        <a href="piano.html" class="app-card">
+        <a onclick="accesoProtegido('piano.html')" class="app-card">
             <i class="fas fa-music"></i>
             <span>Piano</span>
         </a>
+
+        <a id="btnDirector" href="director.html" class="app-card">
+            <i class="fas fa-star"></i>
+            <span style="color: var(--accent);">Director</span>
+        </a>
+
+        <div id="authBtn" class="login-bar" onclick="gestionarSesion()">
+            <i id="authIcon" class="fas fa-sign-in-alt"></i>
+            <span id="authText">INICIAR SESIÓN</span>
+        </div>
     </div>
 </div>
 
@@ -203,6 +198,72 @@
         &copy; 2026 Walter Reyes y Coro Parroquial San Francisco de Asís - Camoapa
     </p>
 </footer>
+
+<script>
+    // Configuración de Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyCx_3nwwj3mKAEmtNVW0OaKamuaovhcM-w",
+        authDomain: "graduale-nostrum.firebaseapp.com",
+        projectId: "graduale-nostrum",
+        storageBucket: "graduale-nostrum.firebasestorage.app",
+        messagingSenderId: "534378937675",
+        appId: "1:534378937675:web:677bbc4eb55ef3e6ed7cce",
+        measurementId: "G-LJJLQXQXY1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const DIRECTOR_EMAIL = "waljrg@gmail.com";
+    let usuarioLogueado = false;
+
+    // Monitor de estado de sesión
+    auth.onAuthStateChanged((user) => {
+        const authText = document.getElementById('authText');
+        const authIcon = document.getElementById('authIcon');
+        const btnDirector = document.getElementById('btnDirector');
+
+        if (user) {
+            usuarioLogueado = true;
+            authText.innerText = "CERRAR SESIÓN";
+            authIcon.className = "fas fa-sign-out-alt";
+            
+            // Lógica de visibilidad del botón Director
+            if (user.email === DIRECTOR_EMAIL) {
+                btnDirector.style.display = "flex";
+            } else {
+                btnDirector.style.display = "none";
+            }
+        } else {
+            usuarioLogueado = false;
+            authText.innerText = "INICIAR SESIÓN";
+            authIcon.className = "fas fa-sign-in-alt";
+            btnDirector.style.display = "none";
+        }
+    });
+
+    // Lógica del botón inferior
+    function gestionarSesion() {
+        if (usuarioLogueado) {
+            auth.signOut().then(() => {
+                alert("Has cerrado sesión.");
+            }).catch((error) => {
+                console.error("Error al cerrar sesión:", error);
+            });
+        } else {
+            window.location.href = "login.html";
+        }
+    }
+
+    // Lógica de los 6 botones protegidos
+    function accesoProtegido(url) {
+        if (usuarioLogueado) {
+            window.location.href = url;
+        } else {
+            alert("Debes iniciar sesión para usar esta herramienta.");
+            window.location.href = "login.html";
+        }
+    }
+</script>
 
 </body>
 </html>
