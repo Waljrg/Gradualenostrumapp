@@ -228,6 +228,13 @@
         }
     });
 
+    // Manejar el resultado de la redirección al volver a la página
+    auth.getRedirectResult().catch((err) => {
+        if (err.code !== 'auth/redirect-cancelled-by-user') {
+            alert("Error al volver del inicio de sesión: " + err.message);
+        }
+    });
+
     // 4. Funciones de Base de Datos (CRUD de Cantos)
     async function guardarCanto(cantoData, currentId = null) {
         try {
@@ -271,7 +278,7 @@
         });
     }
 
-    // 6. Autenticación (Funciones originales)
+    // 6. Autenticación (Cambios realizados para evitar bloqueos)
     async function loginEmail() {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('password').value;
@@ -290,13 +297,15 @@
 
     async function loginGoogle() {
         try {
-            await auth.signInWithPopup(googleProvider);
+            // Se usa Redirect en lugar de Popup para evitar bloqueos del navegador
+            await auth.signInWithRedirect(googleProvider);
         } catch (err) { alert("Error Google: " + err.message); }
     }
 
     async function loginFacebook() {
         try {
-            await auth.signInWithPopup(facebookProvider);
+            // Se usa Redirect en lugar de Popup para evitar bloqueos del navegador
+            await auth.signInWithRedirect(facebookProvider);
         } catch (err) { alert("Error Facebook: " + err.message); }
     }
 
