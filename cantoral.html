@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --primary: #2C211F; 
@@ -21,6 +22,12 @@
             --radius-md: 16px;
             --shadow: 0 10px 30px rgba(78, 52, 46, 0.08);
             --border: 1px solid rgba(184, 134, 11, 0.2);
+            /* Colores de secciones */
+            --c-inicio: #800000;
+            --c-coro: #D4AF37;
+            --c-estrofa: #A9A9A9;
+            --c-puente: #FF69B4;
+            --c-final: #696969;
         }
 
         [data-theme="dark"] {
@@ -99,9 +106,9 @@
         .editor-group label { font-size: 0.65rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-left: 2px; }
         .input-styled { padding: 12px; border-radius: 12px; border: 1px solid rgba(184, 134, 11, 0.2); background: var(--bg); color: var(--text); font-size: 0.85rem; width: 100%; box-sizing: border-box; transition: 0.3s; font-family: 'Inter', sans-serif; }
         .input-styled:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1); }
-        .editor-toolbar { display: flex; gap: 8px; overflow-x: auto; padding: 5px 0 10px; scrollbar-width: none; }
+        .editor-toolbar { display: flex; gap: 5px; overflow-x: auto; padding: 5px 0 10px; scrollbar-width: none; flex-wrap: nowrap; }
         .editor-toolbar::-webkit-scrollbar { display: none; }
-        .tool-tag { background: var(--accent-light); color: var(--primary); padding: 7px 14px; border-radius: 20px; font-size: 0.65rem; font-weight: 700; white-space: nowrap; cursor: pointer; border: none; }
+        .tool-tag { background: var(--accent-light); color: var(--primary); padding: 5px 10px; border-radius: 15px; font-size: 0.6rem; font-weight: 700; white-space: nowrap; cursor: pointer; border: none; }
         
         .chord-tag-sm { 
             background: var(--primary); 
@@ -160,15 +167,20 @@
         
         .section-marker { 
             display: block; 
-            color: var(--accent); 
-            font-weight: 700; 
-            margin-top: 1em; 
+            font-weight: 800; 
+            margin-top: 1.2em; 
             margin-bottom: 0.3em; 
-            border-left: 3px solid var(--accent); 
-            padding-left: 8px; 
+            padding: 2px 8px;
+            border-radius: 4px;
             text-transform: uppercase; 
-            font-size: 0.9em;
+            font-size: 0.85em;
+            width: fit-content;
         }
+        .m-inicio { background: var(--c-inicio); color: white; }
+        .m-coro { background: var(--c-coro); color: white; }
+        .m-estrofa { background: var(--c-estrofa); color: white; }
+        .m-puente { background: var(--c-puente); color: white; }
+        .m-final { background: var(--c-final); color: white; }
 
         .chorus-content {
             font-weight: 700;
@@ -226,6 +238,30 @@
         .director-panel { width: 100%; background: #fdf2f2; border: 1px solid #ffcfcf; padding: 15px; border-radius: 15px; margin-top: 10px; display: none; }
         .director-panel h4 { margin: 0 0 10px 0; color: #b71c1c; font-size: 0.8rem; text-transform: uppercase; }
         .admin-list-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #ffcfcf; font-size: 0.8rem; }
+
+        /* Estilo para el reproductor de audio en detalle */
+        #audioContainer { margin: 15px 0; width: 100%; }
+        #audioPlayer { width: 100%; height: 40px; border-radius: 20px; outline: none; }
+
+        /* BOTON MI TONO */
+        .btn-my-key {
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-size: 0.65rem;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        .btn-my-key.active {
+            background: var(--accent);
+            color: white;
+        }
     </style>
 </head>
 <body data-theme="light">
@@ -324,7 +360,7 @@
             <div id="filterMenu" class="filter-dropdown">
                 <div class="filter-group"><label>Tono Principal</label><select id="fTono" onchange="ejecutarFiltros()"><option value="">Todos</option></select></div>
                 <div class="filter-group"><label>Tono Secundario</label><select id="fTonoSec" onchange="ejecutarFiltros()"><option value="">Todos</option></select></div>
-                <div class="filter-group"><label>Tono Personal</label><select id="fTonoPers" onchange="ejecutarFiltros()"><option value="">Todos</option></select></div>
+                <div class="filter-group"><label>MG (Modos)</label><select id="fTonoPers" onchange="ejecutarFiltros()"><option value="">Todos</option></select></div>
                 <div class="filter-group"><label>Momento de Misa</label><select id="fMomento" onchange="ejecutarFiltros()"><option value="">Todos</option></select></div>
                 <div class="filter-group"><label>Ritmo / Estilo</label><input type="text" id="fRitmo" placeholder="Ej: Vals" onkeyup="ejecutarFiltros()"></div>
                 <div class="filter-group"><label>Tempo (BPM)</label><input type="number" id="fTempo" placeholder="Ej: 120" onkeyup="ejecutarFiltros()"></div>
@@ -365,12 +401,15 @@
             <h2 style="margin:0; font-family:'Cinzel'; font-size: 1.2rem;">Editor de Canto</h2>
         </div>
         <div class="form-container">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                 <button class="btn btn-gold" style="justify-content:center; font-size: 0.7rem;" onclick="document.getElementById('imageInput').click()"><i class="fas fa-camera"></i> ESCANEAR</button>
                 <button class="btn btn-dark" style="justify-content:center; font-size: 0.7rem;" onclick="document.getElementById('pdfInput').click()"><i class="fas fa-file-pdf"></i> PDF</button>
+                <button class="btn btn-gold" id="audioBtn" style="justify-content:center; font-size: 0.7rem;" onclick="document.getElementById('audioInput').click()"><i class="fas fa-microphone"></i> AUDIO</button>
             </div>
             <input type="file" id="imageInput" accept="image/*" style="display:none" onchange="importarImagen(this)">
             <input type="file" id="pdfInput" accept="application/pdf" style="display:none" onchange="importarPDF(this)">
+            <input type="file" id="audioInput" accept="audio/*" style="display:none" onchange="gestionarSubidaAudio(this)">
+            
             <div class="editor-group"><label>Título</label><input type="text" id="titulo" class="input-styled" placeholder="Título del canto"></div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="editor-group"><label>T. Litúrgico</label><select id="tiempoLiturgico" class="input-styled"></select></div>
@@ -379,7 +418,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
                 <div class="editor-group"><label>Original</label><select id="tonalidad" class="input-styled" onchange="actualizarAcordesInteligentes()"></select></div>
                 <div class="editor-group"><label>Secundario</label><select id="tonalidadSec" class="input-styled"></select></div>
-                <div class="editor-group"><label>Mi Tono</label><select id="tonalidadPersonal" class="input-styled" style="background: #fff5e6;"></select></div>
+                <div class="editor-group"><label>MG (Modo)</label><select id="tonalidadPersonal" class="input-styled" style="background: #fff5e6;"></select></div>
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="editor-group"><label>Ritmo</label><input type="text" id="ritmo" class="input-styled" placeholder="Ritmo"></div>
@@ -388,9 +427,11 @@
             <div class="editor-group">
                 <label>Letra y Acordes</label>
                 <div class="editor-toolbar">
+                    <button class="tool-tag" onclick="insertTag('INICIO:\n')">INICIO</button>
                     <button class="tool-tag" onclick="insertTag('CORO:\n')">CORO</button>
                     <button class="tool-tag" onclick="insertTag('ESTROFA')">ESTROFA</button>
-                    <button class="tool-tag" onclick="insertTag('[]')">[ ]</button>
+                    <button class="tool-tag" onclick="insertTag('PUENTE:\n')">PUENTE</button>
+                    <button class="tool-tag" onclick="insertTag('FINAL:\n')">FINAL</button>
                     <button class="tool-tag" onclick="insertTag('(BIS)')">(BIS)</button>
                 </div>
                 <div style="position: relative;">
@@ -439,7 +480,12 @@
         </div>
         <div id="infoCanto" style="margin: 10px 0; text-align:center;">
             <h1 id="viewTitulo" style="margin:0; font-family:'Cinzel'; font-size: 1.4rem;"></h1>
-            <div id="viewTonoBadge" style="font-weight:bold; color:var(--accent); margin-top: 5px;"></div>
+            
+            <div id="audioContainer" style="display:none;">
+                <audio id="audioPlayer" controls></audio>
+            </div>
+
+            <div id="viewTonoBadge" style="font-weight:bold; color:var(--accent); margin-top: 5px; display: flex; align-items: center; justify-content: center; gap: 5px;"></div>
             <div style="display:flex; justify-content:center; gap:10px; margin-top:5px; flex-wrap:wrap; font-size: 0.85rem;">
                 <span id="viewRitmoTempo" style="color: #888;"></span>
                 <span id="viewMomentoBadge" style="color: #888;"></span>
@@ -473,6 +519,11 @@
     const auth = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
 
+    // INICIALIZACIÓN SUPABASE
+    const supabaseUrl = 'https://xcyrbmgvwsnfmemyssdl.supabase.co';
+    const supabaseKey = 'sb_publishable_LB0MKK71aRe-QXt3WN_qjw_6pteJqtq';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
     db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
     db.enablePersistence().catch(err => console.log("Persistence failed"));
 
@@ -487,6 +538,7 @@
     const defTiempos = ["Ordinario", "Adviento", "Navidad", "Cuaresma", "Pascua", "Triduo Pascual", "Pentecostés", "Santos", "Purísima", "Virgen María", "San Francisco", "Sagrado Corazón", "Ordinario de la Misa", "Ad Libitum"];
     const defMomentos = ["Entrada", "Kyrie", "Gloria", "Salmos", "Aleluya", "Honor y Gloria", "Ofertorio", "Sanctus", "Doxología", "Padre Nuestro", "Comunión", "Adoración A Jesús Sacramentado", "Salida", "Alabanzas", "Difuntos", "Varios"];
     const opcionesTonos = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B", "Cm", "C#m", "Dm", "Ebm", "Em", "Fm", "F#m", "Gm", "Abm", "Am", "Bbm", "Bm"];
+    const opcionesModos = ["Jónico", "Dórico", "Frigio", "Lidio", "Mixolidio", "Eólico", "Locrio"];
     
     let cantos = [];
     const escala = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
@@ -497,6 +549,42 @@
     let tempCanto = null, viewStack = ['homeView'];
     let programaciones = JSON.parse(localStorage.getItem('gn_programados') || '[]');
     let estrofaCounter = 1; 
+    let audioUrlSubido = null; // Variable temporal para el audio
+
+    // --- FUNCIONES SUPABASE (AUDIO) ---
+    async function gestionarSubidaAudio(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        const btn = document.getElementById('audioBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SUBIENDO...';
+        btn.disabled = true;
+
+        try {
+            const fileName = `${Date.now()}_${file.name}`;
+            const { data, error } = await supabaseClient.storage
+                .from('Audios')
+                .upload(fileName, file);
+
+            if (error) throw error;
+
+            const { data: { publicUrl } } = supabaseClient.storage
+                .from('Audios')
+                .getPublicUrl(fileName);
+
+            audioUrlSubido = publicUrl;
+            alert("Audio subido correctamente a Supabase.");
+            btn.innerHTML = '<i class="fas fa-check"></i> AUDIO LISTO';
+            btn.style.background = "#2e7d32";
+        } catch (e) {
+            console.error(e);
+            alert("Error al subir audio: " + e.message);
+            btn.innerHTML = originalText;
+        } finally {
+            btn.disabled = false;
+        }
+    }
 
     // --- FUNCIONES DE DIRIGIR (SINCRO) ---
     function toggleModoDirector() {
@@ -641,31 +729,47 @@
         if(tag === 'ESTROFA') { tagToInsert = `ESTROFA ${estrofaCounter}:\n`; estrofaCounter++; }
         area.value = text.substring(0, start) + tagToInsert + text.substring(end);
         area.focus();
-        if(tag === '[]') area.setSelectionRange(start + 1, start + 1);
-        else area.setSelectionRange(start + tagToInsert.length, start + tagToInsert.length);
+        area.setSelectionRange(start + tagToInsert.length, start + tagToInsert.length);
     }
 
-    const gradosMayores = [0, 2, 4, 5, 7, 9]; 
-    const sufijosMayores = ["", "m", "m", "", "", "m"];
-    const gradosMenores = [0, 2, 3, 5, 7, 8]; 
-    const sufijosMenores = ["m", "dim", "", "m", "m", ""];
+    // MAPAS DE MODOS GRIEGOS
+    const MODOS_CONFIG = {
+        "Mayor": { grados: [0, 2, 4, 5, 7, 9], sufijos: ["", "m", "m", "", "", "m"] },
+        "Menor": { grados: [0, 2, 3, 5, 7, 8], sufijos: ["m", "dim", "", "m", "m", ""] },
+        "Jónico": { grados: [0, 2, 4, 5, 7, 9, 11], sufijos: ["maj7", "m7", "m7", "maj7", "7", "m7", "m7b5"] },
+        "Dórico": { grados: [0, 2, 3, 5, 7, 9, 10], sufijos: ["m7", "m7", "maj7", "7", "m7", "m7b5", "maj7"] },
+        "Frigio": { grados: [0, 1, 3, 5, 7, 8, 10], sufijos: ["m7", "maj7", "7", "m7", "m7b5", "maj7", "m7"] },
+        "Lidio": { grados: [0, 2, 4, 6, 7, 9, 11], sufijos: ["maj7", "7", "m7", "m7b5", "maj7", "m7", "m7"] },
+        "Mixolidio": { grados: [0, 2, 4, 5, 7, 9, 10], sufijos: ["7", "m7", "m7b5", "maj7", "m7", "m7", "maj7"] },
+        "Eólico": { grados: [0, 2, 3, 5, 7, 8, 10], sufijos: ["m7", "m7b5", "maj7", "m7", "m7", "maj7", "7"] },
+        "Locrio": { grados: [0, 1, 3, 5, 6, 8, 10], sufijos: ["m7b5", "maj7", "m7", "m7", "maj7", "7", "m7"] }
+    };
 
     function actualizarAcordesInteligentes() {
         const tonoPrincipal = document.getElementById('tonalidad').value;
         const container = document.getElementById('smartChords');
         container.innerHTML = "";
         if (!tonoPrincipal) return;
-        let esMenor = tonoPrincipal.endsWith('m');
+
+        let modoActual = "Mayor";
+        if (tonoPrincipal.endsWith('m')) modoActual = "Menor";
+        
+        // Verificar si hay un modo griego seleccionado en MG
+        const mgSeleccionado = document.getElementById('tonalidadPersonal').value;
+        if (mgSeleccionado && MODOS_CONFIG[mgSeleccionado]) {
+            modoActual = mgSeleccionado;
+        }
+
         let notaBase = tonoPrincipal.replace('m', '');
         let indexBase = escala.indexOf(americanas[notaBase] || notaBase);
-        const grados = esMenor ? gradosMenores : gradosMayores;
-        const sufijos = esMenor ? sufijosMayores : sufijosMayores;
-        const gradosRomanos = ["I", "II", "III", "IV", "V", "VI"];
         
-        grados.forEach((semitonos, i) => {
+        const config = MODOS_CONFIG[modoActual];
+        const gradosRomanos = ["I", "II", "III", "IV", "V", "VI", "VII"];
+        
+        config.grados.forEach((semitonos, i) => {
             let indexNota = (indexBase + semitonos) % 12;
             let nota = escala[indexNota];
-            let acordeFinal = nota + sufijos[i];
+            let acordeFinal = nota + config.sufijos[i];
             let btn = document.createElement('button');
             btn.className = "chord-tag-sm";
             btn.innerHTML = `<span>${acordeFinal}</span><small>${gradosRomanos[i]}</small>`;
@@ -673,13 +777,7 @@
             container.appendChild(btn);
         });
 
-        let btn7 = document.createElement('button');
-        btn7.className = "chord-tag-sm";
-        btn7.style.background = "var(--chord)";
-        btn7.innerHTML = `<span>7</span><small>VII</small>`;
-        btn7.onclick = () => insertTag("7");
-        container.appendChild(btn7);
-
+        // Botón de tensiones
         let btnPlus = document.createElement('button');
         btnPlus.className = "chord-tag-sm";
         btnPlus.style.background = "var(--accent)";
@@ -983,7 +1081,15 @@
         defTiempos.sort().forEach(cat => { const imgFile = iconosTiempos[cat] || "logo.png"; tGrid.innerHTML += `<div class="card" onclick="verCategoria('${cat}', 'tiempo')"><img src="Iconos/${imgFile}" alt="${cat}"></div>`; selectTiempo.innerHTML += `<option value="${cat}">${cat}</option>`; });
         const momentosConfig = [{ n: "Entrada", i: "entrada.png" }, { n: "Kyrie", i: "kyrie.png" }, { n: "Gloria", i: "gloria.png" }, { n: "Salmos", i: "salmos.png" }, { n: "Aleluya", i: "aleluya.png" }, { n: "Honor y Gloria", i: "honor.png" }, { n: "Ofertorio", i: "ofertorio.png" }, { n: "Sanctus", i: "santo.png" }, { n: "Doxología", i: "doxologia.png" }, { n: "Padre Nuestro", i: "padre.png" }, { n: "Comunión", i: "comunion.png" }, { n: "Adoración A Jesús Sacramentado", i: "adoración.png" }, { n: "Salida", i: "salida.png" }, { n: "Alabanzas", i: "alabanzas.png" }, { n: "Difuntos", i: "difuntos.png" }, { n: "Varios", i: "varios.png" }];
         momentosConfig.forEach(m => { mGrid.innerHTML += `<div class="card" onclick="verCategoria('${m.n}', 'momento')"><img src="Iconos/${m.i}" alt="${m.n}"></div>`; selectMomento.innerHTML += `<option value="${m.n}">${m.n}</option>`; fMomento.innerHTML += `<option value="${m.n}">${m.n}</option>`; });
-        opcionesTonos.forEach(t => { selectTono.innerHTML += `<option value="${t}">${t}</option>`; selectTonoSec.innerHTML += `<option value="${t}">${t}</option>`; selectTonoPers.innerHTML += `<option value="${t}">${t}</option>`; fTono.innerHTML += `<option value="${t}">${t}</option>`; fTonoSec.innerHTML += `<option value="${t}">${t}</option>`; fTonoPers.innerHTML += `<option value="${t}">${t}</option>`; });
+        opcionesTonos.forEach(t => { selectTono.innerHTML += `<option value="${t}">${t}</option>`; selectTonoSec.innerHTML += `<option value="${t}">${t}</option>`; fTono.innerHTML += `<option value="${t}">${t}</option>`; fTonoSec.innerHTML += `<option value="${t}">${t}</option>`; });
+        
+        selectTonoPers.innerHTML = '<option value="">Normal</option>';
+        fTonoPers.innerHTML = '<option value="">Todos</option>';
+        opcionesModos.forEach(m => {
+            selectTonoPers.innerHTML += `<option value="${m}">${m}</option>`;
+            fTonoPers.innerHTML += `<option value="${m}">${m}</option>`;
+        });
+        selectTonoPers.onchange = actualizarAcordesInteligentes;
     }
 
     function transposeNote(nota, semitonos) {
@@ -996,12 +1102,29 @@
     function renderTexto() {
         const c = (currentCantoId !== null) ? cantos[currentCantoId] : tempCanto; if (!c) return;
         const regexChords = /(?:\[|(?<=\s|^))(Do|Re|Mi|Fa|Sol|La|Si|[A-G])(#|b)?(maj|min|m|M|aug|dim|sus|add|ø|maj?\d+|min?\d+|\d+|[\+\-\(\)])*(\/(Do|Re|Mi|Fa|Sol|La|Si|[A-G])(#|b)?)?(?=\]|(?:\s|$))/g;
-        const regexChorusStart = /^CORO:/i; const regexOtherSections = /^(ESTROFA|VERSO|V\d+)\s*\d*:/i; 
+        
+        const sectionRules = [
+            { regex: /^INICIO:/i, class: "m-inicio" },
+            { regex: /^CORO:/i, class: "m-coro" },
+            { regex: /^(ESTROFA|VERSO|V\d+)\s*\d*:/i, class: "m-estrofa" },
+            { regex: /^PUENTE:/i, class: "m-puente" },
+            { regex: /^FINAL:/i, class: "m-final" }
+        ];
+
         let isChorusMode = false;
         const htmlProcesado = c.letra.split('\n').map(linea => {
             const lineaLimpia = linea.trim();
-            if (regexChorusStart.test(lineaLimpia)) { isChorusMode = true; return `<span class="section-marker">${lineaLimpia}</span>`; }
-            else if (regexOtherSections.test(lineaLimpia)) { isChorusMode = false; return `<span class="section-marker">${lineaLimpia}</span>`; }
+            
+            // Detección de marcadores
+            let sectionClass = "";
+            for(let rule of sectionRules) {
+                if(rule.regex.test(lineaLimpia)) {
+                    sectionClass = rule.class;
+                    isChorusMode = (rule.class === "m-coro");
+                    return `<span class="section-marker ${sectionClass}">${lineaLimpia}</span>`;
+                }
+            }
+
             const minusculas = (linea.match(/[a-z]/g) || []).length; const esLineaDeTexto = minusculas > 5;
             let procesada = linea.replace(regexChords, (match) => {
                 const limpio = match.replace(/[\[\]]/g, ''); const partes = limpio.split('/');
@@ -1017,23 +1140,52 @@
                 if (bajo) resultado += "/" + procesarNotaUnica(bajo);
                 return `<span class="chord">${resultado}</span>`;
             });
+            
+            // ELIMINAR CORCHETES SOBRANTES EN EL VISOR
+            procesada = procesada.replace(/[\[\]]/g, '');
+
             if (isChorusMode && lineaLimpia !== "") return `<span class="chorus-content">${procesada}</span>`;
             return procesada;
         }).join('\n');
+
         document.getElementById('viewLetra').innerHTML = htmlProcesado;
         document.getElementById('viewLetra').style.fontSize = fontSize + "px";
         let baseTono = c.tonalidad.replace(/m$/, ''); let esMenor = c.tonalidad.endsWith('m');
         let nuevoTono = transposeNote(baseTono, currentTranspose) + (esMenor ? "m" : "");
-        let htmlTonos = `<span>${nuevoTono}</span>`;
+        
+        // --- LÓGICA BOTÓN MI TONO ---
+        const myKeyStorageKey = `myKey_${c.id}`;
+        const myKeySaved = localStorage.getItem(myKeyStorageKey);
+        let btnMyKeyHtml = `<button class="btn-my-key ${myKeySaved ? 'active' : ''}" onclick="seleccionarMiTono('${c.id}')">
+            <i class="fas fa-music"></i> ${myKeySaved ? myKeySaved : 'MI TONO'}
+        </button>`;
+
+        let htmlTonos = `<span>${nuevoTono}</span>${btnMyKeyHtml}`;
         if(c.tonalidadSec) htmlTonos += ` <span style="opacity:0.6; font-size: 0.9em;">/ ${c.tonalidadSec}</span>`;
-        if(c.tonoPersonal) htmlTonos += ` <span style="background:var(--accent); color:white; padding:2px 10px; border-radius:8px; margin-left:12px; font-size:0.75rem; text-transform: uppercase;">Pers: ${c.tonoPersonal}</span>`;
+        if(c.tonoPersonal) htmlTonos += ` <span style="background:var(--accent); color:white; padding:2px 10px; border-radius:8px; margin-left:12px; font-size:0.75rem; text-transform: uppercase;">Modo: ${c.tonoPersonal}</span>`;
+        
         document.getElementById('viewTonoBadge').innerHTML = htmlTonos;
         document.getElementById('viewRitmoTempo').innerText = (c.ritmo ? `• ${c.ritmo} ` : "") + (c.tempo ? `• ${c.tempo} BPM` : "");
         document.getElementById('viewMomentoBadge').innerText = "• " + (c.momentoMisa || "Varios");
         document.getElementById('favBtn').innerHTML = c.favorito ? '<i class="fas fa-star"></i> FAVORITO' : '<i class="far fa-star"></i> FAVORITO';
         
-        // SINCRO DIRECTOR
+        const player = document.getElementById('audioPlayer');
+        const container = document.getElementById('audioContainer');
+        if (c.audioUrl) { player.src = c.audioUrl; container.style.display = 'block'; } else { container.style.display = 'none'; }
         sincronizarConMúsicos();
+    }
+
+    // NUEVA FUNCIÓN MI TONO
+    function seleccionarMiTono(cantoId) {
+        let opciones = opcionesTonos.join(", ");
+        let eleccion = prompt("Ingresa tu tono para este canto (Ej: G, Am, D, etc):\nDeja vacío para borrar.", localStorage.getItem(`myKey_${cantoId}`) || "");
+        if (eleccion === null) return;
+        if (eleccion.trim() === "") {
+            localStorage.removeItem(`myKey_${cantoId}`);
+        } else {
+            localStorage.setItem(`myKey_${cantoId}`, eleccion.trim());
+        }
+        renderTexto();
     }
 
     function changeZoom(n) { fontSize += n; renderTexto(); }
@@ -1059,25 +1211,49 @@
 
     async function toggleFavorite() { const c = cantos[currentCantoId]; await db.collection("cantos").doc(c.id).update({ favorito: !c.favorito }); c.favorito = !c.favorito; renderTexto(); toggleTools(); }
     function verDetalle(idx, fromSave = false) { currentCantoId = idx; const c = cantos[idx]; const storageKey = `tonoPers_${c.titulo.replace(/\s+/g, '_')}`; c.tonoPersonal = localStorage.getItem(storageKey) || ""; document.getElementById('viewTitulo').innerText = c.titulo; renderTexto(); showView('detailView', false, fromSave); }
-    function previsualizarCanto() { currentCantoId = null; document.getElementById('previewBadge').style.display = 'block'; tempCanto = { titulo: document.getElementById('titulo').value || "Vista Previa", letra: document.getElementById('letra').value, tonalidad: document.getElementById('tonalidad').value, tonalidadSec: document.getElementById('tonalidadSec').value, tiempoLiturgico: document.getElementById('tiempoLiturgico').value, momentoMisa: document.getElementById('momentoMisa').value, ritmo: document.getElementById('ritmo').value, tempo: document.getElementById('tempo').value, favorito: false }; renderTexto(); showView('detailView'); }
+    function previsualizarCanto() { currentCantoId = null; document.getElementById('previewBadge').style.display = 'block'; tempCanto = { titulo: document.getElementById('titulo').value || "Vista Previa", letra: document.getElementById('letra').value, tonalidad: document.getElementById('tonalidad').value, tonalidadSec: document.getElementById('tonalidadSec').value, tiempoLiturgico: document.getElementById('tiempoLiturgico').value, momentoMisa: document.getElementById('momentoMisa').value, ritmo: document.getElementById('ritmo').value, tempo: document.getElementById('tempo').value, favorito: false, audioUrl: audioUrlSubido, tonoPersonal: document.getElementById('tonalidadPersonal').value }; renderTexto(); showView('detailView'); }
 
     async function guardarCanto() {
         if(!isAdmin) return alert("No tienes permisos.");
         const titulo = document.getElementById('titulo').value.trim();
-        const obj = { titulo: titulo, tiempoLiturgico: document.getElementById('tiempoLiturgico').value, momentoMisa: document.getElementById('momentoMisa').value, tonalidad: document.getElementById('tonalidad').value, tonalidadSec: document.getElementById('tonalidadSec').value, ritmo: document.getElementById('ritmo').value.trim(), tempo: document.getElementById('tempo').value.trim(), letra: document.getElementById('letra').value, favorito: currentFirebaseId ? (cantos.find(c => c.id === currentFirebaseId)?.favorito || false) : false };
+        const obj = { 
+            titulo: titulo, 
+            tiempoLiturgico: document.getElementById('tiempoLiturgico').value, 
+            momentoMisa: document.getElementById('momentoMisa').value, 
+            tonalidad: document.getElementById('tonalidad').value, 
+            tonalidadSec: document.getElementById('tonalidadSec').value, 
+            ritmo: document.getElementById('ritmo').value.trim(), 
+            tempo: document.getElementById('tempo').value.trim(), 
+            letra: document.getElementById('letra').value, 
+            favorito: currentFirebaseId ? (cantos.find(c => c.id === currentFirebaseId)?.favorito || false) : false,
+            audioUrl: audioUrlSubido || (currentFirebaseId ? (cantos.find(c => c.id === currentFirebaseId)?.audioUrl || null) : null)
+        };
         if(!obj.titulo || !obj.tiempoLiturgico) return alert("Faltan datos");
         const storageKey = `tonoPers_${titulo.replace(/\s+/g, '_')}`;
         if(document.getElementById('tonalidadPersonal').value) localStorage.setItem(storageKey, document.getElementById('tonalidadPersonal').value);
         else localStorage.removeItem(storageKey);
-        let id = currentFirebaseId; if(id) await db.collection("cantos").doc(id).update(obj);
+        let id = currentFirebaseId; 
+        if(id) await db.collection("cantos").doc(id).update(obj);
         else { const r = await db.collection("cantos").add(obj); id = r.id; }
-        estrofaCounter = 1; setTimeout(() => { const newIdx = cantos.findIndex(c => c.id === id); if(newIdx !== -1) verDetalle(newIdx, true); else showView('homeView'); }, 500);
+        audioUrlSubido = null;
+        document.getElementById('audioBtn').style.background = "var(--accent)";
+        document.getElementById('audioBtn').innerHTML = '<i class="fas fa-microphone"></i> AUDIO';
+        estrofaCounter = 1; 
+        setTimeout(() => { const newIdx = cantos.findIndex(c => c.id === id); if(newIdx !== -1) verDetalle(newIdx, true); else showView('homeView'); }, 500);
     }
 
     function toggleTheme() { const isDark = document.body.getAttribute('data-theme') === 'dark'; document.body.setAttribute('data-theme', isDark ? 'light' : 'dark'); document.getElementById('themeIcon').src = isDark ? 'Iconos/luna.png' : 'Iconos/sol.png'; }
     function transpose(n) { currentTranspose += n; renderTexto(); }
     function toggleNotation() { isAmerican = !isAmerican; document.getElementById('notBtn').innerText = isAmerican ? "NOTACIÓN: Do" : "NOTACIÓN: C"; actualizarAcordesInteligentes(); renderTexto(); toggleTools(); }
-    function abrirFormulario() { if(!isAdmin) return; currentFirebaseId = null; estrofaCounter = 1; document.getElementById('titulo').value = ""; document.getElementById('letra').value = ""; document.getElementById('tonalidad').value = ""; document.getElementById('tonalidadPersonal').value = ""; actualizarAcordesInteligentes(); showView('formView'); }
+    function abrirFormulario() { 
+        if(!isAdmin) return; 
+        currentFirebaseId = null; audioUrlSubido = null; estrofaCounter = 1; 
+        document.getElementById('audioBtn').style.background = "var(--accent)";
+        document.getElementById('audioBtn').innerHTML = '<i class="fas fa-microphone"></i> AUDIO';
+        document.getElementById('titulo').value = ""; document.getElementById('letra').value = ""; 
+        document.getElementById('tonalidad').value = ""; document.getElementById('tonalidadPersonal').value = ""; 
+        actualizarAcordesInteligentes(); showView('formView'); 
+    }
 
     function editarActual() {
         if(!isAdmin) return;
@@ -1087,6 +1263,7 @@
         document.getElementById('tonalidad').value = c.tonalidad; document.getElementById('tonalidadSec').value = c.tonalidadSec || "";
         document.getElementById('ritmo').value = c.ritmo || ""; document.getElementById('tempo').value = c.tempo || "";
         document.getElementById('tonalidadPersonal').value = localStorage.getItem(`tonoPers_${c.titulo.replace(/\s+/g, '_')}`) || "";
+        if (c.audioUrl) { document.getElementById('audioBtn').style.background = "#2e7d32"; document.getElementById('audioBtn').innerHTML = '<i class="fas fa-check"></i> AUDIO EXISTENTE'; } else { document.getElementById('audioBtn').style.background = "var(--accent)"; document.getElementById('audioBtn').innerHTML = '<i class="fas fa-microphone"></i> AUDIO'; }
         actualizarAcordesInteligentes(); showView('formView'); toggleTools();
     }
 
