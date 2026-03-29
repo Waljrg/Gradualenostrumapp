@@ -188,6 +188,7 @@
             text-transform: uppercase;
         }
 
+        .chorus-content .chord { text-transform: none !important; }
         .metronome-visual {
             position: fixed;
             top: 25px;
@@ -552,7 +553,7 @@
     let unsuscribeDirector = null;
 
     const defTiempos = ["Ordinario", "Adviento", "Navidad", "Cuaresma", "Pascua", "Triduo Pascual", "Pentecostés", "Santos", "Purísima", "Virgen María", "San Francisco", "Sagrado Corazón", "Ordinario de la Misa", "Ad Libitum"];
-    const defMomentos = ["Entrada", "Kyrie", "Gloria", "Salmos", "Aleluya", "Honor y Gloria", "Ofertorio", "Sanctus", "Doxología", "Padre Nuestro", "Comunión", "Adoración A Jesús Sacramentado", "Salida", "Alabanzas", "Difuntos", "Varios"];
+    const defMomentos = ["Entrada", "Kyrie", "Gloria", "Salmos", "Aleluya", "Honor y Gloria", "Ofertorio", "Sanctus", "Doxología", "Padre Nuestro", "Cordero", "Comunión", "Adoración A Jesús Sacramentado", "Salida", "Alabanzas", "Difuntos", "Varios"];
     const opcionesTonos = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B", "Cm", "C#m", "Dm", "Ebm", "Em", "Fm", "F#m", "Gm", "Abm", "Am", "Bbm", "Bm"];
     const opcionesModos = ["Jónico", "Dórico", "Frigio", "Lidio", "Mixolidio", "Eólico", "Locrio"];
     
@@ -1098,7 +1099,7 @@
         fMomento.innerHTML = '<option value="">Todos</option>';
         const iconosTiempos = { "Ad Libitum": "ad.png", "Adviento": "adviento.png", "Navidad": "navidad.png", "Cuaresma": "cuaresma.png", "Pascua": "pascua.png", "Ordinario": "ordinario.png", "Ordinario de la Misa": "misa.png", "Pentecostés": "pentecostes.png", "Purísima": "purisima.png", "Sagrado Corazón": "corazon.png", "San Francisco": "francisco.png", "Santos": "santos.png", "Triduo Pascual": "triduo.png", "Virgen María": "maria.png" };
         defTiempos.sort().forEach(cat => { const imgFile = iconosTiempos[cat] || "logo.png"; tGrid.innerHTML += `<div class="card" onclick="verCategoria('${cat}', 'tiempo')"><img src="Iconos/${imgFile}" alt="${cat}"></div>`; selectTiempo.innerHTML += `<option value="${cat}">${cat}</option>`; });
-        const momentosConfig = [{ n: "Entrada", i: "entrada.png" }, { n: "Kyrie", i: "kyrie.png" }, { n: "Gloria", i: "gloria.png" }, { n: "Salmos", i: "salmos.png" }, { n: "Aleluya", i: "aleluya.png" }, { n: "Honor y Gloria", i: "honor.png" }, { n: "Ofertorio", i: "ofertorio.png" }, { n: "Sanctus", i: "santo.png" }, { n: "Doxología", i: "doxologia.png" }, { n: "Padre Nuestro", i: "padre.png" }, { n: "Comunión", i: "comunion.png" }, { n: "Adoración A Jesús Sacramentado", i: "adoración.png" }, { n: "Salida", i: "salida.png" }, { n: "Alabanzas", i: "alabanzas.png" }, { n: "Difuntos", i: "difuntos.png" }, { n: "Varios", i: "varios.png" }];
+        const momentosConfig = [{ n: "Entrada", i: "entrada.png" }, { n: "Kyrie", i: "kyrie.png" }, { n: "Gloria", i: "gloria.png" }, { n: "Salmos", i: "salmos.png" }, { n: "Aleluya", i: "aleluya.png" }, { n: "Honor y Gloria", i: "honor.png" }, { n: "Ofertorio", i: "ofertorio.png" }, { n: "Sanctus", i: "santo.png" }, { n: "Doxología", i: "doxologia.png" }, { n: "Padre Nuestro", i: "padre.png" }, { n: "Cordero", i: "cordero.png" }, { n: "Comunión", i: "comunion.png" }, { n: "Adoración A Jesús Sacramentado", i: "adoración.png" }, { n: "Salida", i: "salida.png" }, { n: "Alabanzas", i: "alabanzas.png" }, { n: "Difuntos", i: "difuntos.png" }, { n: "Varios", i: "varios.png" }];
         momentosConfig.forEach(m => { mGrid.innerHTML += `<div class="card" onclick="verCategoria('${m.n}', 'momento')"><img src="Iconos/${m.i}" alt="${m.n}"></div>`; selectMomento.innerHTML += `<option value="${m.n}">${m.n}</option>`; fMomento.innerHTML += `<option value="${m.n}">${m.n}</option>`; });
         opcionesTonos.forEach(t => { selectTono.innerHTML += `<option value="${t}">${t}</option>`; selectTonoSec.innerHTML += `<option value="${t}">${t}</option>`; fTono.innerHTML += `<option value="${t}">${t}</option>`; fTonoSec.innerHTML += `<option value="${t}">${t}</option>`; });
         
