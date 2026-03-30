@@ -490,6 +490,7 @@
                 <button class="btn btn-gold btn-sm" onclick="toggleFavorite()" id="favBtn"><i class="far fa-star"></i> FAVORITO</button>
                 <button class="btn btn-gold btn-sm" onclick="toggleNotation()" id="notBtn">NOTACIÓN: Do</button>
                 <button id="editBtn" class="btn btn-dark btn-sm" onclick="editarActual()" style="display:none;"><i class="fas fa-pen-nib"></i> EDITAR</button>
+                <button id="deleteBtn" class="btn btn-dark btn-sm" onclick="borrarCantoActual()" style="display:none; background:#b71c1c;"><i class="fas fa-trash-alt"></i> ELIMINAR</button>
                 <button class="btn btn-gold btn-sm" onclick="toggleFullScreen()"><i class="fas fa-expand"></i> PANTALLA</button>
                 <button class="btn btn-dark btn-sm" onclick="toggleScrollPanel()"><img src="Iconos/barra.png" style="width:15px; filter:invert(1);" alt=""> AUTO SCROLL</button>
                 <button class="btn btn-gold btn-sm" onclick="toggleMetronome()" id="metBtn"><i class="fas fa-drum"></i> METRÓNOMO</button>
@@ -690,6 +691,7 @@
         const loginCard = document.getElementById('loginCard');
         const fab = document.getElementById('mainFab');
         const editBtn = document.getElementById('editBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
         const dPanel = document.getElementById('directorPanel');
         const dirigirCard = document.getElementById('dirigirCard');
 
@@ -711,6 +713,7 @@
             
             fab.style.display = isAdmin ? "flex" : "none";
             if(editBtn) editBtn.style.display = isAdmin ? "flex" : "none";
+            if(deleteBtn) deleteBtn.style.display = isAdmin ? "flex" : "none";
             document.getElementById('btnActivarMando').style.display = isAdmin ? "flex" : "none";
 
         } else {
@@ -721,6 +724,7 @@
             fab.style.display = "none";
             dirigirCard.style.display = "none";
             if(editBtn) editBtn.style.display = "none";
+            if(deleteBtn) deleteBtn.style.display = "none";
             dPanel.style.display = "none";
         }
     });
@@ -1243,7 +1247,7 @@
     }
 
     function verCategoria(nombre, tipo) {
-        document.getElementById('categoryTitle').innerText = name;
+        document.getElementById('categoryTitle').innerText = nombre;
         const container = document.getElementById('songsContainer'); container.innerHTML = "";
         cantos.filter(c => tipo === 'tiempo' ? c.tiempoLiturgico === nombre : c.momentoMisa === nombre).forEach(c => { const idx = cantos.indexOf(c); const color = getColorTiempo(c.tiempoLiturgico); container.innerHTML += `<div class="song-row" onclick="verDetalle(${idx})"><div><strong>${c.titulo}</strong><small>${c.tonalidad} • <span style="color:${color}">${c.tiempoLiturgico}</span></small></div><div style="display:flex; align-items:center; gap:15px;"><i class="fas fa-plus-circle add-to-prog" onclick="event.stopPropagation(); agregarAProg('${c.id}')"></i><i class="fas fa-play-circle" style="color:var(--accent); font-size:1.5rem;"></i></div></div>`; });
         showView('listView');
@@ -1287,6 +1291,21 @@
         document.getElementById('audioBtn').innerHTML = '<i class="fas fa-microphone"></i> AUDIO';
         estrofaCounter = 1; 
         setTimeout(() => { const newIdx = cantos.findIndex(c => c.id === id); if(newIdx !== -1) verDetalle(newIdx, true); else showView('homeView'); }, 500);
+    }
+
+    async function borrarCantoActual() {
+        if(!isAdmin) return;
+        const c = cantos[currentCantoId];
+        if(confirm(`¿Estás seguro de que deseas eliminar permanentemente "${c.titulo}"? Esta acción no se puede deshacer.`)) {
+            try {
+                await db.collection("cantos").doc(c.id).delete();
+                alert("Canto eliminado correctamente.");
+                goBack();
+            } catch (e) {
+                alert("Error al eliminar: " + e.message);
+            }
+        }
+        toggleTools();
     }
 
     function toggleTheme() { const isDark = document.body.getAttribute('data-theme') === 'dark'; document.body.setAttribute('data-theme', isDark ? 'light' : 'dark'); document.getElementById('themeIcon').src = isDark ? 'Iconos/luna.png' : 'Iconos/sol.png'; }
