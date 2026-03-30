@@ -44,9 +44,16 @@
 
         header { background: var(--primary); background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%); color: white; padding: 3.5rem 1rem 4rem; text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
         
-        .header-logo { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 55px; height: 55px; object-fit: contain; opacity: 0.9; cursor: pointer; z-index: 100; transition: transform 0.2s; }
+        .header-logo { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 55px; height: 55px; object-fit: contain; opacity: 0.9; cursor: pointer; z-index: 100; transition: all 0.3s; border-radius: 50%; }
         .header-logo:active { transform: translateX(-50%) scale(0.9); }
+        .header-logo.sync-active { box-shadow: 0 0 20px #D4AF37; border: 2px solid #D4AF37; animation: pulse-sync 2s infinite; }
         
+        @keyframes pulse-sync {
+            0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 10px #D4AF37; }
+            50% { transform: translateX(-50%) scale(1.1); box-shadow: 0 0 25px #D4AF37; }
+            100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 10px #D4AF37; }
+        }
+
         .header-title-img { height: 55px; width: 95%; max-width: 450px; object-fit: contain; margin-top: 25px; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3)); }
 
         .theme-toggle { position: absolute; left: 25px; top: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; }
@@ -287,7 +294,7 @@
 
 <header>
     <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()"><img src="Iconos/luna.png" id="themeIcon" alt="Modo"></button>
-    <img src="Iconos/logo.png" class="header-logo" alt="Logo">
+    <img src="Iconos/logo.png" id="headerLogo" class="header-logo" alt="Logo" onclick="toggleModoDirector()">
     <img src="Iconos/nombre.png" class="header-title-img" alt="Graduale Nostrum">
 </header>
 
@@ -332,12 +339,9 @@
 
             <div class="setting-card" id="dirigirCard" style="border: 2px solid var(--accent);">
                 <i class="fas fa-broadcast-tower"></i>
-                <h3>Dirigir Sesión</h3>
-                <p style="font-size: 0.75rem; color: #666;">Sincroniza tu pantalla con la de los demás músicos en tiempo real.</p>
+                <h3>Seguimiento Síncrono</h3>
+                <p style="font-size: 0.75rem; color: #666;">Permite que tu pantalla cambie automáticamente cuando el director abre un canto.</p>
                 <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
-                    <button id="btnActivarMando" class="btn btn-dark" style="width: 100%; justify-content: center;" onclick="toggleModoDirector()">
-                        ACTIVAR MANDO
-                    </button>
                     <button id="btnSeguirDirector" class="btn btn-gold" style="width: 100%; justify-content: center;" onclick="toggleSeguirDirector()">
                         SEGUIR DIRECTOR
                     </button>
@@ -609,16 +613,18 @@
 
     // --- FUNCIONES DE DIRIGIR (SINCRO) ---
     function toggleModoDirector() {
-        if(!isAdmin) return alert("Solo los administradores pueden dirigir.");
+        if(!isAdmin) return; 
         modoDirectorActivo = !modoDirectorActivo;
-        const btn = document.getElementById('btnActivarMando');
+        const logo = document.getElementById('headerLogo');
+        
         if(modoDirectorActivo) {
-            btn.innerText = "MANDO ACTIVO";
-            btn.style.background = "#b71c1c";
-            alert("Ahora lo que abras se sincronizará con los demás.");
+            logo.classList.add('sync-active');
+            // Al activar mando, si ya estamos en un detalle, sincronizar de una vez
+            if(currentCantoId !== null) sincronizarConMúsicos();
         } else {
-            btn.innerText = "ACTIVAR MANDO";
-            btn.style.background = "var(--primary)";
+            logo.classList.remove('sync-active');
+            // Limpiar sesión al desactivar mando si se desea
+            db.collection("sesion").doc("activa").delete();
         }
     }
 
@@ -626,22 +632,25 @@
         siguiendoDirector = !siguiendoDirector;
         const btn = document.getElementById('btnSeguirDirector');
         if(siguiendoDirector) {
-            btn.innerText = "SIGUIENDO...";
+            btn.innerText = "SIGUIENDO AL DIRECTOR...";
             btn.style.background = "#2e7d32";
             unsuscribeDirector = db.collection("sesion").doc("activa").onSnapshot(doc => {
                 if(doc.exists && !modoDirectorActivo) {
                     const data = doc.data();
                     const index = cantos.findIndex(c => c.id === data.cantoId);
-                    if(index !== -1 && (currentCantoId !== index || currentTranspose !== data.transpose)) {
-                        currentTranspose = data.transpose;
-                        verDetalle(index);
+                    if(index !== -1) {
+                        // Solo refrescar si es un cambio real para evitar bucles
+                        if(currentCantoId !== index || currentTranspose !== data.transpose) {
+                            currentTranspose = data.transpose;
+                            verDetalle(index);
+                        }
                     }
                 }
             });
         } else {
             btn.innerText = "SEGUIR DIRECTOR";
             btn.style.background = "var(--accent)";
-            if(unsuscribeDirector) unsuscribeDirector();
+            if(unsuscribeDirector) { unsuscribeDirector(); unsuscribeDirector = null; }
         }
     }
 
@@ -714,7 +723,6 @@
             fab.style.display = isAdmin ? "flex" : "none";
             if(editBtn) editBtn.style.display = isAdmin ? "flex" : "none";
             if(deleteBtn) deleteBtn.style.display = isAdmin ? "flex" : "none";
-            document.getElementById('btnActivarMando').style.display = isAdmin ? "flex" : "none";
 
         } else {
             isAdmin = false;
@@ -1223,6 +1231,8 @@
         const player = document.getElementById('audioPlayer');
         const container = document.getElementById('audioContainer');
         if (c.audioUrl) { player.src = c.audioUrl; container.style.display = 'block'; } else { container.style.display = 'none'; }
+        
+        // SINCRONIZACIÓN AUTOMÁTICA AL RENDERIZAR (Cambio de tono o canto)
         sincronizarConMúsicos();
     }
 
