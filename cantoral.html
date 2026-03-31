@@ -1160,7 +1160,7 @@
         ];
 
         let isChorusMode = false;
-        const htmlProcesado = c.letra.split('\n').map(linea => {
+        let htmlProcesado = c.letra.split('\n').map(linea => {
             const lineaLimpia = linea.trim();
             
             // Detección de marcadores
@@ -1195,6 +1195,9 @@
             if (isChorusMode && lineaLimpia !== "") return `<span class="chorus-content">${procesada}</span>`;
             return procesada;
         }).join('\n');
+
+        // REGLA PARA (BIS) EN CELESTE
+        htmlProcesado = htmlProcesado.replace(/\(BIS\)/gi, '<span style="color: #00BFFF; font-weight: bold;">(BIS)</span>');
 
         const visor = document.getElementById('viewLetra');
         visor.innerHTML = htmlProcesado;
@@ -1348,3 +1351,4 @@
 </script>
 </body>
 </html>
+
