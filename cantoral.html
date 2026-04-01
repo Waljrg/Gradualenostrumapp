@@ -49,7 +49,18 @@
 
         body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; transition: background 0.5s ease; line-height: 1.6; overflow-x: hidden; }
 
-        header { background: var(--primary); background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%); color: white; padding: 3.5rem 1rem 4rem; text-align: center; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+        header { background: var(--primary); background-image: url('base.png'); 
+    background-size: cover; 
+    background-position: center;
+    color: white; 
+    padding: 3.5rem 1rem 4rem; 
+    text-align: center; 
+    border-bottom-left-radius: 40px; 
+    border-bottom-right-radius: 40px; 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+    position: relative; 
+    overflow: hidden; 
+}
         
         .header-logo { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 55px; height: 55px; object-fit: contain; opacity: 0.9; cursor: pointer; z-index: 100; transition: all 0.3s; border-radius: 50%; }
         .header-logo:active { transform: translateX(-50%) scale(0.9); }
@@ -66,7 +77,7 @@
         .theme-toggle { position: absolute; left: 25px; top: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; }
         .theme-toggle img { width: 25px; height: 25px; }
 
-        .nav-tabs { display: flex; background: url('Iconos/fondo.png'); background-size: cover; margin: -30px 25px 25px; border-radius: var(--radius-md); padding: 8px; box-shadow: var(--shadow); position: relative; z-index: 10; border: var(--border); overflow-x: auto; scrollbar-width: none; justify-content: space-around; }
+        .nav-tabs { display: flex; background: url('Iconos/serafin.png'); background-size: cover; margin: -30px 25px 25px; border-radius: var(--radius-md); padding: 8px; box-shadow: var(--shadow); position: relative; z-index: 10; border: var(--border); overflow-x: auto; scrollbar-width: none; justify-content: space-around; }
         .nav-tabs::-webkit-scrollbar { display: none; }
         
         .tab-btn { flex: 1; padding: 2px; border: none; background: none; cursor: pointer; border-radius: 12px; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; height: 60px; overflow: hidden; }
@@ -627,7 +638,7 @@
         }
     }
 
-    // --- FUNCIONES DE DIRIGIR (SINCRO CORREGIDAS) ---
+    // --- FUNCIONES DE DIRIGIR (SINCRO) ---
     function toggleModoDirector() {
         if(!isAdmin) return; 
         modoDirectorActivo = !modoDirectorActivo;
@@ -635,9 +646,12 @@
         
         if(modoDirectorActivo) {
             logo.classList.add('sync-active');
+            // Al activar mando, si ya estamos en un detalle, sincronizar de una vez
             if(currentCantoId !== null) sincronizarConMúsicos();
         } else {
             logo.classList.remove('sync-active');
+            // Limpiar sesión al desactivar mando si se desea
+            db.collection("sesion").doc("activa").delete();
         }
     }
 
@@ -650,9 +664,9 @@
             unsuscribeDirector = db.collection("sesion").doc("activa").onSnapshot(doc => {
                 if(doc.exists && !modoDirectorActivo) {
                     const data = doc.data();
-                    // Buscar por el ID de Firebase guardado, no por índice
                     const index = cantos.findIndex(c => c.id === data.cantoId);
                     if(index !== -1) {
+                        // Solo refrescar si es un cambio real para evitar bucles
                         if(currentCantoId !== index || currentTranspose !== data.transpose) {
                             currentTranspose = data.transpose;
                             verDetalle(index);
@@ -668,10 +682,10 @@
     }
 
     async function sincronizarConMúsicos() {
-        if(isAdmin && modoDirectorActivo && currentCantoId !== null) {
+        if(modoDirectorActivo && currentCantoId !== null) {
             const c = cantos[currentCantoId];
             await db.collection("sesion").doc("activa").set({
-                cantoId: c.id,          // Enviamos ID único de Firebase
+                cantoId: c.id,
                 transpose: currentTranspose,
                 timestamp: Date.now()
             });
@@ -1176,6 +1190,7 @@
         let htmlProcesado = c.letra.split('\n').map(linea => {
             const lineaLimpia = linea.trim();
             
+            // Detección de marcadores
             let sectionClass = "";
             for(let rule of sectionRules) {
                 if(rule.regex.test(lineaLimpia)) {
@@ -1201,30 +1216,35 @@
                 return `<span class="chord">${resultado}</span>`;
             });
             
+            // ELIMINAR CORCHETES SOBRANTES EN EL VISOR
             procesada = procesada.replace(/[\[\]]/g, '');
 
             if (isChorusMode && lineaLimpia !== "") return `<span class="chorus-content">${procesada}</span>`;
             return procesada;
         }).join('\n');
 
+        // REGLA PARA (BIS) EN CELESTE
         htmlProcesado = htmlProcesado.replace(/\(BIS\)/gi, '<span style="color: #00BFFF; font-weight: bold;">(BIS)</span>');
 
         const visor = document.getElementById('viewLetra');
         visor.innerHTML = htmlProcesado;
         visor.style.fontSize = fontSize + "px";
         
+        // Mantener el estado de la vista al renderizar
         if (modoVistaCorista) visor.classList.add('hide-chords');
         else visor.classList.remove('hide-chords');
 
         let baseTono = c.tonalidad.replace(/m$/, ''); let esMenor = c.tonalidad.endsWith('m');
         let nuevoTono = transposeNote(baseTono, currentTranspose) + (esMenor ? "m" : "");
         
+        // --- LÓGICA BOTÓN MI TONO ---
         const myKeyStorageKey = `myKey_${c.id}`;
         const myKeySaved = localStorage.getItem(myKeyStorageKey);
         let btnMyKeyHtml = `<button class="btn-my-key ${myKeySaved ? 'active' : ''}" onclick="seleccionarMiTono('${c.id}')">
             <i class="fas fa-music"></i> ${myKeySaved ? myKeySaved : 'MI TONO'}
         </button>`;
 
+        // BADGE DE TONO ORIGINAL Y TRANSPO
         let transpoSign = currentTranspose >= 0 ? "+" : "";
         let transpoText = currentTranspose !== 0 ? `${transpoSign}${currentTranspose}` : "";
         let originalBadge = `<div class="badge-original-track">${c.tonalidad} ${transpoText}</div>`;
@@ -1242,10 +1262,11 @@
         const container = document.getElementById('audioContainer');
         if (c.audioUrl) { player.src = c.audioUrl; container.style.display = 'block'; } else { container.style.display = 'none'; }
         
-        // Sincronizar automáticamente al renderizar si somos el director
+        // SINCRONIZACIÓN AUTOMÁTICA AL RENDERIZAR (Cambio de tono o canto)
         sincronizarConMúsicos();
     }
 
+    // NUEVA FUNCIÓN MI TONO
     function seleccionarMiTono(cantoId) {
         let opciones = opcionesTonos.join(", ");
         let eleccion = prompt("Ingresa tu tono para este canto (Ej: G, Am, D, etc):\nDeja vacío para borrar.", localStorage.getItem(`myKey_${cantoId}`) || "");
