@@ -212,7 +212,6 @@
 
     auth.onAuthStateChanged(async (user) => {
         if (user) {
-            // El usuario Reyes (waljrg@gmail.com) es admin por defecto
             if(user.email === DIRECTOR_EMAIL) {
                 isAdmin = true;
             } else {
@@ -220,22 +219,20 @@
                 isAdmin = doc.exists && doc.data().rol === "admin";
             }
             console.log("Usuario identificado:", user.email, "Es Admin:", isAdmin);
-            
-            // Redirección tras login exitoso
             window.location.href = 'index.html';
         } else {
             isAdmin = false;
         }
     });
 
-    // Manejar el resultado de la redirección al volver a la página
+    // Manejar el resultado del login
     auth.getRedirectResult().catch((err) => {
         if (err.code !== 'auth/redirect-cancelled-by-user') {
             alert("Error al volver del inicio de sesión: " + err.message);
         }
     });
 
-    // 4. Funciones de Base de Datos (CRUD de Cantos)
+    // 4. Funciones de Base de Datos
     async function guardarCanto(cantoData, currentId = null) {
         try {
             if(currentId) {
@@ -260,7 +257,7 @@
         });
     }
 
-    // 5. Lógica de Sincronización (Modo Director)
+    // 5. Lógica de Sincronización
     async function sincronizarSesion(cantoId, transpose) {
         if(!isAdmin) return;
         await db.collection("sesion").doc("activa").set({
@@ -278,7 +275,7 @@
         });
     }
 
-    // 6. Autenticación (Cambios realizados para evitar bloqueos)
+    // 6. Autenticación (Popups habilitados para evitar pérdida de estado en la App)
     async function loginEmail() {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('password').value;
@@ -297,15 +294,15 @@
 
     async function loginGoogle() {
         try {
-            // Se usa Redirect en lugar de Popup para evitar bloqueos del navegador
-            await auth.signInWithRedirect(googleProvider);
+            // Cambiado a Popup para que funcione correctamente dentro del APK
+            await auth.signInWithPopup(googleProvider);
         } catch (err) { alert("Error Google: " + err.message); }
     }
 
     async function loginFacebook() {
         try {
-            // Se usa Redirect en lugar de Popup para evitar bloqueos del navegador
-            await auth.signInWithRedirect(facebookProvider);
+            // Cambiado a Popup para que funcione correctamente dentro del APK
+            await auth.signInWithPopup(facebookProvider);
         } catch (err) { alert("Error Facebook: " + err.message); }
     }
 
