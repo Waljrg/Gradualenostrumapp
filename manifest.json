@@ -1,0 +1,22 @@
+{
+  "name": "Graduale Nostrum",
+  "short_name": "Graduale",
+  "description": "Edición Galería - Cancionero Litúrgico",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#FDFBF7",
+  "theme_color": "#2C211F",
+  "icons": [
+    {
+      "src": "Iconos/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "Iconos/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
