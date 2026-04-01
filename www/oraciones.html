@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Oraciones del Coro - Estilo Misal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            background-color: #e8e2d2;
+            background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            color: #2c2420;
+            font-family: 'Playfair Display', serif;
+            line-height: 1.8;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Navegación */
+        .selector-oracion {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .btn-misa {
+            background: #8b4513;
+            color: #d4af37;
+            font-family: 'Cinzel', serif;
+            border: 2px solid #d4af37;
+            padding: 10px 25px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .btn-misa:hover {
+            background: #d4af37;
+            color: #8b4513;
+        }
+
+        .btn-active {
+            background: #fff !important;
+            color: #8b4513 !important;
+            border: 2px solid #8b4513 !important;
+        }
+
+        .contenedor {
+            max-width: 700px;
+            background: #ffffff;
+            padding: 50px 70px;
+            border: 4px double #8b4513;
+            outline: 1px solid #d4af37;
+            outline-offset: -15px;
+            border-radius: 2px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            position: relative;
+            display: none; /* Se controla con JS */
+        }
+
+        .contenedor.activo {
+            display: block;
+        }
+
+        /* Adornos */
+        .contenedor::before, .contenedor::after, 
+        .esquina-inf-izq, .esquina-inf-der {
+            content: "✦";
+            position: absolute;
+            color: #d4af37;
+            font-size: 25px;
+        }
+        .contenedor::before { top: 20px; left: 20px; }
+        .contenedor::after { top: 20px; right: 20px; }
+        .esquina-inf-izq { bottom: 20px; left: 20px; }
+        .esquina-inf-der { bottom: 20px; right: 20px; }
+
+        h2 {
+            font-family: 'Cinzel', serif;
+            color: #8b4513;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+
+        .subtitulo-adorno {
+            text-align: center;
+            color: #d4af37;
+            font-size: 0.8rem;
+            letter-spacing: 5px;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+
+        .rito-inicial {
+            text-align: center;
+            font-size: 0.95rem;
+            margin-bottom: 40px;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .oracion-principal::first-letter {
+            float: left;
+            font-family: 'Cinzel', serif;
+            font-size: 4.5rem;
+            line-height: 0.8;
+            padding: 10px 12px 5px 0;
+            color: #8b4513;
+            font-weight: bold;
+            text-shadow: 2px 2px 0px #d4af3733;
+        }
+
+        .oracion {
+            white-space: pre-line;
+            text-align: justify;
+            font-style: italic;
+            font-size: 1.15rem;
+            margin: 30px 0;
+            color: #2c2420;
+        }
+
+        .separador-floral {
+            text-align: center;
+            color: #d4af37;
+            margin: 40px 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .separador-floral::before, .separador-floral::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to var(--dir, right), transparent, #d4af37);
+            margin: 0 20px;
+        }
+        .separador-floral::after { --dir: left; }
+
+        .pie {
+            margin-top: 50px;
+            text-align: center;
+            border-top: 2px solid #8b4513;
+            padding-top: 30px;
+            font-size: 0.9rem;
+        }
+
+        .resaltado {
+            color: #b8860b;
+            font-weight: bold;
+            font-family: 'Cinzel', serif;
+        }
+
+        .instruccion-rubrica {
+            color: #a52a2a;
+            font-size: 0.85rem;
+            font-style: normal;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="selector-oracion">
+        <button class="btn-misa btn-active" onclick="mostrarOracion('inicial', this)">Oración Inicial</button>
+        <button class="btn-misa" onclick="mostrarOracion('final', this)">Oración Final</button>
+    </div>
+
+    <div id="oracion-inicial" class="contenedor activo">
+        <div class="esquina-inf-izq"></div>
+        <div class="esquina-inf-der"></div>
+        <div style="text-align: center; color: #d4af37; margin-bottom: 10px;"><i class="fas fa-scroll"></i></div>
+        
+        <h2>Oración del Coro</h2>
+        <div class="subtitulo-adorno">— Ad maiorem Dei gloriam —</div>
+        
+        <div class="rito-inicial">
+            <p><span class="instruccion-rubrica">♱</span> Por la señal de la Santa Cruz, de nuestros enemigos, líbranos Señor, Dios nuestro. En el nombre del Padre, y del Hijo, y del Espíritu Santo. Amén.</p>
+            <p style="margin-top:15px;">
+               <span class="resaltado">V/</span> Señor, abre mis labios. <br>
+               <span class="resaltado">R/</span> Y mi boca proclamará tu alabanza.
+            </p>
+        </div>
+        
+        <div class="oracion oracion-principal">
+            Señor Dios nuestro, que nos has elegido para servir y poner a disposición tuyo los dones y talentos que nos has regalado. Nos has elegido para que con nuestra voz y nuestra música te alabemos en la liturgia con todos nuestros hermanos.
+
+            Te pedimos sabiduría y entendimiento para poder cumplir esta misión con humildad y entrega. No permitas que la soberbia se apodere de nosotros, sino que concédenos reconocer que todo se debe a Ti.
+
+            Enséñanos a servir orando, a orar cantando y cantar sirviendo. Que no busquemos el reconocimiento personal, sino que ayudemos a nuestra comunidad a darte gloria a Ti, nuestro Dios y Señor y poder decir con el salmista: “Para ti es mi música Señor”.
+        </div>
+
+        <div class="separador-floral"><i class="fas fa-music"></i></div>
+
+        <div class="oracion">
+            Padre celestial, con la gracia del Espíritu Santo, haznos conscientes de que al colaborar de tu misterio pascual estamos ayudando a traer tu gozo al mundo y a la vez llevando a todos a Ti.
+
+            Invocando la intercesión de la Madre de tu Hijo, María Santísima y Santa Cecilia nuestra patrona te rogamos que junto a Ellas nosotros también proclamemos las grandezas del Señor.
+            ¡Amén!
+        </div>
+
+        <div class="pie">
+            <p><span class="instruccion-rubrica">Oremos:</span> Padre Nuestro | Ave María | Gloria</p>
+            <p style="margin-top: 20px;">
+                <span class="resaltado">V/</span> Santa Cecilia, virgen y mártir, <br>
+                <span class="resaltado">R/</span> Ruega por nosotros. <i class="fas fa-pray"></i>
+            </p>
+        </div>
+    </div>
+
+    <div id="oracion-final" class="contenedor">
+        <div class="esquina-inf-izq"></div>
+        <div class="esquina-inf-der"></div>
+        <div style="text-align: center; color: #d4af37; margin-bottom: 10px;"><i class="fas fa-leaf"></i></div>
+        
+        <h2>Acción de Gracias</h2>
+        <div class="subtitulo-adorno">— Post ensayo —</div>
+        
+        <div class="rito-inicial">
+            <p><span class="instruccion-rubrica">♱</span> Por la señal de la Santa Cruz, de nuestros enemigos, líbranos Señor, Dios nuestro. En el nombre del Padre, y del Hijo, y del Espíritu Santo. Amén.</p>
+        </div>
+        
+        <div class="oracion oracion-principal">
+            Señor, te damos gracias de todo corazón por este tiempo que nos has permitido compartir en torno a la música y el servicio. Gracias por el don de la vida y por el talento que has depositado en nuestras manos y en nuestras voces; reconocemos que cada nota y cada acorde son un regalo que viene de ti.
+
+            Te agradecemos por la paciencia, la escucha y la armonía que han reinado en este ensayo. Bendice el esfuerzo que hemos puesto al practicar cada canto, para que no se quede solo en una ejecución técnica, sino que se transforme en una verdadera oración que nazca de un espíritu sincero.
+        </div>
+
+        <div class="separador-floral"><i class="fas fa-church"></i></div>
+
+        <div class="oracion">
+            Permite que estos cantos que hoy preparamos con dedicación, den fruto en el momento de la celebración. Que nuestra música sea un puente que invite a nuestros hermanos a encontrarse contigo, y que, al escucharnos, sus corazones se llenen de tu paz y de tu esperanza.
+
+            Danos la constancia para seguir mejorando y la humildad para recordar siempre que cantamos para tu gloria y no para la nuestra. Quédate con nosotros al regresar a nuestros hogares y mantennos unidos en la caridad. Amén.
+        </div>
+
+        <div class="pie">
+            <p>
+                <span class="resaltado">V/</span> Santa Cecilia <br>
+                <span class="resaltado">R/</span> Ruega por nosotros. <br><br>
+                <span class="resaltado">V/</span> San Francisco <br>
+                <span class="resaltado">R/</span> Ruega por nosotros.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function mostrarOracion(tipo, elemento) {
+            // Ocultar todos los contenedores
+            document.querySelectorAll('.contenedor').forEach(c => c.classList.remove('activo'));
+            // Quitar clase activa de botones
+            document.querySelectorAll('.btn-misa').forEach(b => b.classList.remove('btn-active'));
+            
+            // Mostrar el seleccionado
+            document.getElementById('oracion-' + tipo).classList.add('activo');
+            elemento.classList.add('btn-active');
+            
+            // Scroll al inicio de la oración
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+    </script>
+</body>
+</html>

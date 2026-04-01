@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Plataforma Musical | Inicio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        :root {
+            --primary: #2C211F; 
+            --accent: #B8860B;  
+            --text-light: #E8D4A2;
+            --surface: rgba(255, 255, 255, 0.95); 
+            --text-dark: #3E322E;
+            --radius-lg: 20px;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            --border-gold: 2px solid #D4AF37;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-image: url('Iconos/fondo.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-color: #FDFBF7;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%);
+            color: white;
+            padding: 1.5rem 1rem 2.5rem;
+            text-align: center;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: var(--shadow);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.6rem;
+            margin: 0;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .hub-container {
+            padding: 10px;
+            max-width: 400px;
+            margin: -20px auto 0;
+            width: 100%;
+            flex: 1;
+            position: relative;
+            z-index: 20;
+        }
+
+        .grid-apps {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px;
+            padding: 10px;
+        }
+
+        .app-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: var(--border-gold) !important;
+            text-decoration: none;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            transition: all 0.2s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            text-align: center;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        /* Botón especial de Director */
+        #btnDirector {
+            display: none; /* Oculto por defecto */
+            border: 3px double var(--accent) !important;
+        }
+
+        .login-bar {
+            grid-column: span 2;
+            background: var(--primary);
+            color: var(--text-light);
+            padding: 15px;
+            border-radius: 15px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 5px;
+            border: 1px solid var(--accent);
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .login-bar:active { opacity: 0.8; transform: scale(0.98); }
+        .app-card:active { transform: scale(0.95); }
+        .app-card i { font-size: 1.5rem; color: var(--accent); margin-bottom: 6px; }
+        .app-card span { font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.1; }
+
+        footer {
+            padding: 15px; text-align: center;
+            background: rgba(253, 251, 247, 0.92); 
+            border-top: 1px solid rgba(184, 134, 11, 0.2);
+            margin-top: 20px;
+        }
+
+        .footer-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 8px; }
+        .footer-links a { text-decoration: none; color: var(--text-dark); font-size: 0.6rem; font-weight: 600; text-transform: uppercase; opacity: 0.8; }
+        .copyright { font-size: 0.55rem; color: #666; margin: 0; line-height: 1.2; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="welcome-text">
+        <h1 class="header-title">Graduale Nostrum</h1>
+    </div>
+</header>
+
+<div class="hub-container">
+    <div class="grid-apps">
+        <a onclick="accesoProtegido('cantoral.html')" class="app-card">
+            <i class="fas fa-book-open"></i>
+            <span>Cantoral</span>
+        </a>
+        <a onclick="accesoProtegido('social.html')" class="app-card">
+            <i class="fas fa-users"></i>
+            <span>Social</span>
+        </a>
+        <a onclick="accesoProtegido('oraciones.html')" class="app-card">
+            <i class="fas fa-hands-praying"></i>
+            <span>Oraciones</span>
+        </a>
+        <a onclick="accesoProtegido('agenda.html')" class="app-card">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Agenda</span>
+        </a>
+        <a onclick="accesoProtegido('entrenamiento.html')" class="app-card">
+            <i class="fas fa-dumbbell"></i>
+            <span>Entrenamiento</span>
+        </a>
+        <a onclick="accesoProtegido('piano.html')" class="app-card">
+            <i class="fas fa-music"></i>
+            <span>Piano</span>
+        </a>
+
+        <a id="btnDirector" href="director.html" class="app-card">
+            <i class="fas fa-star"></i>
+            <span style="color: var(--accent);">Director</span>
+        </a>
+
+        <div id="authBtn" class="login-bar" onclick="gestionarSesion()">
+            <i id="authIcon" class="fas fa-sign-in-alt"></i>
+            <span id="authText">INICIAR SESIÓN</span>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="footer-links">
+        <a href="acercade.html">Acerca de</a>
+        <a href="pdp.html">Política de Privacidad</a>
+    </div>
+    <p class="copyright">
+        &copy; 2026 Walter Reyes y Coro Parroquial San Francisco de Asís - Camoapa
+    </p>
+</footer>
+
+<script>
+    // Configuración de Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyCx_3nwwj3mKAEmtNVW0OaKamuaovhcM-w",
+        authDomain: "graduale-nostrum.firebaseapp.com",
+        projectId: "graduale-nostrum",
+        storageBucket: "graduale-nostrum.firebasestorage.app",
+        messagingSenderId: "534378937675",
+        appId: "1:534378937675:web:677bbc4eb55ef3e6ed7cce",
+        measurementId: "G-LJJLQXQXY1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const DIRECTOR_EMAIL = "waljrg@gmail.com";
+    let usuarioLogueado = false;
+
+    // Monitor de estado de sesión
+    auth.onAuthStateChanged((user) => {
+        const authText = document.getElementById('authText');
+        const authIcon = document.getElementById('authIcon');
+        const btnDirector = document.getElementById('btnDirector');
+
+        if (user) {
+            usuarioLogueado = true;
+            authText.innerText = "CERRAR SESIÓN";
+            authIcon.className = "fas fa-sign-out-alt";
+            
+            // Lógica de visibilidad del botón Director
+            if (user.email === DIRECTOR_EMAIL) {
+                btnDirector.style.display = "flex";
+            } else {
+                btnDirector.style.display = "none";
+            }
+        } else {
+            usuarioLogueado = false;
+            authText.innerText = "INICIAR SESIÓN";
+            authIcon.className = "fas fa-sign-in-alt";
+            btnDirector.style.display = "none";
+        }
+    });
+
+    // Lógica del botón inferior
+    function gestionarSesion() {
+        if (usuarioLogueado) {
+            auth.signOut().then(() => {
+                alert("Has cerrado sesión.");
+            }).catch((error) => {
+                console.error("Error al cerrar sesión:", error);
+            });
+        } else {
+            window.location.href = "login.html";
+        }
+    }
+
+    // Lógica de los 6 botones protegidos
+    function accesoProtegido(url) {
+        if (usuarioLogueado) {
+            window.location.href = url;
+        } else {
+            alert("Debes iniciar sesión para usar esta herramienta.");
+            window.location.href = "login.html";
+        }
+    }
+</script>
+
+</body>
+</html>
+

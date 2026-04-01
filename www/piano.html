@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        :root { 
+            --madera: #3e2723; --dorado: #c5a059; --brillo: #f4d03f; 
+            --blanco: #fffcf5; --negro: #1a1a1a; --fondo: #e6dfcf;
+            --sombra: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        body { 
+            text-align: center; background: var(--fondo); padding: 20px; 
+            font-family: 'Segoe UI', serif; color: #333; 
+            margin: 0; overflow-x: hidden; 
+        }
+        
+        .metronomo-container { 
+            background: linear-gradient(135deg, var(--madera), #2a1a17); padding: 20px; border-radius: 12px; 
+            color: var(--dorado); margin-bottom: 25px; display: inline-flex; 
+            justify-content: center; gap: 20px; align-items: center; border: 1px solid var(--dorado);
+            box-shadow: var(--sombra);
+        }
+        
+        .controles { margin-bottom: 30px; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        button { 
+            padding: 12px 24px; background: var(--dorado); border: none; cursor: pointer; 
+            color: white; font-weight: 600; border-radius: 8px; transition: all 0.3s ease;
+            box-shadow: var(--sombra); text-transform: uppercase; letter-spacing: 1px; font-size: 12px;
+        }
+        button:hover { background: var(--brillo); color: var(--madera); transform: translateY(-3px); }
+        button.pedal-activo { background: var(--madera); color: var(--dorado); border: 1px solid var(--dorado); }
+
+        .modal {
+            display: none; position: fixed; z-index: 100; left: 0; top: 0; 
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.7);
+        }
+        .modal-content {
+            background-color: var(--madera); margin: 15% auto; padding: 30px;
+            border: 2px solid var(--dorado); width: 300px; border-radius: 15px;
+            color: var(--blanco); box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        .modal-content h2 { color: var(--dorado); margin-top: 0; font-size: 1.2rem; }
+        .inst-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 20px; }
+        .inst-btn { background: #5d4037; border: 1px solid var(--dorado); }
+        .inst-btn.active { background: var(--dorado); color: var(--madera); }
+
+        #pedal-visual { width: 40px; height: 40px; background: #888; margin: 10px auto; border-radius: 50%; border: 4px solid #555; transition: all 0.2s; }
+        .pedal-presionado { transform: scale(0.9); background: var(--madera) !important; box-shadow: 0 0 20px var(--brillo); border-color: var(--brillo) !important; }
+
+        #piano-scroll-container {
+            width: 100vw; overflow-x: auto; padding: 20px 0;
+            margin-bottom: 20px; scroll-behavior: smooth;
+        }
+
+        #zoom-wrapper { transition: transform 0.2s; transform-origin: top center; display: inline-block; }
+        
+        .piano-container { 
+            display: flex; background: #2d1b18; padding: 20px; border: 8px solid var(--madera); 
+            border-radius: 16px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); width: fit-content; margin: 0 auto;
+        }
+
+        .tecla { 
+            display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12px; 
+            font-size: 11px; font-weight: bold; cursor: pointer; user-select: none; border: 1px solid #ccc;
+            transition: all 0.1s;
+        }
+        .blanca { width: 14.28vw; height: 200px; background: var(--blanco); border-radius: 0 0 6px 6px; min-width: 50px; }
+        .negra { width: 9vw; height: 130px; background: var(--negro); color: var(--dorado); margin-left: -4.5vw; margin-right: -4.5vw; z-index: 2; border-radius: 0 0 4px 4px; min-width: 35px; }
+        
+        .tecla-activa { background: var(--brillo) !important; color: black !important; transform: scale(0.98); }
+
+        .acordes-scroll-container {
+            width: 100%;
+            padding: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .acordes-section { 
+            margin: 20px auto; padding: 30px; background: #2d1b18; border-radius: 16px; 
+            color: var(--blanco); box-shadow: var(--sombra); display: block;
+            width: 95%; max-width: 1300px;
+        }
+        
+        #contenedor-botones { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); 
+            gap: 8px; 
+            margin-top: 20px; 
+            margin-bottom: 20px; 
+        }
+
+        .acorde-btn { background: var(--dorado); color: white; border: none; font-size: 11px; padding: 10px 5px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        .acorde-btn:hover { background: var(--brillo); color: var(--madera); }
+        .cancelar-btn { background: #8e2424; width: 100%; padding: 12px; grid-column: 1 / -1; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="metronomo-container">
+    <span>⏱️</span>
+    <label>BPM: <input type="number" id="bpm" value="120" min="40" max="240" style="width: 50px; padding: 5px; border-radius: 4px;"></label>
+    <button id="btnMetronomo" onclick="toggleMetronomo()">🎵 Iniciar Metrónomo</button>
+</div>
+
+<div class="controles">
+    <button onclick="abrirModal()">🎹 Instrumento</button>
+    <button onclick="cambiarSistema()">🌐 Sistema</button>
+    <button onclick="cambiarZoom(0.1)">➕ Zoom</button>
+    <button onclick="cambiarZoom(-0.1)">➖ Zoom</button>
+    <button id="pedalBtn" onclick="togglePedal()">🦶 Pedal (OFF)</button>
+</div>
+
+<div id="modalInstrumento" class="modal">
+    <div class="modal-content">
+        <h2>Elegir Sonido</h2>
+        <div class="inst-grid">
+            <button class="inst-btn active" onclick="setInst('piano_cola', this)">Piano de Cola</button>
+            <button class="inst-btn" onclick="setInst('violin', this)">Violín</button>
+            <button class="inst-btn" onclick="setInst('guitarra', this)">Guitarra</button>
+            <button class="inst-btn" onclick="setInst('strings', this)">Strings</button>
+            <button class="inst-btn" onclick="setInst('piano_electrico', this)">Piano Eléctrico</button>
+            <button class="inst-btn" onclick="setInst('voces', this)">Voces</button>
+        </div>
+        <button onclick="cerrarModal()" style="margin-top: 20px; width: 100%; background: #8e2424;">Cerrar</button>
+    </div>
+</div>
+
+<div id="pedal-visual"></div>
+
+<div id="piano-scroll-container">
+    <div id="zoom-wrapper">
+        <div class="piano-container" id="piano"></div>
+    </div>
+</div>
+
+<div class="acordes-scroll-container">
+    <div class="acordes-section">
+        <h3>📜 Diccionario de Acordes (48 Acordes)</h3>
+        <div id="contenedor-botones"></div>
+        <button class="acorde-btn cancelar-btn" onclick="cancelarSeleccion()">❌ Cancelar Selección</button>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let esAmericano = true; let pedalSustain = false; let escala = 1.0;
+    let metronomoInterval = null;
+    let instrumentoActual = 'piano_cola';
+
+    const notasInfo = [
+        { amer: 'C', lat: 'Do', b: false }, { amer: 'C#', lat: 'Do#', b: true },
+        { amer: 'D', lat: 'Re', b: false }, { amer: 'D#', lat: 'Re#', b: true },
+        { amer: 'E', lat: 'Mi', b: false }, { amer: 'F', lat: 'Fa', b: false },
+        { amer: 'F#', lat: 'Fa#', b: true }, { amer: 'G', lat: 'Sol', b: false },
+        { amer: 'G#', lat: 'Sol#', b: true }, { amer: 'A', lat: 'La', b: false },
+        { amer: 'A#', lat: 'La#', b: true }, { amer: 'B', lat: 'Si', b: false }
+    ];
+
+    const acordesDef = [
+        // Normales (Mayores y Menores) - 24
+        {amer: 'C', lat: 'Do', notas: ['C4','E4','G4']}, {amer: 'Cm', lat: 'Dom', notas: ['C4','D#4','G4']},
+        {amer: 'C#', lat: 'Do#', notas: ['C#4','F4','G#4']}, {amer: 'C#m', lat: 'Do#m', notas: ['C#4','E4','G#4']},
+        {amer: 'D', lat: 'Re', notas: ['D4','F#4','A4']}, {amer: 'Dm', lat: 'Rem', notas: ['D4','F4','A4']},
+        {amer: 'D#', lat: 'Re#', notas: ['D#4','G4','A#4']}, {amer: 'D#m', lat: 'Re#m', notas: ['D#4','F#4','A#4']},
+        {amer: 'E', lat: 'Mi', notas: ['E4','G#4','B4']}, {amer: 'Em', lat: 'Mim', notas: ['E4','G4','B4']},
+        {amer: 'F', lat: 'Fa', notas: ['F4','A4','C5']}, {amer: 'Fm', lat: 'Fam', notas: ['F4','G#4','C5']},
+        {amer: 'F#', lat: 'Fa#', notas: ['F#4','A#4','C#5']}, {amer: 'F#m', lat: 'Fa#m', notas: ['F#4','A4','C#5']},
+        {amer: 'G', lat: 'Sol', notas: ['G4','B4','D5']}, {amer: 'Gm', lat: 'Solm', notas: ['G4','A#4','D5']},
+        {amer: 'G#', lat: 'Sol#', notas: ['G#4','C5','D#5']}, {amer: 'G#m', lat: 'Sol#m', notas: ['G#4','B4','D#5']},
+        {amer: 'A', lat: 'La', notas: ['A4','C#5','E5']}, {amer: 'Am', lat: 'Lam', notas: ['A4','C5','E5']},
+        {amer: 'A#', lat: 'La#', notas: ['A#4','D5','F5']}, {amer: 'A#m', lat: 'La#m', notas: ['A#4','C#5','F5']},
+        {amer: 'B', lat: 'Si', notas: ['B4','D#5','F#5']}, {amer: 'Bm', lat: 'Sim', notas: ['B4','D5','F#5']},
+        
+        // De Séptima (Dominante 7 y Menor 7) - 24
+        {amer: 'C7', lat: 'Do7', notas: ['C4','E4','G4','A#4']}, {amer: 'Cm7', lat: 'Dom7', notas: ['C4','D#4','G4','A#4']},
+        {amer: 'C#7', lat: 'Do#7', notas: ['C#4','F4','G#4','B4']}, {amer: 'C#m7', lat: 'Do#m7', notas: ['C#4','E4','G#4','B4']},
+        {amer: 'D7', lat: 'Re7', notas: ['D4','F#4','A4','C5']}, {amer: 'Dm7', lat: 'Rem7', notas: ['D4','F4','A4','C5']},
+        {amer: 'D#7', lat: 'Re#7', notas: ['D#4','G4','A#4','C#5']}, {amer: 'D#m7', lat: 'Re#m7', notas: ['D#4','F#4','A#4','C#5']},
+        {amer: 'E7', lat: 'Mi7', notas: ['E4','G#4','B4','D5']}, {amer: 'Em7', lat: 'Mim7', notas: ['E4','G4','B4','D5']},
+        {amer: 'F7', lat: 'Fa7', notas: ['F4','A4','C5','D#5']}, {amer: 'Fm7', lat: 'Fam7', notas: ['F4','G#4','C5','D#5']},
+        {amer: 'F#7', lat: 'Fa#7', notas: ['F#4','A#4','C#5','E5']}, {amer: 'F#m7', lat: 'Fa#m7', notas: ['F#4','A4','C#5','E5']},
+        {amer: 'G7', lat: 'Sol7', notas: ['G4','B4','D5','F5']}, {amer: 'Gm7', lat: 'Solm7', notas: ['G4','A#4','D5','F5']},
+        {amer: 'G#7', lat: 'Sol#7', notas: ['G#4','C5','D#5','F#5']}, {amer: 'G#m7', lat: 'Sol#m7', notas: ['G#4','B4','D#5','F#5']},
+        {amer: 'A7', lat: 'La7', notas: ['A4','C#5','E5','G5']}, {amer: 'Am7', lat: 'Lam7', notas: ['A4','C5','E5','G5']},
+        {amer: 'A#7', lat: 'La#7', notas: ['A#4','D5','F5','G#5']}, {amer: 'A#m7', lat: 'La#m7', notas: ['A#4','C#5','F5','G#5']},
+        {amer: 'B7', lat: 'Si7', notas: ['B4','D#5','F#5','A5']}, {amer: 'Bm7', lat: 'Sim7', notas: ['B4','D5','F#5','A5']}
+    ];
+
+    function abrirModal() { document.getElementById('modalInstrumento').style.display = 'block'; }
+    function cerrarModal() { document.getElementById('modalInstrumento').style.display = 'none'; }
+    function setInst(inst, btn) {
+        instrumentoActual = inst;
+        document.querySelectorAll('.inst-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        cerrarModal();
+    }
+
+    function toggleMetronomo() {
+        const btn = document.getElementById('btnMetronomo');
+        if (metronomoInterval) {
+            clearInterval(metronomoInterval);
+            metronomoInterval = null;
+            btn.innerText = "🎵 Iniciar Metrónomo";
+        } else {
+            const bpm = document.getElementById('bpm').value;
+            const ms = 60000 / bpm;
+            metronomoInterval = setInterval(clickMetronomo, ms);
+            btn.innerText = "🛑 Detener Metrónomo";
+        }
+    }
+
+    function clickMetronomo() {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    function renderizarPiano() {
+        const piano = document.getElementById('piano');
+        piano.innerHTML = '';
+        for (let oct = 2; oct <= 6; oct++) {
+            notasInfo.forEach((n, i) => {
+                const tecla = document.createElement('div');
+                tecla.className = `tecla ${n.b ? 'negra' : 'blanca'}`;
+                tecla.id = `tecla-${n.amer}${oct}`;
+                tecla.innerText = (esAmericano ? n.amer : n.lat) + oct;
+                tecla.onclick = () => tocarNota(440 * Math.pow(2, ((i + (oct - 4) * 12) - 9) / 12));
+                piano.appendChild(tecla);
+            });
+        }
+        renderizarBotones();
+        setTimeout(centrarEnRango4, 100);
+    }
+
+    function centrarEnRango4() {
+        const teclaDo4 = document.getElementById('tecla-C4');
+        const container = document.getElementById('piano-scroll-container');
+        if (teclaDo4 && container) {
+            container.scrollLeft = teclaDo4.offsetLeft;
+        }
+    }
+
+    function renderizarBotones() {
+        const contenedor = document.getElementById('contenedor-botones');
+        contenedor.innerHTML = '';
+        acordesDef.forEach(acorde => {
+            const btn = document.createElement('button');
+            btn.innerText = esAmericano ? acorde.amer : acorde.lat;
+            btn.className = 'acorde-btn';
+            btn.onclick = () => resaltarAcorde(acorde.notas);
+            contenedor.appendChild(btn);
+        });
+    }
+
+    function tocarNota(freq) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const masterGain = audioCtx.createGain();
+        const filter = audioCtx.createBiquadFilter();
+        
+        let dur = pedalSustain ? 4.0 : 1.2;
+        let type = 'triangle';
+        let attack = 0.01;
+
+        switch(instrumentoActual) {
+            case 'violin':
+                type = 'sawtooth'; attack = 0.2; dur = pedalSustain ? 3.0 : 1.5;
+                filter.frequency.setValueAtTime(3000, audioCtx.currentTime); break;
+            case 'guitarra':
+                type = 'sine'; attack = 0.005; dur = pedalSustain ? 3.0 : 1.0;
+                filter.frequency.setValueAtTime(1200, audioCtx.currentTime); break;
+            case 'strings':
+                type = 'sawtooth'; attack = 0.4; dur = 3.0;
+                filter.frequency.setValueAtTime(1500, audioCtx.currentTime); break;
+            case 'piano_electrico':
+                type = 'square'; attack = 0.01;
+                filter.frequency.setValueAtTime(1000, audioCtx.currentTime); break;
+            case 'voces':
+                type = 'sawtooth'; attack = 0.3;
+                filter.frequency.setValueAtTime(800, audioCtx.currentTime); break;
+            default: 
+                type = 'triangle';
+                filter.frequency.setValueAtTime(2000, audioCtx.currentTime);
+        }
+
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        filter.type = 'lowpass';
+        masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+        masterGain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + attack);
+        masterGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        osc.connect(filter); filter.connect(masterGain); masterGain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + dur);
+    }
+
+    function togglePedal() {
+        pedalSustain = !pedalSustain;
+        document.getElementById('pedalBtn').innerText = pedalSustain ? '🦶 Pedal (ON)' : '🦶 Pedal (OFF)';
+        document.getElementById('pedalBtn').className = pedalSustain ? 'pedal-activo' : '';
+        document.getElementById('pedal-visual').className = pedalSustain ? 'pedal-presionado' : '';
+    }
+
+    function cambiarSistema() { esAmericano = !esAmericano; renderizarPiano(); }
+    function cambiarZoom(d) { escala = Math.min(Math.max(escala + d, 0.5), 2.5); document.getElementById('zoom-wrapper').style.transform = `scale(${escala})`; centrarEnRango4(); }
+
+    function resaltarAcorde(notasAcorde) {
+        document.querySelectorAll('.tecla').forEach(t => t.classList.remove('tecla-activa'));
+        notasAcorde.forEach(id => {
+            const el = document.getElementById(`tecla-${id}`);
+            if (el) {
+                el.classList.add('tecla-activa');
+                const i = notasInfo.findIndex(n => n.amer === id.replace(/[0-9]/g, ''));
+                const oct = parseInt(id.replace(/[^0-9]/g, ''));
+                tocarNota(440 * Math.pow(2, ((i + (oct - 4) * 12) - 9) / 12));
+            }
+        });
+    }
+
+    function cancelarSeleccion() {
+        document.querySelectorAll('.tecla').forEach(t => t.classList.remove('tecla-activa'));
+    }
+
+    renderizarPiano();
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('modalInstrumento')) cerrarModal();
+    }
+</script>
+</body>
+</html>

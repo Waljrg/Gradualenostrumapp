@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Acceso | Graduale Nostrum</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #2C211F; 
+            --accent: #B8860B;  
+            --accent-light: #E8D4A2; 
+            --bg: #FDFBF7;
+            --surface: #FFFFFF;
+            --text: #3E322E;
+            --border: 1px solid rgba(184, 134, 11, 0.3);
+            --shadow: 0 15px 35px rgba(44, 33, 31, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            background-image: url('Iconos/fondo.png'); 
+            background-size: cover;
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .login-card {
+            background: var(--surface);
+            width: 90%;
+            max-width: 400px;
+            padding: 40px 30px;
+            border-radius: 30px;
+            box-shadow: var(--shadow);
+            border: 2px solid var(--accent);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 15px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+
+        .divider {
+            margin: 25px 0;
+            display: flex;
+            align-items: center;
+            color: #aaa;
+            font-size: 0.8rem;
+        }
+
+        .divider::before, .divider::after {
+            content: ""; flex: 1; height: 1px; background: rgba(184, 134, 11, 0.2); margin: 0 10px;
+        }
+
+        .social-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-social { background: white; border: var(--border); color: var(--text); font-size: 0.75rem; padding: 10px; }
+        .btn-facebook { color: #1877F2; }
+        .btn-google { color: #DB4437; }
+        .btn-phone { color: #2e7d32; }
+        #recaptcha-container { margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <img src="Iconos/logo.png" alt="Logo" style="width: 60px; margin-bottom: 10px;">
+    <h1>Acceso</h1>
+    <p style="font-size: 0.9rem; color: #777; margin-bottom: 30px;">Inicia sesión en tu cuenta de músico</p>
+
+    <div class="input-group">
+        <label>Correo Electrónico</label>
+        <input type="email" id="email" placeholder="ejemplo@correo.com">
+    </div>
+    <div class="input-group">
+        <label>Contraseña</label>
+        <input type="password" id="password" placeholder="••••••••">
+    </div>
+    
+    <button class="btn btn-primary" onclick="loginEmail()">
+        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+    </button>
+    <button class="btn btn-outline" onclick="registerEmail()">
+        <i class="fas fa-user-plus"></i> Registrarse
+    </button>
+
+    <div class="divider">O CONTINUAR CON</div>
+
+    <div class="social-grid">
+        <button class="btn btn-social" onclick="loginGoogle()">
+            <i class="fab fa-google btn-google"></i> Google
+        </button>
+        <button class="btn btn-social" onclick="loginFacebook()">
+            <i class="fab fa-facebook btn-facebook"></i> Facebook
+        </button>
+    </div>
+
+    <button class="btn btn-social" style="width: 100%; margin-top: 10px;" onclick="showPhoneInput()">
+        <i class="fas fa-phone btn-phone"></i> Teléfono
+    </button>
+
+    <div id="phone-section" style="display: none; margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+        <div class="input-group">
+            <label>Número de Teléfono</label>
+            <input type="tel" id="phone" placeholder="+505 0000 0000">
+        </div>
+        <div id="recaptcha-container"></div>
+        <button class="btn btn-primary" id="send-code" onclick="loginPhone()">Enviar Código</button>
+        
+        <div id="verification-step" style="display: none; margin-top: 10px;">
+            <input type="text" id="verification-code" placeholder="Código de 6 dígitos" style="text-align: center; letter-spacing: 5px;">
+            <button class="btn btn-primary" style="margin-top: 10px;" onclick="verifyCode()">Verificar</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+    // 1. Configuración de Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyCx_3nwwj3mKAEmtNVW0OaKamuaovhcM-w",
+        authDomain: "graduale-nostrum.firebaseapp.com",
+        projectId: "graduale-nostrum",
+        storageBucket: "graduale-nostrum.firebasestorage.app",
+        messagingSenderId: "534378937675",
+        appId: "1:534378937675:web:677bbc4eb55ef3e6ed7cce",
+        measurementId: "G-LJJLQXQXY1"
+    };
+
+    // 2. Inicialización de Servicios
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+    const facebookProvider = new firebase.auth.FacebookAuthProvider();
+
+    // Optimización de persistencia (Modo Offline)
+    db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
+    db.enablePersistence().catch(err => console.error("Error de persistencia:", err));
+
+    // 3. Gestión de Roles y Permisos
+    const DIRECTOR_EMAIL = "waljrg@gmail.com"; 
+    let isAdmin = false;
+
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            // El usuario Reyes (waljrg@gmail.com) es admin por defecto
+            if(user.email === DIRECTOR_EMAIL) {
+                isAdmin = true;
+            } else {
+                const doc = await db.collection("usuarios").doc(user.email).get();
+                isAdmin = doc.exists && doc.data().rol === "admin";
+            }
+            console.log("Usuario identificado:", user.email, "Es Admin:", isAdmin);
+            
+            // Redirección tras login exitoso
+            window.location.href = 'index.html';
+        } else {
+            isAdmin = false;
+        }
+    });
+
+    // Manejar el resultado de la redirección al volver a la página
+    auth.getRedirectResult().catch((err) => {
+        if (err.code !== 'auth/redirect-cancelled-by-user') {
+            alert("Error al volver del inicio de sesión: " + err.message);
+        }
+    });
+
+    // 4. Funciones de Base de Datos (CRUD de Cantos)
+    async function guardarCanto(cantoData, currentId = null) {
+        try {
+            if(currentId) {
+                await db.collection("cantos").doc(currentId).update(cantoData);
+            } else {
+                await db.collection("cantos").add(cantoData);
+            }
+            return true;
+        } catch (error) {
+            console.error("Error al guardar:", error);
+            return false;
+        }
+    }
+
+    function escucharCantos(callback) {
+        return db.collection("cantos").onSnapshot(snap => {
+            const listaCantos = [];
+            snap.forEach(doc => {
+                listaCantos.push({ id: doc.id, ...doc.data() });
+            });
+            callback(listaCantos);
+        });
+    }
+
+    // 5. Lógica de Sincronización (Modo Director)
+    async function sincronizarSesion(cantoId, transpose) {
+        if(!isAdmin) return;
+        await db.collection("sesion").doc("activa").set({
+            cantoId: cantoId,
+            transpose: transpose,
+            timestamp: Date.now()
+        });
+    }
+
+    function seguirDirector(callback) {
+        return db.collection("sesion").doc("activa").onSnapshot(doc => {
+            if(doc.exists) {
+                callback(doc.data());
+            }
+        });
+    }
+
+    // 6. Autenticación (Cambios realizados para evitar bloqueos)
+    async function loginEmail() {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        try {
+            await auth.signInWithEmailAndPassword(email, pass);
+        } catch (err) { alert("Error: " + err.message); }
+    }
+
+    async function registerEmail() {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        try {
+            await auth.createUserWithEmailAndPassword(email, pass);
+        } catch (err) { alert("Error al registrar: " + err.message); }
+    }
+
+    async function loginGoogle() {
+        try {
+            // Se usa Redirect en lugar de Popup para evitar bloqueos del navegador
+            await auth.signInWithRedirect(googleProvider);
+        } catch (err) { alert("Error Google: " + err.message); }
+    }
+
+    async function loginFacebook() {
+        try {
+            // Se usa Redirect en lugar de Popup para evitar bloqueos del navegador
+            await auth.signInWithRedirect(facebookProvider);
+        } catch (err) { alert("Error Facebook: " + err.message); }
+    }
+
+    async function logout() { return await auth.signOut(); }
+
+    // Lógica de Teléfono
+    let confirmationResult = null;
+
+    function showPhoneInput() {
+        document.getElementById('phone-section').style.display = 'block';
+        if (!window.recaptchaVerifier) {
+            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'normal' });
+        }
+    }
+
+    async function loginPhone() {
+        const phoneNumber = document.getElementById('phone').value;
+        try {
+            confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier);
+            document.getElementById('verification-step').style.display = 'block';
+            document.getElementById('send-code').style.display = 'none';
+        } catch (err) { alert("Error SMS: " + err.message); }
+    }
+
+    async function verifyCode() {
+        const code = document.getElementById('verification-code').value;
+        try {
+            await confirmationResult.confirm(code);
+        } catch (err) { alert("Código incorrecto"); }
+    }
+</script>
+
+</body>
+</html>
+
