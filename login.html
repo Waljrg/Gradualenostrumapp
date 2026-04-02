@@ -225,13 +225,6 @@
         }
     });
 
-    // Manejar el resultado del login
-    auth.getRedirectResult().catch((err) => {
-        if (err.code !== 'auth/redirect-cancelled-by-user') {
-            alert("Error al volver del inicio de sesión: " + err.message);
-        }
-    });
-
     // 4. Funciones de Base de Datos
     async function guardarCanto(cantoData, currentId = null) {
         try {
@@ -294,14 +287,12 @@
 
     async function loginGoogle() {
         try {
-            // Cambiado a Popup para que funcione correctamente dentro del APK
             await auth.signInWithPopup(googleProvider);
         } catch (err) { alert("Error Google: " + err.message); }
     }
 
     async function loginFacebook() {
         try {
-            // Cambiado a Popup para que funcione correctamente dentro del APK
             await auth.signInWithPopup(facebookProvider);
         } catch (err) { alert("Error Facebook: " + err.message); }
     }
