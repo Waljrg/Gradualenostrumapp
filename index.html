@@ -52,6 +52,22 @@
             z-index: 10;
         }
 
+        /* Estilos del nuevo botón Vaticano */
+        .vatican-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 100;
+            transition: transform 0.2s;
+        }
+        .vatican-btn img {
+            width: 35px;
+            height: 35px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+        .vatican-btn:active { transform: scale(0.9); }
+
         .header-title {
             font-family: 'Cinzel', serif;
             font-size: 1.6rem;
@@ -145,6 +161,10 @@
 <body>
 
 <header>
+    <a href="vatican.html" class="vatican-btn">
+        <img src="Iconos/vatican.png" alt="Vaticano">
+    </a>
+    
     <div class="welcome-text">
         <h1 class="header-title">Graduale Nostrum</h1>
     </div>
