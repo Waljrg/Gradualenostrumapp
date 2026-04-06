@@ -37,6 +37,8 @@
             --c-estrofa: #A9A9A9;
             --c-puente: #FF69B4;
             --c-final: #696969;
+            --c-enfasis: #1B5E20; /* Verde oscuro para énfasis */
+            --c-enfasis-azul: #00008B; /* Azul oscuro solicitado */
         }
 
         [data-theme="dark"] {
@@ -209,6 +211,8 @@
         .m-estrofa { background: var(--c-estrofa); color: white; }
         .m-puente { background: var(--c-puente); color: white; }
         .m-final { background: var(--c-final); color: white; }
+        .m-enfasis { background: var(--c-enfasis); color: white; }
+        .m-enfasis-azul { background: var(--c-enfasis-azul); color: white; }
 
         .chorus-content {
             font-weight: 700;
@@ -491,7 +495,7 @@
             
             <div class="editor-group"><label>Título</label><input type="text" id="titulo" class="input-styled" placeholder="Título del canto"></div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: rgba(184, 134, 11, 0.05); padding: 10px; border-radius: 12px; border: 1px dashed var(--accent);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: rgba(184, 134, 11, 0.05); padding: 10px; border-radius: 12px; border: 1px dashed var(--accent);">
                 <div class="editor-group">
                     <label><i class="fas fa-tags"></i> Classificatio</label>
                     <select id="classificatio" class="input-styled" style="padding: 8px;">
@@ -1282,7 +1286,7 @@
     function switchTab(type) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.querySelector('#tabTiempos img').src = "Iconos/tiempos.png"; document.querySelector('#tabMomentos img').src = "Iconos/momentos.png"; document.querySelector('#tabProgramados img').src = "Iconos/programados.png"; document.querySelector('#tabFavoritos img').src = "Iconos/favoritos.png";
-        document.getElementById('tiemposGrid').style.display = 'none'; document.getElementById('momentosGrid').style.display = 'none'; document.getElementById('favoritosGrid').style.display = 'none'; document.getElementById('programadosView').style.display = 'none'; document.getElementById('searchResults').style.display = 'none';
+        document.getElementById('tiemposGrid').style.display = 'none'; document.getElementById('momentosGrid').style.display = 'none'; document.getElementById('favoritosGrid').style.display = 'none'; document.getElementById('programadosView').style.display = 'block'; document.getElementById('searchResults').style.display = 'none';
         if(type === 'tiempos') { document.getElementById('tabTiempos').classList.add('active'); document.querySelector('#tabTiempos img').src = "Iconos/tiempos1.png"; document.getElementById('tiemposGrid').style.display = 'grid'; }
         else if(type === 'momentos') { document.getElementById('tabMomentos').classList.add('active'); document.querySelector('#tabMomentos img').src = "Iconos/momentos1.png"; document.getElementById('momentosGrid').style.display = 'grid'; }
         else if(type === 'favoritos') { document.getElementById('tabFavoritos').classList.add('active'); document.querySelector('#tabFavoritos img').src = "Iconos/favoritos1.png"; verFavoritos(); }
@@ -1354,14 +1358,15 @@
         let htmlProcesado = c.letra.split('\n').map(linea => {
             const lineaLimpia = linea.trim();
             
+            // BUSCAR MARCADORES DE SECCIÓN
             for(let rule of sectionRules) {
                 if(rule.regex.test(lineaLimpia)) {
-                    sectionClass = rule.class;
                     isChorusMode = (rule.class === "m-coro");
-                    return `<span class="section-marker ${sectionClass}">${lineaLimpia}</span>`;
+                    return `<span class="section-marker ${rule.class}">${lineaLimpia}</span>`;
                 }
             }
 
+            // PROCESAR ACORDES
             const matchesLine = linea.match(regexChords) || [];
             const minusculas = (linea.match(/[a-z]/g) || []).length;
             const esLineaDeAcordes = matchesLine.length > 0 && (minusculas < 4 || matchesLine.length > 2 || linea.includes('['));
@@ -1391,6 +1396,16 @@
             });
             
             procesada = procesada.replace(/[\[\]]/g, '');
+
+            // PROCESAR ÉNFASIS (TEXTO ENTRE *)
+            procesada = procesada.replace(/\*(.*?)\*/g, (match, p1) => {
+                return `<span class="section-marker m-enfasis">${p1.toUpperCase()}</span>`;
+            });
+
+            // PROCESAR ÉNFASIS AZUL (TEXTO ENTRE ')
+            procesada = procesada.replace(/'(.*?)'/g, (match, p1) => {
+                return `<span class="section-marker m-enfasis-azul">${p1.toUpperCase()}</span>`;
+            });
 
             if (isChorusMode && lineaLimpia !== "") return `<span class="chorus-content">${procesada}</span>`;
             return procesada;
@@ -1427,7 +1442,9 @@
         document.getElementById('viewAutor').innerText = c.autor ? "Autor: " + c.autor : "";
 
         const colorTiempo = getColorTiempo(c.tiempoLiturgico);
-        const badgeClassificatio = c.classificatio ? `<span style="background: ${c.classificatio === 'Liturgicum' ? '#2e7d32' : '#555'}; color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">${c.classificatio}</span>` : "";
+        
+        // MODIFICACIÓN DE ETIQUETA NON LITURGICUM (AMARILLO CON LETRAS ROJAS)
+        const badgeClassificatio = c.classificatio ? `<span style="background: ${c.classificatio === 'Liturgicum' ? '#2e7d32' : '#FFD700'}; color: ${c.classificatio === 'Liturgicum' ? 'white' : '#b71c1c'}; padding: 2px 8px; border-radius: 6px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; ${c.classificatio !== 'Liturgicum' ? 'border: 1px solid #b71c1c;' : ''}">${c.classificatio}</span>` : "";
         
         document.getElementById('viewMomentoBadge').innerHTML = `
             <span style="color: ${colorTiempo}; font-weight: bold;">• ${c.tiempoLiturgico || "Varios"}</span>
