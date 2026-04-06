@@ -799,22 +799,34 @@
         toggleShareMenu();
     }
 
-    // EXPORTACIÓN A PDF REAL USANDO JSPDF
+    // EXPORTACIÓN A PDF REAL USANDO JSPDF (Mejorado para solo letra e info)
     async function exportarPDFReal() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
         const canto = cantos[currentCantoId];
         const area = document.getElementById('detailView');
         
-        // Ocultar botones para la captura
+        // Elementos a ocultar para la exportación limpia
         const controls = area.querySelector('.controls-wrapper');
+        const audio = document.getElementById('audioContainer');
+        const tools = document.getElementById('toolsMenu');
+        const share = document.getElementById('shareMenu');
+
+        // Ocultar temporalmente
         if(controls) controls.style.display = 'none';
+        if(audio) audio.style.display = 'none';
+        if(tools) tools.classList.remove('active');
+        if(share) share.classList.remove('active');
 
         try {
             const canvas = await html2canvas(area, {
                 scale: 2,
                 useCORS: true,
-                backgroundColor: '#ffffff'
+                backgroundColor: '#ffffff',
+                ignoreElements: (el) => {
+                    // Ignorar elementos específicos que no queremos en el PDF
+                    return el.classList.contains('controls-wrapper') || el.id === 'audioContainer' || el.id === 'toolsMenu' || el.id === 'shareMenu';
+                }
             });
             
             const imgData = canvas.toDataURL('image/png');
@@ -828,20 +840,41 @@
             alert("Error al generar PDF");
             console.error(e);
         } finally {
+            // Restaurar visibilidad
             if(controls) controls.style.display = 'block';
+            if(audio && canto.audioUrl) audio.style.display = 'block';
             toggleShareMenu();
         }
     }
 
+    // CAPTURA DE PANTALLA (Mejorado para solo letra e info)
     function capturaPantalla() {
         const area = document.getElementById('detailView');
-        html2canvas(area, { backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg') }).then(canvas => {
+        const c = cantos[currentCantoId];
+        
+        // Elementos a ocultar
+        const controls = area.querySelector('.controls-wrapper');
+        const audio = document.getElementById('audioContainer');
+
+        if(controls) controls.style.display = 'none';
+        if(audio) audio.style.display = 'none';
+
+        html2canvas(area, { 
+            backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg'),
+            ignoreElements: (el) => {
+                return el.classList.contains('controls-wrapper') || el.id === 'audioContainer' || el.id === 'toolsMenu' || el.id === 'shareMenu';
+            }
+        }).then(canvas => {
             const link = document.createElement('a');
-            link.download = `Graduale_${cantos[currentCantoId].titulo}.png`;
+            link.download = `Graduale_${c.titulo}.png`;
             link.href = canvas.toDataURL();
             link.click();
+            
+            // Restaurar
+            if(controls) controls.style.display = 'block';
+            if(audio && c.audioUrl) audio.style.display = 'block';
+            toggleShareMenu();
         });
-        toggleShareMenu();
     }
 
     // --- FUNCIONES DE DIRECTOR ---
