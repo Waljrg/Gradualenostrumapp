@@ -450,6 +450,15 @@
 </footer>
 
 <script>
+    // Registro del Service Worker Profesional
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registrado', reg))
+                .catch(err => console.warn('Error SW', err));
+        });
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
         const introOverlay = document.getElementById('intro-overlay');
         const header = document.getElementById('main-header');

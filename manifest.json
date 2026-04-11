@@ -1,13 +1,16 @@
 {
   "name": "Graduale Nostrum",
   "short_name": "Graduale",
-  "description": "Edición Galería - Cancionero Litúrgico",
+  "description": "Plataforma Integral de Música Litúrgica y Formación",
+  "categories": ["music", "education", "lifestyle"],
   "start_url": "index.html",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FDFBF7",
   "theme_color": "#2C211F",
-  "scope": "/",
+  "dir": "ltr",
+  "lang": "es-ES",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "Iconos/logo1.png",
@@ -16,14 +19,8 @@
       "purpose": "any"
     },
     {
-      "src": "Iconos/carga.png",
-      "sizes": "1080x2400",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "Iconos/carga.png",
-      "sizes": "1080x2400",
+      "src": "Iconos/logo512.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
@@ -32,6 +29,31 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Abrir Cantoral",
+      "short_name": "Cantoral",
+      "description": "Acceso directo al cancionero",
+      "url": "cantoral.html",
+      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Practicar Piano",
+      "short_name": "Piano",
+      "description": "Abrir el simulador de piano",
+      "url": "piano.html",
+      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "Iconos/carga.png",
+      "sizes": "1080x2400",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Interfaz Principal de Graduale Nostrum"
     }
   ]
 }
