@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Formación Litúrgica | Graduale Nostrum</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2C211F; 
+            --accent: #B8860B;  
+            --accent-light: #E8D4A2;
+            --bg: #FDFBF7;
+            --surface: #FFFFFF;
+            --text: #3E322E;
+            --radius-md: 16px;
+            --radius-lg: 30px;
+            --shadow: 0 10px 30px rgba(78, 52, 46, 0.08);
+            --border: 1px solid rgba(184, 134, 11, 0.2);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            line-height: 1.6;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        header { 
+            background: var(--primary); 
+            color: white; 
+            padding: 2.5rem 1rem; 
+            text-align: center; 
+            border-bottom-left-radius: 40px; 
+            border-bottom-right-radius: 40px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        header img {
+            width: 80px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        header h1 {
+            font-family: 'Cinzel', serif;
+            margin: 0;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            color: var(--accent-light);
+        }
+
+        header p {
+            font-family: 'Cinzel', serif;
+            margin: 5px 0 0;
+            font-size: 1.1rem;
+            letter-spacing: 3px;
+            color: white;
+            font-weight: 700;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            padding: 20px;
+        }
+
+        .top-nav {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: -45px;
+            margin-bottom: 30px;
+        }
+
+        .topics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            padding-bottom: 50px;
+        }
+
+        .btn-topic {
+            background: var(--surface);
+            border: var(--border);
+            padding: 15px 10px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            box-shadow: var(--shadow);
+            min-height: 90px;
+        }
+
+        .btn-topic:active { transform: scale(0.95); }
+
+        .btn-topic i {
+            font-size: 1.3rem;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .btn-top {
+            background: var(--accent);
+            color: white;
+            border: 2px solid var(--accent-light);
+            font-family: 'Cinzel', serif;
+        }
+
+        .btn-top i { color: white; }
+
+        #contentViewer {
+            display: none;
+            background: var(--surface);
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            border: var(--border);
+            box-shadow: var(--shadow);
+            margin-top: 10px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .view-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid var(--accent-light);
+            padding-bottom: 15px;
+        }
+
+        #topicTitle {
+            margin: 0;
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        /* Estilos para el contenido Markdown */
+        #textContent {
+            font-size: 1.05rem;
+            color: var(--text);
+            text-align: left;
+        }
+
+        #textContent h1, #textContent h2, #textContent h3 {
+            color: var(--accent);
+            font-family: 'Cinzel', serif;
+        }
+
+        #textContent ul, #textContent ol {
+            padding-left: 20px;
+        }
+
+        .back-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="logo.png" alt="Logo">
+    <h1>FORMACIÓN LITÚRGICA</h1>
+    <p>GRADUALE NOSTRUM</p>
+</header>
+
+<div class="container">
+    <div id="topNav" class="top-nav">
+        <button class="btn-topic btn-top" onclick="loadTopic('Presentación.md', 'Presentación')">
+            <i class="fas fa-leaf"></i> Presentación
+        </button>
+        <button class="btn-topic btn-top" onclick="loadTopic('Prólogo.md', 'Prólogo')">
+            <i class="fas fa-book-bible"></i> Prólogo
+        </button>
+    </div>
+
+    <div id="mainMenu" class="topics-grid">
+        <button class="btn-topic" onclick="loadTopic('Dignidad.md', 'Sobre la Dignidad Eucarística')"><i class="fas fa-cross"></i> 1. Dignidad</button>
+        <button class="btn-topic" onclick="loadTopic('Vestimenta.md', 'Sobre la Vestimenta')"><i class="fas fa-user-tie"></i> 2. Vestimenta</button>
+        <button class="btn-topic" onclick="loadTopic('Disposición.md', 'Sobre la Disposición Espiritual')"><i class="fas fa-heart"></i> 3. Disposición</button>
+        <button class="btn-topic" onclick="loadTopic('Corporal.md', 'Sobre la posición corporal')"><i class="fas fa-hands-praying"></i> 4. P. Corporal</button>
+        <button class="btn-topic" onclick="loadTopic('Entrada.md', 'Sobre el rito y canto de Entrada')"><i class="fas fa-door-open"></i> 5. Entrada</button>
+        <button class="btn-topic" onclick="loadTopic('Kyrie.md', 'Sobre el Kyrie')"><i class="fas fa-comment-dots"></i> 6. Kyrie</button>
+        <button class="btn-topic" onclick="loadTopic('Gloria.md', 'Sobre el Gloria')"><i class="fas fa-sun"></i> 7. Gloria</button>
+        <button class="btn-topic" onclick="loadTopic('Salmo.md', 'Sobre el Salmo')"><i class="fas fa-music"></i> 8. Salmo</button>
+        <button class="btn-topic" onclick="loadTopic('Aleluya.md', 'Sobre el Aleluya')"><i class="fas fa-scroll"></i> 9. Aleluya</button>
+        <button class="btn-topic" onclick="loadTopic('Ofertorio.md', 'Sobre el Ofertorio')"><i class="fas fa-wine-glass"></i> 10. Ofertorio</button>
+        <button class="btn-topic" onclick="loadTopic('Santo.md', 'Sobre el Sanctus')"><i class="fas fa-dove"></i> 11. Sanctus</button>
+        <button class="btn-topic" onclick="loadTopic('Doxología.md', 'Sobre la Doxología')"><i class="fas fa-crown"></i> 12. Doxología</button>
+        <button class="btn-topic" onclick="loadTopic('PN.md', 'Sobre el Padre Nuestro')"><i class="fas fa-cloud"></i> 13. Padre Nuestro</button>
+        <button class="btn-topic" onclick="loadTopic('Cordero.md', 'Sobre el Agnus Dei')"><i class="fas fa-hand-holding-heart"></i> 14. Agnus Dei</button>
+        <button class="btn-topic" onclick="loadTopic('Comunión.md', 'Sobre la Comunión')"><i class="fas fa-bread-slice"></i> 15. Comunión</button>
+        <button class="btn-topic" onclick="loadTopic('Salida.md', 'Sobre la Salida')"><i class="fas fa-walking"></i> 16. Salida</button>
+        <button class="btn-topic" onclick="loadTopic('Cantos.md', 'Sobre la Elección de cantos')"><i class="fas fa-list-ol"></i> 17. Elección</button>
+        <button class="btn-topic" onclick="loadTopic('Ordinario.md', 'Sobre el Ordinario de la Misa')"><i class="fas fa-bible"></i> 18. Ordinario</button>
+        <button class="btn-topic" onclick="loadTopic('Propio.md', 'Sobre el Propio de la Misa')"><i class="fas fa-bookmark"></i> 19. Propio</button>
+        <button class="btn-topic" onclick="loadTopic('Ensayos.md', 'Sobre los Ensayos')"><i class="fas fa-microphone-alt"></i> 20. Ensayos</button>
+        <button class="btn-topic" onclick="loadTopic('Rygc.md', 'Reglamentos y Conducta')"><i class="fas fa-gavel"></i> 21. Reglamento</button>
+        <button class="btn-topic" onclick="loadTopic('Admisión.md', 'Admisión de Miembros')"><i class="fas fa-user-plus"></i> 22. Admisión</button>
+        <button class="btn-topic" onclick="loadTopic('PF.md', 'Preguntas Frecuentes')"><i class="fas fa-question-circle"></i> 23. P. Frecuentes</button>
+    </div>
+
+    <div id="contentViewer">
+        <div class="view-header">
+            <button class="back-btn" onclick="closeViewer()"><i class="fas fa-arrow-left"></i></button>
+            <h2 id="topicTitle"></h2>
+        </div>
+        <div id="textContent"></div>
+    </div>
+</div>
+<script type="module" src="backbutton.js"></script>
+
+<script>
+    function loadTopic(mdFileName, title) {
+        document.getElementById('mainMenu').style.display = 'none';
+        document.getElementById('topNav').style.display = 'none';
+        
+        const viewer = document.getElementById('contentViewer');
+        const titleEl = document.getElementById('topicTitle');
+        const contentEl = document.getElementById('textContent');
+
+        titleEl.innerText = title;
+        contentEl.innerHTML = "Cargando formación...";
+        viewer.style.display = 'block';
+        window.scrollTo(0, 0);
+
+        fetch(`Json/${mdFileName}`)
+            .then(response => {
+                if (!response.ok) throw new Error('Archivo no encontrado');
+                return response.text(); // Leer como texto plano (Markdown)
+            })
+            .then(markdownText => {
+                // Convertir Markdown a HTML usando marked.js
+                contentEl.innerHTML = marked.parse(markdownText);
+            })
+            .catch(err => {
+                contentEl.innerHTML = `<p style="color:#c62828; font-weight:bold;">Error: No se pudo cargar el archivo "Json/${mdFileName}". Verifique que el archivo .md exista en la carpeta Json.</p>`;
+            });
+    }
+
+    function closeViewer() {
+        document.getElementById('contentViewer').style.display = 'none';
+        document.getElementById('mainMenu').style.display = 'grid';
+        document.getElementById('topNav').style.display = 'grid';
+        window.scrollTo(0, 0);
+    }
+</script>
+
+</body>
+</html>
+
