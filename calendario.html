@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liturgia - Graduale Nostrum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+
+    <style>
+    
+    
+        :root {
+            --primary: #2C211F; 
+            --accent: #B8860B;  
+            --accent-light: #E8D4A2;
+            --bg: #FDFBF7;
+            --surface: #FFFFFF;
+            --text: #3E322E;
+            --radius-lg: 30px;
+            --shadow: 0 10px 30px rgba(78, 52, 46, 0.08);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: var(--primary);
+            width: 100%;
+            padding: 1.5rem 0 1rem;
+            text-align: center;
+            border-bottom-left-radius: 40px;
+            border-bottom-right-radius: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            position: fixed;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-logo {
+            width: 70px;
+            height: auto;
+            margin-bottom: 8px;
+        }
+
+        .header-title-main {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 2rem;
+            color: var(--accent-light);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+        }
+
+        .header-subtitle {
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            color: var(--accent);
+            letter-spacing: 3px;
+            margin-top: 4px;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            width: 90%;
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+            justify-content: center;           /* Centra verticalmente */
+            align-items: center;
+            gap: 30px;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Pantalla Principal - Ahora muestra directamente el Calendario Litúrgico */
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            width: 100%;
+            max-width: 380px;
+        }
+
+        .calendar-container {
+            background: var(--surface);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            width: 100%;
+        }
+
+        .calendar-container input[type="date"] {
+            font-size: 1.15rem;
+            padding: 14px;
+            border: 2px solid var(--accent);
+            border-radius: 15px;
+            width: 100%;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .readings-card {
+            background: var(--surface);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(184, 134, 11, 0.2);
+            width: 100%;
+        }
+
+        .reading-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.45rem;
+            color: var(--primary);
+            margin-bottom: 18px;
+            border-bottom: 2px solid var(--accent-light);
+            padding-bottom: 10px;
+        }
+
+        .reading-section {
+            margin-bottom: 28px;
+        }
+
+        .reading-section h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--accent);
+            margin: 0 0 10px;
+            font-size: 1.2rem;
+        }
+
+        .reading-section p {
+            line-height: 1.65;
+            margin-bottom: 10px;
+        }
+
+        .source-info {
+            font-size: 0.82rem;
+            color: var(--accent);
+            text-align: center;
+            margin-top: 20px;
+            font-style: italic;
+        }
+
+        .vatican-link {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 10px 22px;
+            background: var(--accent);
+            color: white;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--accent);
+        }
+
+        .error {
+            color: #c0392b;
+            text-align: center;
+            padding: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="Iconos/logo.png" alt="Logo" class="header-logo">
+    <h1 class="header-title-main">Liturgia</h1>
+    <div class="header-subtitle">GRADUALE NOSTRUM</div>
+</header>
+
+<!-- Pantalla Principal - Ahora muestra directamente el Calendario Litúrgico -->
+<div id="main-screen" class="screen active">
+    <div class="main-container">
+
+        <div id="readings-container" class="readings-card">
+            <!-- Se llena automáticamente -->
+        </div>
+    </div>
+</div>
+<script type="module">
+    import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
+
+    window.onload = function() {
+        App.addListener('backButton', () => {
+            const pagina = window.location.pathname.split("/").pop();
+
+            if (pagina === 'index.html' || pagina === '') {
+                App.exitApp();
+            } else {
+                window.location.assign('index.html');
+            }
+        });
+    };
+</script>
+
+
+<script>
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    async function loadReadingsForDate(selectedDate) {
+        const container = document.getElementById('readings-container');
+        container.innerHTML = `<div class="loading">Cargando lecturas oficiales del Vaticano...</div>`;
+
+        try {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isToday = selectedDate === todayStr;
+
+            let html = `
+                <h2 class="reading-title">Lecturas del día<br>
+                <small style="font-size:1rem; font-weight:400; color:var(--accent);">
+                    ${new Date(selectedDate).toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}
+                </small>
+                </h2>`;
+
+            if (isToday) {
+                html += `
+                    <p style="text-align:center; padding:40px 20px; line-height:1.6;">
+                        Las lecturas completas de hoy están disponibles en el sitio oficial del Vaticano.
+                    </p>`;
+            } else {
+                html += `
+                    <p style="text-align:center; padding:40px 20px; color:var(--accent);">
+                        Selecciona la fecha de hoy para ver las lecturas actuales.<br>
+                        Para otras fechas, consulta el sitio oficial.
+                    </p>`;
+            }
+
+            html += `
+                <div class="source-info">
+                    Fuente oficial: Vatican News<br>
+                    <a href="https://www.vaticannews.va/es/evangelio-de-hoy.html" target="_blank" class="vatican-link">Ver lecturas completas →</a>
+                </div>`;
+
+            container.innerHTML = html;
+
+        } catch (e) {
+            container.innerHTML = `
+                <h2 class="reading-title">Lecturas del día</h2>
+                <div class="error">
+                    No se pudo cargar automáticamente.<br>
+                    Por favor revisa tu conexión a internet.
+                </div>
+                <a href="https://www.vaticannews.va/es/evangelio-de-hoy.html" target="_blank" class="vatican-link" style="display:block; text-align:center;">
+                    Abrir en Vatican News
+                </a>`;
+        }
+    }
+
+    // Inicializar
+    window.onload = () => {
+        const today = new Date().toISOString().split('T')[0];
+        loadReadingsForDate(today);
+    };
+</script>
+
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad - Graduale Nostrum</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+            color: #3e2723;
+            margin: 0;
+            padding: 15px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #d4af37;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background-color: #5d4037;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header img {
+            width: 80px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+            color: #ffcc00;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            display: block;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #ffffff;
+            margin-top: 5px;
+        }
+
+        .update-date {
+            font-size: 0.8em;
+            display: block;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        /* Estilos para el contenido inyectado */
+        .content {
+            padding: 20px;
+            font-size: 0.95em;
+        }
+
+        .content h3 {
+            color: #5d4037;
+            border-left: 4px solid #d4af37;
+            padding-left: 10px;
+            margin-top: 25px;
+            font-size: 1.1em;
+            text-transform: uppercase;
+        }
+
+        .content ul {
+            padding-left: 20px;
+        }
+
+        .content li {
+            margin-bottom: 8px;
+        }
+
+        /* Clase especial para la caja de Copyright si decides usarla en el MD */
+        .copyright-box {
+            background-color: #fffde7;
+            border: 1px dashed #d4af37;
+            padding: 15px;
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .footer-contact {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #eeeeee;
+        }
+
+        .email-link {
+            color: #d4af37;
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <img src="iconos/logo.png" alt="Logo Graduale Nostrum">
+        <h1>Política de Privacidad</h1>
+        <span class="subtitle">Graduale Nostrum</span>
+        <span class="update-date">Última actualización: 13 de marzo de 2026</span>
+    </div>
+
+    <div id="pdp-content" class="content">
+        Cargando política de privacidad...
+    </div>
+<script type="module">
+    import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
+
+    window.onload = function() {
+        App.addListener('backButton', () => {
+            const pagina = window.location.pathname.split("/").pop();
+
+            if (pagina === 'index.html' || pagina === '') {
+                App.exitApp();
+            } else {
+                window.location.assign('index.html');
+            }
+        });
+    };
+</script>
+
+
+<script>
+    async function loadPrivacyPolicy() {
+        try {
+            const response = await fetch('md/pdp.md');
+            if (!response.ok) throw new Error('No se pudo encontrar el archivo pdp.md');
+            const markdownText = await response.text();
+            
+            // Renderizar el Markdown dentro del contenedor
+            document.getElementById('pdp-content').innerHTML = marked.parse(markdownText);
+        } catch (error) {
+            document.getElementById('pdp-content').innerHTML = 
+                '<p style="color:red; text-align:center;">Error al cargar el contenido de privacidad.</p>';
+            console.error(error);
+        }
+    }
+
+    // Iniciar carga al abrir el documento
+    window.onload = loadPrivacyPolicy;
+</script>
+
+</body>
+</html>

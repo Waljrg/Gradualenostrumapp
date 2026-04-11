@@ -1,0 +1,135 @@
+<div class="vatican-full-screen">
+    <div class="vatican-header-noble">
+        <div class="vatican-branding">
+            <img src="Iconos/logo.png" alt="Logo" class="vatican-logo-main">
+            
+            <h1>En comunion con el Papa</h1>
+            
+            <div class="vatican-separator">
+                <span class="vatican-subtitle-app">GRADUALE NOSTRUM</span>
+            </div>
+            
+            <p class="vatican-tagline">ACTUALIDAD ECLESIAL</p>
+        </div>
+    </div>
+
+    <div class="vatican-widget-wrapper">
+        <vaticannews-widget lang="es" fontSize="14" carouselVideoAuto="true" carouselVideoTime="medium"></vaticannews-widget>
+    </div>
+</div>
+
+<style>
+    :root {
+        --noble-bg: #FDFBF7;
+        --noble-gold: #D4AF37;
+        --noble-dark: #2C211F; /* Color primario de tu cantoral */
+        --noble-accent: #B8860B;
+    }
+
+    .vatican-full-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: var(--noble-bg);
+        display: flex;
+        flex-direction: column;
+        z-index: 9999;
+        overflow: hidden;
+    }
+
+    .vatican-header-noble {
+        background-color: var(--noble-dark);
+        padding: 25px 15px 15px 15px;
+        border-bottom: 4px solid var(--noble-gold);
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    .vatican-logo-main {
+        width: 60px; /* Ajusta según el tamaño de tu logo.png */
+        height: auto;
+        margin-bottom: 12px;
+        filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
+    }
+
+    .vatican-header-noble h1 {
+        font-family: 'Cinzel', serif;
+        color: #E8D4A2; /* Acento claro de tu paleta */
+        margin: 0;
+        font-size: 1.4rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    /* Separador decorativo para el subtítulo Graduale Nostrum */
+    .vatican-separator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 8px 0;
+    }
+
+    .vatican-separator::before,
+    .vatican-separator::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(to right, transparent, var(--noble-gold), transparent);
+        max-width: 50px;
+    }
+
+    .vatican-subtitle-app {
+        font-family: 'Cinzel', serif;
+        color: var(--noble-gold);
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin: 0 15px;
+        letter-spacing: 3px;
+    }
+
+    .vatican-tagline {
+        font-family: 'Inter', sans-serif;
+        color: #FFFFFF;
+        margin: 0;
+        font-size: 0.7rem;
+        letter-spacing: 4px;
+        opacity: 0.7;
+        text-transform: uppercase;
+    }
+
+    .vatican-widget-wrapper {
+        flex: 1;
+        overflow-y: auto;
+        padding: 10px;
+        -webkit-overflow-scrolling: touch;
+        background-image: radial-gradient(circle, rgba(212, 175, 55, 0.05) 1px, transparent 1px);
+        background-size: 20px 20px; /* Textura sutil de fondo */
+    }
+
+    vaticannews-widget {
+        width: 100% !important;
+        max-width: 900px;
+        margin: 0 auto;
+        display: block;
+    }
+</style>
+
+<script src="https://www.vaticannews.va/widget.js"></script>
+<script type="module">
+    import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
+
+    window.onload = function() {
+        App.addListener('backButton', () => {
+            const pagina = window.location.pathname.split("/").pop();
+
+            if (pagina === 'index.html' || pagina === '') {
+                App.exitApp();
+            } else {
+                window.location.assign('index.html');
+            }
+        });
+    };
+</script>
+

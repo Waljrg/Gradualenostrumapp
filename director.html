@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Director | Graduale Nostrum</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2C211F; 
+            --accent: #B8860B;  
+            --accent-light: #E8D4A2;
+            --bg: #FDFBF7;
+            --surface: #FFFFFF;
+            --text: #3E322E;
+            --radius-lg: 30px;
+            --shadow: 0 10px 30px rgba(78, 52, 46, 0.08);
+            --border: 1px solid rgba(184, 134, 11, 0.2);
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+        .header { background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%); color: white; padding: 2rem; text-align: center; border-radius: var(--radius-lg); margin-bottom: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
+        .header h1 { font-family: 'Cinzel', serif; margin: 0; font-size: 1.5rem; }
+        .header img { width: 60px; height: auto; margin-bottom: 10px; }
+        .header .subtitle { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--accent-light); margin-top: 5px; display: block; }
+        .header .author { font-size: 0.8rem; opacity: 0.8; margin-top: 5px; display: block; letter-spacing: 1px; }
+        .card { background: var(--surface); padding: 25px; border-radius: var(--radius-lg); border: var(--border); box-shadow: var(--shadow); margin-bottom: 20px; display: none; }
+        .card h3 { font-family: 'Cinzel', serif; margin-top: 0; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+        .input-styled { padding: 12px; border-radius: 12px; border: 1px solid rgba(184, 134, 11, 0.2); background: var(--bg); width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+        .btn { border-radius: 14px; padding: 12px 20px; border: none; font-weight: 600; cursor: pointer; transition: 0.3s; text-transform: uppercase; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }
+        .btn-gold { background: var(--accent); color: white; }
+        .btn-dark { background: var(--primary); color: white; }
+        .btn-danger { background: #b71c1c; color: white; }
+        .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--accent-light); }
+        #loginView { display: block; text-align: center; padding: 50px 20px; }
+    </style>
+</head>
+<body>
+
+    <div id="loginView">
+        <div class="header"><h1>ACCESO DIRECTOR</h1></div>
+        <button class="btn btn-gold" onclick="loginGoogle()"><i class="fab fa-google"></i> ENTRAR CON GOOGLE</button>
+        <p style="margin-top:20px; font-size: 0.8rem; color: #888;">Solo el Director General tiene acceso a este panel.</p>
+    </div>
+
+    <div id="mainPanel" style="display: none;">
+        <div class="header">
+            <img src="iconos/logo.png" alt="Logo">
+            <h1 id="welcomeTxt">DIRECCIÓN</h1>
+            <span class="subtitle">Graduale Nostrum</span>
+            <span class="author">Walter Reyes</span>
+            <button onclick="logout()" style="background:none; border:none; color:rgba(255,255,255,0.6); cursor:pointer; font-size:0.7rem; margin-top: 15px;">CERRAR SESIÓN</button>
+        </div>
+
+        <div class="card" id="cardSincro" style="display: block;">
+            <h3><i class="fas fa-broadcast-tower"></i> Sincronización</h3>
+            <p style="font-size: 0.85rem;">Controla lo que ven los demás miembros en tiempo real.</p>
+            <button id="btnSync" class="btn btn-dark" onclick="activarSincronizacionTotal()">
+                SINCRONIZAR PANTALLAS AHORA
+            </button>
+        </div>
+
+        <div class="card" id="cardAdmins" style="display: block;">
+            <h3><i class="fas fa-user-shield"></i> Administradores</h3>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="email" id="newAdminEmail" class="input-styled" placeholder="Correo del nuevo admin" style="margin-bottom: 0;">
+                <button class="btn btn-gold" onclick="agregarAdmin()" style="width: auto;">AÑADIR</button>
+            </div>
+            <div id="adminList"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script type="module">
+    import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
+
+    window.onload = function() {
+        App.addListener('backButton', () => {
+            const pagina = window.location.pathname.split("/").pop();
+
+            if (pagina === 'index.html' || pagina === '') {
+                App.exitApp();
+            } else {
+                window.location.assign('index.html');
+            }
+        });
+    };
+</script>
+
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCx_3nwwj3mKAEmtNVW0OaKamuaovhcM-w",
+            authDomain: "graduale-nostrum.firebaseapp.com",
+            projectId: "graduale-nostrum",
+            storageBucket: "graduale-nostrum.firebasestorage.app",
+            messagingSenderId: "534378937675",
+            appId: "1:534378937675:web:677bbc4eb55ef3e6ed7cce"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+
+        const DIRECTOR_EMAIL = "waljrg@gmail.com"; 
+        let isAdmin = false;
+
+        auth.onAuthStateChanged(async (user) => {
+            if (user && user.email === DIRECTOR_EMAIL) {
+                isAdmin = true;
+                document.getElementById('loginView').style.display = 'none';
+                document.getElementById('mainPanel').style.display = 'block';
+                // welcomeTxt se mantiene como "DIRECCIÓN" definido en el HTML
+                cargarAdmins();
+            } else {
+                isAdmin = false;
+                if(user) {
+                    alert("Acceso denegado. Solo el Director Principal puede entrar.");
+                    auth.signOut();
+                }
+                document.getElementById('loginView').style.display = 'block';
+                document.getElementById('mainPanel').style.display = 'none';
+            }
+        });
+
+        async function sincronizarSesion(cantoId, transpose) {
+            if(!isAdmin) return;
+            try {
+                await db.collection("sesion").doc("activa").set({
+                    cantoId: cantoId,
+                    transpose: transpose,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert("Señal de sincronización enviada a todos los dispositivos.");
+            } catch (error) {
+                console.error("Error al sincronizar:", error);
+                alert("Error de permisos en Firebase. Revisa las reglas de Firestore.");
+            }
+        }
+
+        async function activarSincronizacionTotal() {
+            const btn = document.getElementById('btnSync');
+            btn.disabled = true;
+            btn.innerText = "ENVIANDO...";
+            
+            await sincronizarSesion("Sincronizado_Por_Director", 0);
+            
+            btn.disabled = false;
+            btn.innerText = "SINCRONIZAR PANTALLAS AHORA";
+        }
+
+        async function agregarAdmin() {
+            const email = document.getElementById('newAdminEmail').value.trim().toLowerCase();
+            if(!email) return;
+            try {
+                await db.collection("usuarios").doc(email).set({ rol: "admin", fecha: Date.now() });
+                document.getElementById('newAdminEmail').value = "";
+            } catch (error) {
+                alert("Error al añadir admin: " + error.message);
+            }
+        }
+
+        async function eliminarAdmin(email) {
+            if(confirm(`¿Quitar permisos a ${email}?`)) {
+                try {
+                    await db.collection("usuarios").doc(email).delete();
+                } catch (error) {
+                    alert("Error al eliminar admin: " + error.message);
+                }
+            }
+        }
+
+        function cargarAdmins() {
+            db.collection("usuarios").onSnapshot(snap => {
+                const list = document.getElementById('adminList');
+                list.innerHTML = "";
+                snap.forEach(doc => {
+                    list.innerHTML += `
+                        <div class="admin-item">
+                            <span>${doc.id}</span>
+                            <button class="btn btn-danger" onclick="eliminarAdmin('${doc.id}')" style="width: auto; padding: 5px 10px;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>`;
+                });
+            }, error => {
+                console.error("Error al cargar admins:", error);
+            });
+        }
+
+        async function loginGoogle() { 
+            try {
+                await auth.signInWithPopup(provider);
+            } catch (error) {
+                alert("Error en login: " + error.message);
+            }
+        }
+        
+        async function logout() { return await auth.signOut(); }
+    </script>
+</body>
+</html>
+

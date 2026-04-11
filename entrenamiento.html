@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Entrenamiento Auditivo | Pro Academy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Colores extraídos del Cantoral */
+            --primary: #2C211F; 
+            --accent: #B8860B;  
+            --accent-light: #E8D4A2;
+            --bg: #FDFBF7;
+            --surface: #FFFFFF;
+            --text: #3E322E;
+            --chord: #8B4513;
+            --radius-lg: 30px;
+            --radius-md: 16px;
+            --shadow: 0 10px 30px rgba(78, 52, 46, 0.08);
+            --border: 1px solid rgba(184, 134, 11, 0.2);
+            --error: #800000;
+            --success: #1B5E20;
+            --pro: #4A0E0E;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            overflow-x: hidden; 
+            line-height: 1.6;
+        }
+        
+        .app-container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: var(--bg); 
+            min-height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            position: relative; 
+        }
+
+        .header { 
+            background: var(--primary); 
+            color: white; 
+            padding: 1.5rem 1rem; 
+            text-align: center; 
+            border-bottom-left-radius: 40px; 
+            border-bottom-right-radius: 40px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .header img {
+            width: 60px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .header h2 {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 1px;
+            margin: 0;
+            font-size: 1.2rem;
+            white-space: nowrap;
+        }
+
+        .header .subtitle {
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .screen { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
+        .hidden { display: none !important; }
+
+        /* XP Bar con estilo Cantoral */
+        .xp-bar-bg { background: rgba(255,255,255,0.1); height: 10px; border-radius: 5px; margin: 10px auto; width: 80%; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); }
+        .xp-bar-fill { background: var(--accent); height: 100%; width: 0%; transition: 0.5s; }
+
+        /* Botones estilo Cantoral */
+        .btn { 
+            padding: 15px; 
+            border: none; 
+            border-radius: var(--radius-md); 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: 0.3s; 
+            font-size: 0.85rem; 
+            margin: 8px 0; 
+            text-transform: uppercase;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-gold { background: var(--accent); color: white; box-shadow: 0 4px 15px rgba(184, 134, 11, 0.2); }
+        .btn-pro { background: var(--pro); color: #E8D4A2; border: 1px solid var(--accent); }
+        .btn-gold:disabled, .btn-pro:disabled { background: #ccc; cursor: not-allowed; opacity: 0.7; color: #666; border: none; }
+        .btn-outline { border: var(--border); background: var(--surface); color: var(--accent); }
+        .btn-timer { background: var(--primary); color: white; border: 1px solid var(--accent); }
+
+        /* Piano estilo Cantoral */
+        .piano { display: flex; justify-content: center; margin: 25px 0; height: 120px; }
+        .key { width: 35px; border: 1px solid var(--primary); background: var(--surface); border-radius: 0 0 5px 5px; cursor: pointer; position: relative; }
+        .key.black { background: var(--primary); height: 70px; width: 25px; margin: 0 -12.5px; z-index: 2; border-color: #000; }
+        .key:active { background: var(--accent-light); }
+
+        /* Grid Opciones */
+        .grid-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 20px 0; }
+        .opt-card { 
+            padding: 15px; 
+            border: var(--border); 
+            border-radius: var(--radius-md); 
+            cursor: pointer; 
+            text-align: center; 
+            background: var(--surface); 
+            font-size: 0.85em; 
+            font-weight: 700;
+            color: var(--text);
+            box-shadow: var(--shadow);
+            transition: 0.2s;
+        }
+        .opt-card.selected { 
+            border-color: var(--accent); 
+            background: var(--accent-light); 
+            color: var(--primary);
+            transform: translateY(-3px); 
+        }
+
+        .stat-box { 
+            display: flex; 
+            justify-content: space-around; 
+            background: var(--surface); 
+            padding: 15px; 
+            border-radius: var(--radius-md); 
+            margin-bottom: 20px; 
+            border: var(--border);
+            box-shadow: var(--shadow);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .lives-container { color: var(--error); font-size: 1.2em; letter-spacing: 2px; }
+        #timer-display { color: var(--error); font-weight: bold; font-size: 1.2em; }
+        
+        h3 { font-family: 'Cinzel', serif; color: var(--accent); text-align: center; margin-top: 15px; margin-bottom: 10px; }
+
+        /* Ranking */
+        .ranking-list { width: 100%; text-align: left; margin-top: 10px; font-size: 0.9em; }
+        .ranking-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(184,134,11,0.1); color: var(--text); }
+        
+        hr { border: 0; border-top: var(--border); margin: 25px 0; }
+        
+        #game-feedback { height: 30px; text-align: center; font-weight: 800; margin: 15px; font-family: 'Cinzel', serif; }
+
+        /* Estilo para los resultados */
+        #res-stats h1 { font-family: 'Cinzel', serif; color: var(--accent); margin: 10px 0; }
+        #res-stats p { font-weight: 600; color: var(--text); }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="header">
+        <img src="iconos/logo.png" alt="Logo">
+        <h2>ENTRENAMIENTO AUDITIVO</h2>
+        <div class="subtitle">Graduale Nostrum.</div>
+        <div style="font-size: 0.75rem; font-weight:500; color: var(--accent-light); text-transform: uppercase; letter-spacing: 1px;">
+            Nivel <span id="user-level">1</span> | <span id="user-xp">0</span> XP
+        </div>
+        <div class="xp-bar-bg"><div id="xp-fill" class="xp-bar-fill"></div></div>
+    </div>
+
+    <div id="scr-home" class="screen">
+        <h3>NIVELES ACADEMIA</h3>
+        <div class="stat-box">
+            <span>🔥 RACHA: <b id="stat-streak">0</b></span>
+            <span>🏆 RÉCORD: <b id="stat-best">0</b></span>
+        </div>
+        
+        <div id="level-list" style="display: flex; flex-direction: column;">
+            <button class="btn btn-gold" onclick="startLevel(1, false)"><i class="fas fa-music"></i> Nivel 1: Escala Blanca</button>
+            <button id="lock-2" class="btn btn-outline" onclick="startLevel(2, false)"><i class="fas fa-lock"></i> Nivel 2: Cromatismo (1000 XP)</button>
+            <button id="lock-3" class="btn btn-outline" onclick="startLevel(3, false)"><i class="fas fa-lock"></i> Nivel 3: Comparación (2000 XP)</button>
+            <button id="lock-4" class="btn btn-outline" onclick="startLevel(4, false)"><i class="fas fa-lock"></i> Nivel 4: Dictado Intervalos (4000 XP)</button>
+            <button id="lock-5" class="btn btn-outline" onclick="startLevel(5, false)"><i class="fas fa-lock"></i> Nivel 5: Escalas (8000 XP)</button>
+            <button id="lock-6" class="btn btn-outline" onclick="startLevel(6, false)"><i class="fas fa-lock"></i> Nivel 6: Acordes (16000 XP)</button>
+            <button id="lock-7" class="btn btn-outline" onclick="startLevel(7, false)"><i class="fas fa-lock"></i> Nivel 7: Progresiones (32000 XP)</button>
+        </div>
+
+        <h3 style="color: var(--pro);">SECCIÓN PRO (SIN SONIDO OPCIONES)</h3>
+        <div id="pro-level-list" style="display: flex; flex-direction: column;">
+            <button id="lock-pro-1" class="btn btn-outline" onclick="startLevel(1, true)"><i class="fas fa-crown"></i> Nivel 1 PRO (64k XP)</button>
+            <button id="lock-pro-2" class="btn btn-outline" onclick="startLevel(2, true)"><i class="fas fa-crown"></i> Nivel 2 PRO (128k XP)</button>
+            <button id="lock-pro-3" class="btn btn-outline" onclick="startLevel(3, true)"><i class="fas fa-crown"></i> Nivel 3 PRO (256k XP)</button>
+            <button id="lock-pro-4" class="btn btn-outline" onclick="startLevel(4, true)"><i class="fas fa-crown"></i> Nivel 4 PRO (512k XP)</button>
+            <button id="lock-pro-5" class="btn btn-outline" onclick="startLevel(5, true)"><i class="fas fa-crown"></i> Nivel 5 PRO (1.02M XP)</button>
+            <button id="lock-pro-6" class="btn btn-outline" onclick="startLevel(6, true)"><i class="fas fa-crown"></i> Nivel 6 PRO (2.04M XP)</button>
+            <button id="lock-pro-7" class="btn btn-outline" onclick="startLevel(7, true)"><i class="fas fa-crown"></i> Nivel 7 PRO (4.09M XP)</button>
+        </div>
+
+        <button class="btn btn-timer" style="margin-top: 20px;" onclick="startTimerMode()"><i class="fas fa-stopwatch"></i> MODO TIEMPO (1 MIN)</button>
+        
+        <hr>
+        <p style="font-size: 0.7rem; color: var(--accent); font-weight: 800; text-transform: uppercase; text-align: center; margin-bottom: 0;">Práctica Libre</p>
+        <div class="piano" id="piano-practice"></div>
+    </div>
+
+    <div id="scr-game" class="screen hidden">
+        <div class="stat-box">
+            <span id="game-status">Pregunta 1/10</span>
+            <span id="timer-display" class="hidden">60s</span>
+            <span class="lives-container" id="game-lives">❤️❤️❤️</span>
+        </div>
+        <div id="pro-badge" style="text-align: center; color: var(--pro); font-weight: 900; margin-bottom: 10px; font-size: 0.8rem;" class="hidden">MODO PRO ACTIVO</div>
+        <button class="btn btn-gold" style="font-size: 2.5rem; padding: 30px; margin: 10px auto; width: 100px; height: 100px; border-radius: 50%;" onclick="playQuestionAudio()">
+            <i class="fas fa-volume-up"></i>
+        </button>
+        <div id="game-options" class="grid-options"></div>
+        <div id="game-feedback"></div>
+        <button class="btn btn-gold" style="width: 100%;" onclick="checkAnswer()">Confirmar</button>
+        <button class="btn" style="color: var(--accent); background: transparent;" onclick="cancelGame()">Abandonar</button>
+    </div>
+
+    <div id="scr-results" class="screen hidden">
+        <h2 id="res-title" style="font-family:'Cinzel'; text-align:center; color: var(--primary);">¡EXAMEN TERMINADO!</h2>
+        <div id="res-stats" class="stat-box" style="flex-direction: column; align-items: center; padding: 30px; background: var(--surface);"></div>
+        <div id="res-ranking" class="hidden" style="width:100%; margin-top:15px;">
+            <h4 style="margin:5px 0; font-family:'Cinzel'; color: var(--accent); text-align:center;">🏆 TOP 5 TIEMPO</h4>
+            <div id="ranking-container" class="ranking-list"></div>
+        </div>
+        <button class="btn btn-gold" style="width:100%; margin-top: 20px;" onclick="goHome()">Volver al Menú</button>
+    </div>
+</div>
+<script type="module">
+    import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
+
+    window.onload = function() {
+        App.addListener('backButton', () => {
+            const pagina = window.location.pathname.split("/").pop();
+
+            if (pagina === 'index.html' || pagina === '') {
+                App.exitApp();
+            } else {
+                window.location.assign('index.html');
+            }
+        });
+    };
+</script>
+
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    const reverb = audioCtx.createConvolver();
+    const impulseLength = 2 * audioCtx.sampleRate;
+    const impulse = audioCtx.createBuffer(2, impulseLength, audioCtx.sampleRate);
+    for (let channel = 0; channel < 2; channel++) {
+        const channelData = impulse.getChannelData(channel);
+        for (let i = 0; i < impulseLength; i++) {
+            channelData[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / impulseLength, 2);
+        }
+    }
+    reverb.buffer = impulse;
+    reverb.connect(audioCtx.destination);
+
+    const NOTES = { "Do": 261.63, "Do#": 277.18, "Re": 293.66, "Re#": 311.13, "Mi": 329.63, "Fa": 349.23, "Fa#": 369.99, "Sol": 392.00, "Sol#": 415.30, "La": 440.00, "La#": 466.16, "Si": 493.88, "Do2": 523.25 };
+    
+    const COMPARISONS = [
+        { name: "2da Menor vs 2da Mayor", options: ["2da Menor", "2da Mayor"], semitones: [1, 2] },
+        { name: "3ra Menor vs 3ra Mayor", options: ["3ra Menor", "3ra Mayor"], semitones: [3, 4] },
+        { name: "6ta Menor vs 6ta Mayor", options: ["6ta Menor", "6ta Mayor"], semitones: [8, 9] },
+        { name: "7ma Menor vs 7ma Mayor", options: ["7ma Menor", "7ma Mayor"], semitones: [10, 11] }
+    ];
+
+    const LEVEL4_INTERVALS = { 
+        "2da Menor": 1, "2da Mayor": 2, "3ra Menor": 3, "3ra Mayor": 4, 
+        "4ta Justa": 5, "Tritono": 6, "5ta Justa": 7, "6ta Menor": 8, 
+        "6ta Mayor": 9, "7ma Menor": 10, "7ma Mayor": 11, "Octava": 12 
+    };
+
+    const SCALES = {
+        "Mayor": [0, 2, 4, 5, 7, 9, 11, 12],
+        "Menor": [0, 2, 3, 5, 7, 8, 10, 12]
+    };
+
+    const CHORDS = {
+        "Mayor": [0, 4, 7],
+        "Menor": [0, 3, 7],
+        "Dominante 7": [0, 4, 7, 10],
+        "Menor 7": [0, 3, 7, 10],
+        "Disminuido": [0, 3, 6],
+        "Maj7": [0, 4, 7, 11],
+        "mMaj7": [0, 3, 7, 11]
+    };
+
+    const DEGREES = {
+        "I": [0, 4, 7],
+        "ii": [2, 5, 9],
+        "IV": [5, 9, 12],
+        "V": [7, 11, 14],
+        "vi": [9, 12, 16],
+        "vii°": [11, 14, 17]
+    };
+
+    const PROGRESSIONS = {
+        "I-V": ["I", "V"],
+        "IV-I": ["IV", "I"],
+        "I-IV": ["I", "IV"],
+        "ii-V": ["ii", "V"],
+        "I-vi": ["I", "vi"],
+        "V-I": ["V", "I"],
+        "vi-IV": ["vi", "IV"],
+        "vii°-I": ["vii°", "I"]
+    };
+
+    // --- LÓGICA DE PERSISTENCIA ---
+    function loadUserData() {
+        const saved = localStorage.getItem('pro_academy_user_data');
+        if (saved) {
+            user = JSON.parse(saved);
+        }
+    }
+
+    function saveUserData() {
+        localStorage.setItem('pro_academy_user_data', JSON.stringify(user));
+    }
+    // ------------------------------
+
+    let user = { level: 1, xp: 0, best: 0, streak: 0 };
+    loadUserData(); // Cargar al iniciar
+
+    let gameState = { currentLvl: 0, step: 0, score: 0, correct: '', selected: '', errors: [], lives: 3, isTimerMode: false, isPro: false, timeLeft: 60, currentPair: null };
+    let gameInterval;
+
+    function synth(freq, time, dur = 1.5) {
+        const osc = audioCtx.createOscillator();
+        const masterGain = audioCtx.createGain();
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, time);
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(freq * 2, time);
+        masterGain.gain.setValueAtTime(0, time);
+        masterGain.gain.linearRampToValueAtTime(0.3, time + 0.02);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+        gain2.gain.setValueAtTime(0.1, time);
+        osc.connect(masterGain);
+        osc2.connect(gain2);
+        gain2.connect(masterGain);
+        masterGain.connect(reverb); 
+        masterGain.connect(audioCtx.destination);
+        osc.start(time);
+        osc2.start(time);
+        osc.stop(time + dur);
+        osc2.stop(time + dur);
+    }
+
+    const pianoDiv = document.getElementById('piano-practice');
+    Object.keys(NOTES).forEach(n => {
+        const k = document.createElement('div');
+        k.className = `key ${n.includes('#') ? 'black' : ''}`;
+        k.onclick = () => { if(audioCtx.state==='suspended') audioCtx.resume(); synth(NOTES[n], audioCtx.currentTime); };
+        pianoDiv.appendChild(k);
+    });
+
+    function updateUI() {
+        // Calcular nivel basado en XP
+        if (user.xp < 1000) user.level = 1;
+        else if (user.xp < 2000) user.level = 2;
+        else if (user.xp < 4000) user.level = 3;
+        else if (user.xp < 8000) user.level = 4;
+        else if (user.xp < 16000) user.level = 5;
+        else if (user.xp < 32000) user.level = 6;
+        else user.level = 7;
+
+        document.getElementById('user-level').innerText = user.level;
+        document.getElementById('user-xp').innerText = user.xp;
+        document.getElementById('stat-best').innerText = user.best;
+        document.getElementById('stat-streak').innerText = user.streak;
+        
+        let progress = 0;
+        if (user.xp < 1000) progress = (user.xp / 1000) * 100;
+        else if (user.xp < 2000) progress = ((user.xp - 1000) / 1000) * 100;
+        else if (user.xp < 4000) progress = ((user.xp - 2000) / 2000) * 100;
+        else if (user.xp < 8000) progress = ((user.xp - 4000) / 4000) * 100;
+        else if (user.xp < 16000) progress = ((user.xp - 8000) / 8000) * 100;
+        else if (user.xp < 32000) progress = ((user.xp - 16000) / 16000) * 100;
+        else progress = 100;
+
+        document.getElementById('xp-fill').style.width = `${progress}%`;
+        
+        // Niveles normales
+        const thresholds = [0, 1000, 2000, 4000, 8000, 16000, 32000];
+        for(let i=2; i<=7; i++) {
+            const btn = document.getElementById(`lock-${i}`);
+            if(user.xp >= thresholds[i-1]) {
+                btn.disabled = false;
+                btn.classList.replace('btn-outline', 'btn-gold');
+                btn.innerHTML = `<i class="fas fa-check"></i> Nivel ${i}`;
+            }
+        }
+
+        // Niveles PRO
+        const proThresholds = [64000, 128000, 256000, 512000, 1024000, 2048000, 4096000];
+        for(let i=1; i<=7; i++) {
+            const btn = document.getElementById(`lock-pro-${i}`);
+            if(user.xp >= proThresholds[i-1]) {
+                btn.disabled = false;
+                btn.classList.replace('btn-outline', 'btn-pro');
+                btn.innerHTML = `<i class="fas fa-crown"></i> Nivel ${i} PRO`;
+            }
+        }
+    }
+
+    function startLevel(lvl, isPro) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const thresholds = [0, 1000, 2000, 4000, 8000, 16000, 32000];
+        const proThresholds = [64000, 128000, 256000, 512000, 1024000, 2048000, 4096000];
+        
+        if (!isPro && lvl > 1 && user.xp < thresholds[lvl-1]) { alert(`Necesitas ${thresholds[lvl-1]} XP`); return; }
+        if (isPro && user.xp < proThresholds[lvl-1]) { alert(`Necesitas ${proThresholds[lvl-1]} XP`); return; }
+        
+        setupGame(lvl, false, isPro);
+    }
+
+    function startTimerMode() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        setupGame(2, true, false);
+    }
+
+    function setupGame(lvl, isTimer, isPro) {
+        gameState = { currentLvl: lvl, step: 1, score: 0, correct: '', selected: '', errors: [], lives: 3, isTimerMode: isTimer, isPro: isPro, timeLeft: 60, currentPair: null };
+        showScreen('scr-game');
+        document.getElementById('res-ranking').classList.add('hidden');
+        document.getElementById('pro-badge').className = isPro ? "" : "hidden";
+        
+        const timerDisp = document.getElementById('timer-display');
+        const livesDisp = document.getElementById('game-lives');
+        const grid = document.getElementById('game-options');
+        
+        if (lvl === 3 || lvl === 5) grid.style.gridTemplateColumns = "repeat(2, 1fr)";
+        else grid.style.gridTemplateColumns = "repeat(3, 1fr)";
+
+        if (isTimer) {
+            timerDisp.classList.remove('hidden');
+            livesDisp.classList.add('hidden');
+            startCountdown();
+        } else {
+            timerDisp.classList.add('hidden');
+            livesDisp.classList.remove('hidden');
+            updateLivesUI();
+        }
+        newQuestion();
+    }
+
+    function startCountdown() {
+        gameInterval = setInterval(() => {
+            gameState.timeLeft--;
+            document.getElementById('timer-display').innerText = gameState.timeLeft + "s";
+            if (gameState.timeLeft <= 0) {
+                clearInterval(gameInterval);
+                finishGame("¡TIEMPO AGOTADO!");
+            }
+        }, 1000);
+    }
+
+    function updateLivesUI() { document.getElementById('game-lives').innerText = "❤️".repeat(gameState.lives); }
+
+    function newQuestion() {
+        gameState.selected = '';
+        document.getElementById('game-feedback').innerText = "";
+        document.getElementById('game-status').innerText = gameState.isTimerMode ? `Aciertos: ${gameState.score/10}` : `Reto ${gameState.step}/10`;
+        
+        const grid = document.getElementById('game-options');
+        grid.innerHTML = "";
+
+        let options = [];
+        if (gameState.currentLvl === 1) options = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
+        else if (gameState.currentLvl === 2) options = Object.keys(NOTES);
+        else if (gameState.currentLvl === 3) options = (gameState.currentPair = COMPARISONS[Math.floor(Math.random() * COMPARISONS.length)]).options;
+        else if (gameState.currentLvl === 4) options = Object.keys(LEVEL4_INTERVALS);
+        else if (gameState.currentLvl === 5) options = Object.keys(SCALES);
+        else if (gameState.currentLvl === 6) options = Object.keys(CHORDS);
+        else if (gameState.currentLvl === 7) options = Object.keys(PROGRESSIONS);
+
+        gameState.correct = options[Math.floor(Math.random() * options.length)];
+        
+        options.sort(() => Math.random() - 0.5).forEach(opt => {
+            const d = document.createElement('div');
+            d.className = 'opt-card';
+            d.innerText = opt;
+            d.onclick = () => {
+                gameState.selected = opt;
+                document.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+                d.classList.add('selected');
+                playAudioForOption(opt, true); // true indica que es clic manual
+            };
+            grid.appendChild(d);
+        });
+        playQuestionAudio();
+    }
+
+    function playAudioForOption(opt, isManualClick = false) {
+        if (gameState.isPro && isManualClick) return;
+
+        const now = audioCtx.currentTime;
+        if (gameState.currentLvl < 3) {
+            synth(NOTES[opt], now);
+        } else if (gameState.currentLvl === 3) {
+            const semitones = opt === gameState.currentPair.options[0] ? gameState.currentPair.semitones[0] : gameState.currentPair.semitones[1];
+            synth(NOTES["Do"], now, 1.0);
+            synth(NOTES["Do"] * Math.pow(2, semitones/12), now + 0.5, 1.2);
+        } else if (gameState.currentLvl === 4) {
+            const semitones = LEVEL4_INTERVALS[opt];
+            synth(NOTES["Do"], now, 1.0);
+            synth(NOTES["Do"] * Math.pow(2, semitones/12), now + 0.5, 1.2);
+        } else if (gameState.currentLvl === 5) {
+            const intervals = SCALES[opt];
+            intervals.forEach((semi, index) => {
+                synth(NOTES["Do"] * Math.pow(2, semi/12), now + (index * 0.4), 0.6);
+            });
+        } else if (gameState.currentLvl === 6) {
+            const intervals = CHORDS[opt];
+            intervals.forEach((semi) => {
+                synth(NOTES["Do"] * Math.pow(2, semi/12), now, 2.0);
+            });
+        } else if (gameState.currentLvl === 7) {
+            const progression = PROGRESSIONS[opt];
+            DEGREES[progression[0]].forEach(semi => {
+                synth(NOTES["Do"] * Math.pow(2, semi/12), now, 1.5);
+            });
+            DEGREES[progression[1]].forEach(semi => {
+                synth(NOTES["Do"] * Math.pow(2, semi/12), now + 1.2, 1.5);
+            });
+        }
+    }
+
+    function playQuestionAudio() {
+        playAudioForOption(gameState.correct, false);
+    }
+
+    function checkAnswer() {
+        if (!gameState.selected) return;
+        const feedback = document.getElementById('game-feedback');
+        
+        if (gameState.selected === gameState.correct) {
+            gameState.score += 10;
+            user.streak++;
+            feedback.innerText = "¡EXCELENTE!";
+            feedback.style.color = "var(--success)";
+            synth(880, audioCtx.currentTime, 0.2);
+        } else {
+            gameState.errors.push({q: gameState.correct, a: gameState.selected});
+            user.streak = 0;
+            if (!gameState.isTimerMode) gameState.lives--;
+            feedback.innerText = `RESPUESTA: ${gameState.correct}`;
+            feedback.style.color = "var(--error)";
+            synth(110, audioCtx.currentTime, 0.4);
+        }
+
+        setTimeout(() => {
+            if (!gameState.isTimerMode && gameState.lives <= 0) finishGame("GAME OVER");
+            else if (!gameState.isTimerMode && gameState.step >= 10) finishGame("¡EXAMEN TERMINADO!");
+            else { gameState.step++; newQuestion(); }
+        }, 800);
+    }
+
+    function saveRanking(score) {
+        let scores = JSON.parse(localStorage.getItem('maestro_auditivo_timer_scores') || "[]");
+        scores.push({score: score, date: new Date().toLocaleDateString()});
+        scores.sort((a, b) => b.score - a.score);
+        scores = scores.slice(0, 5);
+        localStorage.setItem('maestro_auditivo_timer_scores', JSON.stringify(scores));
+        return scores;
+    }
+
+    function finishGame(title) {
+        clearInterval(gameInterval);
+        showScreen('scr-results');
+        document.getElementById('res-title').innerText = title;
+        
+        user.xp += gameState.score;
+        if (gameState.score > user.best) user.best = gameState.score;
+        
+        saveUserData(); // PERSISTENCIA: Guardar progreso al finalizar partida
+
+        document.getElementById('res-stats').innerHTML = `<h1>${gameState.score} PUNTOS</h1><p>XP Ganada: +${gameState.score}</p>`;
+        
+        if (gameState.isTimerMode) {
+            const ranking = saveRanking(gameState.score);
+            const container = document.getElementById('ranking-container');
+            document.getElementById('res-ranking').classList.remove('hidden');
+            container.innerHTML = ranking.map((s, i) => `<div class="ranking-item"><span>${i+1}. ${s.date}</span><b>${s.score} pts</b></div>`).join('');
+        }
+        updateUI();
+    }
+
+    function cancelGame() { 
+        clearInterval(gameInterval); 
+        saveUserData(); // Guardar aunque abandone por si ganó algo de racha/puntos
+        goHome(); 
+    }
+    
+    function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden')); document.getElementById(id).classList.remove('hidden'); }
+    
+    function goHome() { 
+        showScreen('scr-home'); 
+        updateUI(); 
+    }
+
+    // Inicialización
+    updateUI();
+</script>
+</body>
+</html>
+

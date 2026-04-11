@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tonaljs/tonal/browser/tonal.min.js"></script>
+    <style>
+        :root { 
+            --madera: #3e2723; --dorado: #c5a059; --brillo: #f4d03f; 
+            --blanco: #fffcf5; --negro: #1a1a1a; --fondo: #e6dfcf;
+        }
+        body { 
+            text-align: center; background: var(--fondo); padding: 0; 
+            font-family: 'Segoe UI', serif; color: #333; 
+            margin: 0; overflow: hidden; 
+            display: flex; justify-content: flex-end; 
+            user-select: none;
+            touch-action: none; 
+        }
+
+        #piano-scroll-container {
+            width: fit-content; height: 100vh; overflow-y: auto; overflow-x: hidden;
+            margin: 0; scroll-behavior: smooth;
+        }
+
+        #zoom-wrapper { 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            display: inline-block;
+            transform: rotate(-90deg) translateX(-100%) scale(1);
+            transform-origin: top left;
+        }
+        
+        .piano-container { 
+            background: #1a0f0d; 
+            padding: 300px 30px 100px 30px; 
+            border: 12px solid var(--madera); 
+            border-radius: 12px 60px 60px 12px; 
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6); 
+            width: fit-content; 
+            margin-right: -12px; 
+            position: relative;
+        }
+
+        .piano-container::before {
+            content: "";
+            position: absolute;
+            top: 12px; left: 12px; right: 12px; 
+            height: 288px; 
+            background-color: #261410;
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.1) 10px, rgba(0,0,0,0.1) 20px);
+            border-radius: 4px 50px 0 0;
+            opacity: 0.6;
+        }
+
+        /* ENCABEZADO Y CONTROLES CENTRADOS */
+        .header-identidad {
+            position: absolute;
+            top: 130px; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 20;
+        }
+
+        .logo-coro {
+            width: 80px;
+            height: auto;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .nombre-coro {
+            color: var(--dorado);
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .subtitulo-app {
+            color: var(--brillo);
+            font-size: 14px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .controles-resonancia {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .boton-control {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(145deg, #2c1a17, #1a0f0d);
+            border: 1px solid var(--dorado);
+            border-radius: 8px;
+            padding: 10px;
+            color: var(--dorado);
+            cursor: pointer;
+            min-width: 85px;
+            transition: all 0.2s;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            user-select: none;
+        }
+
+        .boton-control:hover { background: var(--madera); color: var(--brillo); transform: scale(1.05); }
+        .boton-control.activo { background: var(--brillo); color: #000; border-color: #000; }
+        .boton-control i { font-size: 20px; margin-bottom: 5px; }
+        .boton-control span { font-size: 10px; text-transform: uppercase; font-weight: bold; }
+
+        #barra-acordes-piano {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px; 
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 10px;
+            overflow-x: auto;
+            z-index: 5;
+        }
+
+        .btn-acorde-piano {
+            background: var(--dorado);
+            color: black;
+            border: none;
+            padding: 0 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-acorde-piano i { font-size: 10px; opacity: 0.6; }
+        .btn-acorde-piano:hover { background: var(--brillo); }
+
+        .modal-rotado {
+            display: none; position: fixed; top: 0; left: 0; width: 100vh; height: 100vw;
+            background: rgba(0,0,0,0.95); z-index: 100; color: white; padding: 40px;
+            box-sizing: border-box; overflow-y: auto; text-align: left;
+            transform: rotate(-90deg) translateX(-100%);
+            transform-origin: top left;
+        }
+
+        .grid-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; margin-top: 20px; }
+        .card-item { background: #333; padding: 20px; border-radius: 8px; cursor: pointer; border: 1px solid var(--dorado); text-align: center; transition: 0.2s; }
+        .card-item:hover { background: var(--madera); transform: translateY(-5px); }
+        .card-item.activo { background: var(--brillo); color: black; border-color: white; }
+        
+        .grid-acordes { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 20px; }
+        .card-acorde { background: #333; padding: 15px; border-radius: 8px; cursor: pointer; border: 1px solid var(--dorado); }
+        .card-acorde:hover { background: var(--dorado); color: black; }
+        .card-acorde.seleccionado { border-color: var(--brillo); background: #444; box-shadow: 0 0 10px var(--brillo); }
+        .selector-raiz { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-raiz { padding: 8px 15px; border: 1px solid var(--dorado); background: none; color: white; cursor: pointer; border-radius: 4px; }
+        .btn-raiz.active { background: var(--dorado); color: black; }
+
+        .control-group { margin-bottom: 25px; background: #222; padding: 15px; border-radius: 10px; border-left: 4px solid var(--dorado); }
+        .control-group label { display: block; margin-bottom: 10px; color: var(--dorado); font-weight: bold; }
+        .metro-input { background: #444; border: 1px solid var(--dorado); color: white; padding: 8px; border-radius: 5px; width: 100%; box-sizing: border-box; }
+        .flex-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-opcion { flex: 1; padding: 10px; border: 1px solid #555; background: #333; color: white; cursor: pointer; border-radius: 5px; min-width: 80px; }
+        .btn-opcion.active { background: var(--dorado); color: black; border-color: white; }
+
+        svg { display: block; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.4)); position: relative; z-index: 1; }
+        .tecla-svg { cursor: pointer; }
+        .tecla-activa-visual { fill: var(--brillo) !important; filter: brightness(1.2); }
+        .tecla-marcada-ver { fill: var(--brillo) !important; filter: drop-shadow(0 0 5px var(--brillo)); }
+        
+        text { font-family: 'Segoe UI', sans-serif; font-size: 14px; font-weight: bold; pointer-events: none; user-select: none; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+<div id="diccionario-modal" class="modal-rotado">
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+        <h2>Diccionario de Acordes Pro</h2>
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-add-lista" onclick="agregarAListaFavoritos()" style="background:var(--dorado); border:none; padding:10px 20px; cursor:pointer; font-weight:bold; display:none;">AÑADIR A LISTA</button>
+            <button id="btn-ver-acorde" onclick="verAcordeEnPiano()" style="background:var(--brillo); border:none; padding:10px 20px; cursor:pointer; font-weight:bold; display:none;">VER</button>
+            <button onclick="cerrarModales()" style="background:var(--dorado); border:none; padding:10px 20px; cursor:pointer; font-weight:bold;">CERRAR</button>
+        </div>
+    </div>
+    <div class="selector-raiz" id="selector-raiz"></div>
+    <h3>Categorías</h3>
+    <div id="categorias-acordes"><div class="grid-acordes" id="lista-acordes"></div></div>
+</div>
+
+<div id="instrumentos-modal" class="modal-rotado">
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+        <h2>Selector de Instrumentos</h2>
+        <button onclick="cerrarModales()" style="background:var(--dorado); border:none; padding:10px 20px; cursor:pointer; font-weight:bold;">CERRAR</button>
+    </div>
+    <div class="grid-items" id="lista-instrumentos">
+        <div class="card-item activo" onclick="cambiarInstrumento('piano')"><i class="fas fa-piano"></i><br>Piano de Cola</div>
+        <div class="card-item" onclick="cambiarInstrumento('organ')"><i class="fas fa-church"></i><br>Órgano de Iglesia</div>
+        <div class="card-item" onclick="cambiarInstrumento('strings')"><i class="fas fa-layer-group"></i><br>Conjunto Cuerdas</div>
+        <div class="card-item" onclick="cambiarInstrumento('violin')"><i class="fas fa-violin"></i><br>Violín Solo</div>
+        <div class="card-item" onclick="cambiarInstrumento('choir')"><i class="fas fa-users"></i><br>Voces y Coros</div>
+    </div>
+</div>
+
+<div id="metronomo-modal" class="modal-rotado">
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+        <h2>Configuración de Metrónomo</h2>
+        <button onclick="cerrarModales()" style="background:var(--dorado); border:none; padding:10px 20px; cursor:pointer; font-weight:bold;">CERRAR</button>
+    </div>
+    <div class="control-group">
+        <label>Tempo (BPM: <span class="val-bpm-sync">120</span>)</label>
+        <input type="range" min="40" max="250" value="120" class="metro-input input-bpm-sync" oninput="updateBpm(this.value)">
+    </div>
+    <div class="control-group">
+        <label>Tipo de Compás</label>
+        <div class="flex-buttons">
+            <button class="btn-opcion active" onclick="setCompas(2, this)">2/4</button>
+            <button class="btn-opcion" onclick="setCompas(3, this)">3/4</button>
+            <button class="btn-opcion" onclick="setCompas(4, this)">4/4</button>
+            <button class="btn-opcion" onclick="setCompas(6, this)">6/8</button>
+        </div>
+    </div>
+    <div class="control-group">
+        <label>Sonido del Click</label>
+        <div class="flex-buttons">
+            <button class="btn-opcion active" onclick="setMetroSound('sinusoidal', this)">Sinusoidal</button>
+            <button class="btn-opcion" onclick="setMetroSound('cuadrada', this)">Cuadrada</button>
+            <button class="btn-opcion" onclick="setMetroSound('triangular', this)">Triangular</button>
+        </div>
+    </div>
+    <button id="btn-toggle-play" onclick="toggleMetronomo()" style="width:100%; padding:20px; background:var(--brillo); border:none; border-radius:10px; font-weight:bold; font-size:1.2em; cursor:pointer;">INICIAR / PARAR</button>
+</div>
+
+<div id="acompanamiento-modal" class="modal-rotado">
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+        <h2>Configuración de Acompañamiento</h2>
+        <button onclick="cerrarModales()" style="background:var(--dorado); border:none; padding:10px 20px; cursor:pointer; font-weight:bold;">CERRAR</button>
+    </div>
+    <div class="control-group">
+        <label>Tempo Global (BPM: <span class="val-bpm-sync">120</span>)</label>
+        <input type="range" min="40" max="250" value="120" class="metro-input input-bpm-sync" oninput="updateBpm(this.value)">
+    </div>
+    <div class="control-group">
+        <label>Modos de Ejecución</label>
+        <div class="flex-buttons">
+            <button class="btn-opcion active" onclick="setAcompStyle('marcado', this)">Marcado</button>
+            <button class="btn-opcion" onclick="setAcompStyle('arpegiado', this)">Arpegiado</button>
+            <button class="btn-opcion" onclick="setAcompStyle('avanzado', this)">Avanzado</button>
+        </div>
+    </div>
+    <div class="control-group">
+        <button id="btn-toggle-acomp" onclick="toggleAcompanamiento()" style="width:100%; padding:15px; background:var(--dorado); border:none; border-radius:8px; font-weight:bold; cursor:pointer;">ACTIVAR ACOMPAÑAMIENTO</button>
+    </div>
+</div>
+
+<div id="piano-scroll-container">
+    <div id="zoom-wrapper">
+        <div class="piano-container" id="piano-container">
+            
+            <div class="header-identidad">
+                <img src="iconos/logo.png" alt="Logo" class="logo-coro" onerror="this.style.display='none'">
+                <div class="nombre-coro">Piano</div>
+                <div class="subtitulo-app">Graduale Nostrum</div>
+                <div class="controles-resonancia">
+                    <div class="boton-control" id="btn-pedal" onclick="togglePedal()"><i class="fas fa-shoe-prints"></i><span>Pedal</span></div>
+                    <div class="boton-control" id="btn-zoom" onclick="ciclarZoom()"><i class="fas fa-search-plus"></i><span>Zoom</span></div>
+                    <div class="boton-control" id="btn-metronomo" onclick="abrirMetronomo()"><i class="fas fa-clock"></i><span id="txt-metro">Metrónomo</span></div>
+                    <div class="boton-control" id="btn-instrumentos" onclick="abrirInstrumentos()"><i class="fas fa-guitar"></i><span>Instrumentos</span></div>
+                    <div class="boton-control" id="btn-acompañamiento" onclick="abrirAcompanamiento()"><i class="fas fa-users"></i><span>Acompañ.</span></div>
+                    <div class="boton-control" id="btn-diccionario" onclick="abrirDiccionario()"><i class="fas fa-book"></i><span>Diccionario</span></div>
+                </div>
+            </div>
+            
+            <svg id="piano-svg"></svg>
+            <div id="barra-acordes-piano"></div>
+        </div>
+    </div>
+</div>
+<script type="module">
+    import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
+
+    window.onload = function() {
+        App.addListener('backButton', () => {
+            const pagina = window.location.pathname.split("/").pop();
+
+            if (pagina === 'index.html' || pagina === '') {
+                App.exitApp();
+            } else {
+                window.location.assign('index.html');
+            }
+        });
+    };
+</script>
+
+
+<script>
+    document.addEventListener('wheel', (e) => { if(e.ctrlKey) e.preventDefault(); }, { passive: false });
+    document.addEventListener('touchstart', (e) => { if(e.touches.length > 1) e.preventDefault(); }, { passive: false });
+
+    const baseSamples = "https://tonejs.github.io/audio/salamander/";
+    let currentInstrument = 'piano';
+    let isMouseDown = false;
+    let listaAcordesFavoritos = [];
+    let pedalSostenido = false;
+    let zoomActual = 1;
+
+    const instruments = {
+        piano: new Tone.Sampler({
+            urls: { "A0": "A0.mp3", "C1": "C1.mp3", "D#1": "Ds1.mp3", "F#1": "Fs1.mp3", "A1": "A1.mp3", "C2": "C2.mp3", "C4": "C4.mp3", "A6": "A6.mp3" },
+            baseUrl: baseSamples, release: 1
+        }).toDestination(),
+        organ: new Tone.Sampler({ urls: { "C4": "C4.mp3" }, baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/organ/", release: 2 }).toDestination(),
+        strings: new Tone.Sampler({ urls: { "C4": "C4.mp3" }, baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/cello/", release: 1.5 }).toDestination(),
+        violin: new Tone.Sampler({ urls: { "C4": "C4.mp3" }, baseUrl: "https://nbrosowsky.github.io/tonejs-instruments/samples/violin/", release: 1.2 }).toDestination(),
+        choir: new Tone.PolySynth(Tone.Synth).toDestination()
+    };
+
+    function togglePedal() {
+        pedalSostenido = !pedalSostenido;
+        const btn = document.getElementById('btn-pedal');
+        if(pedalSostenido) btn.classList.add('activo');
+        else {
+            btn.classList.remove('activo');
+            instruments[currentInstrument].releaseAll();
+        }
+    }
+
+    function ciclarZoom() {
+        const niveles = [1, 1.2, 1.5];
+        let idx = niveles.indexOf(zoomActual);
+        zoomActual = niveles[(idx + 1) % niveles.length];
+        document.getElementById('zoom-wrapper').style.transform = `rotate(-90deg) translateX(-100%) scale(${zoomActual})`;
+    }
+
+    window.addEventListener('mousedown', () => isMouseDown = true);
+    window.addEventListener('mouseup', () => isMouseDown = false);
+
+    function cambiarInstrumento(tipo) {
+        currentInstrument = tipo;
+        document.querySelectorAll('#instrumentos-modal .card-item').forEach(c => c.classList.remove('activo'));
+        event.currentTarget.classList.add('activo');
+        Tone.start();
+    }
+
+    function abrirInstrumentos() { cerrarModales(); document.getElementById('instrumentos-modal').style.display = 'block'; }
+    function abrirMetronomo() { cerrarModales(); document.getElementById('metronomo-modal').style.display = 'block'; }
+    function abrirAcompanamiento() { cerrarModales(); document.getElementById('acompanamiento-modal').style.display = 'block'; }
+    
+    function cerrarModales() {
+        document.getElementById('diccionario-modal').style.display = 'none';
+        document.getElementById('instrumentos-modal').style.display = 'none';
+        document.getElementById('metronomo-modal').style.display = 'none';
+        document.getElementById('acompanamiento-modal').style.display = 'none';
+    }
+
+    let raizActual = "C";
+    let acordeSeleccionado = null;
+    const notasRaiz = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    
+    function abrirDiccionario() {
+        document.getElementById('diccionario-modal').style.display = 'block';
+        renderRaices();
+        renderAcordes();
+    }
+
+    function renderRaices() {
+        const container = document.getElementById('selector-raiz');
+        container.innerHTML = '';
+        notasRaiz.forEach(nota => {
+            const btn = document.createElement('button');
+            btn.className = `btn-raiz ${raizActual === nota ? 'active' : ''}`;
+            btn.innerText = nota;
+            btn.onclick = () => { raizActual = nota; renderRaices(); renderAcordes(); };
+            container.appendChild(btn);
+        });
+    }
+
+    function renderAcordes() {
+        const container = document.getElementById('lista-acordes');
+        container.innerHTML = '';
+        const tipos = Tonal.ChordType.all();
+        tipos.forEach(tipo => {
+            const chord = Tonal.Chord.get(`${raizActual}${tipo.aliases[0] || tipo.name}`);
+            if (chord.empty) return;
+            const div = document.createElement('div');
+            div.className = 'card-acorde';
+            if(acordeSeleccionado && acordeSeleccionado.name === chord.name) div.classList.add('seleccionado');
+            div.innerHTML = `<strong>${raizActual} ${tipo.name}</strong><br><small>${chord.notes.join(', ')}</small>`;
+            div.onclick = () => { seleccionarAcorde(chord, div); };
+            container.appendChild(div);
+        });
+    }
+
+    function seleccionarAcorde(chord, elemento) {
+        acordeSeleccionado = chord;
+        document.querySelectorAll('.card-acorde').forEach(c => c.classList.remove('seleccionado'));
+        if(elemento) elemento.classList.add('seleccionado');
+        document.getElementById('btn-ver-acorde').style.display = 'block';
+        document.getElementById('btn-add-lista').style.display = 'block';
+        if (!acompanamientoActivo) {
+            tocarAcorde(chord.notes);
+        }
+    }
+
+    function agregarAListaFavoritos() {
+        if (!acordeSeleccionado) return;
+        if (!listaAcordesFavoritos.find(a => a.name === acordeSeleccionado.name)) {
+            listaAcordesFavoritos.push(acordeSeleccionado);
+            actualizarBarraFavoritos();
+        }
+    }
+
+    function actualizarBarraFavoritos() {
+        const barra = document.getElementById('barra-acordes-piano');
+        barra.innerHTML = '';
+        listaAcordesFavoritos.forEach((chord, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-acorde-piano';
+            btn.innerHTML = `${chord.name} <i class="fas fa-times" onclick="eliminarFavorito(event, ${index})"></i>`;
+            btn.onclick = (e) => {
+                if(e.target.tagName !== 'I') {
+                    acordeSeleccionado = chord;
+                    if (!acompanamientoActivo) {
+                        verAcordeEnPiano();
+                        tocarAcorde(chord.notes);
+                    }
+                }
+            };
+            barra.appendChild(btn);
+        });
+    }
+
+    function eliminarFavorito(e, index) {
+        e.stopPropagation();
+        listaAcordesFavoritos.splice(index, 1);
+        actualizarBarraFavoritos();
+    }
+
+    function limpiarMarcasPiano() {
+        document.querySelectorAll('.tecla-marcada-ver').forEach(el => el.classList.remove('tecla-marcada-ver'));
+    }
+
+    function verAcordeEnPiano() {
+        if (!acordeSeleccionado) return;
+        cerrarModales();
+        limpiarMarcasPiano();
+        const notasConOctava = acordeSeleccionado.notes.map(n => n + "4");
+        const primeraTecla = document.getElementById(`tecla-${notasConOctava[0]}`);
+        if (primeraTecla) {
+            const container = document.getElementById('piano-scroll-container');
+            container.scrollTop = primeraTecla.getBBox().x - 100;
+        }
+        notasConOctava.forEach(n => {
+            const tecla = document.getElementById(`tecla-${n}`);
+            if (tecla) { tecla.querySelector('rect').classList.add('tecla-marcada-ver'); }
+        });
+    }
+
+    async function tocarAcorde(notas) {
+        await Tone.start();
+        const notasConOctava = notas.map(n => n + "4");
+        instruments[currentInstrument].triggerAttackRelease(notasConOctava, pedalSostenido ? "1n" : "2n", undefined, 0.6);
+        notasConOctava.forEach(n => {
+            const tecla = document.getElementById(`tecla-${n}`);
+            if (tecla) {
+                const rect = tecla.querySelector('rect');
+                rect.classList.add('tecla-activa-visual');
+                setTimeout(() => rect.classList.remove('tecla-activa-visual'), 1000);
+            }
+        });
+    }
+
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let metroWaveform = 'sine'; 
+    let bpm = 120, compas = 4, tiempoActual = 0;
+    let acompStyle = 'marcado';
+    let acompanamientoActivo = false;
+    let loopAcomp = null;
+
+    function updateBpm(val) {
+        bpm = val;
+        Tone.Transport.bpm.value = bpm;
+        document.querySelectorAll('.val-bpm-sync').forEach(el => el.innerText = val);
+        document.querySelectorAll('.input-bpm-sync').forEach(el => el.value = val);
+        worker.postMessage((60/bpm)*1000);
+    }
+
+    function setAcompStyle(style, btn) {
+        acompStyle = style;
+        document.querySelectorAll('#acompanamiento-modal .btn-opcion').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (acompanamientoActivo) restartAcomp();
+    }
+
+    function toggleAcompanamiento() {
+        acompanamientoActivo = !acompanamientoActivo;
+        const btn = document.getElementById('btn-toggle-acomp');
+        const btnPiano = document.getElementById('btn-acompañamiento');
+        if (acompanamientoActivo) {
+            Tone.start();
+            Tone.Transport.start();
+            restartAcomp();
+            btn.innerText = "DESACTIVAR ACOMPAÑAMIENTO";
+            btn.style.background = "#ff4444";
+            btnPiano.classList.add('activo');
+        } else {
+            if (loopAcomp) loopAcomp.dispose();
+            btn.innerText = "ACTIVAR ACOMPAÑAMIENTO";
+            btn.style.background = "var(--dorado)";
+            btnPiano.classList.remove('activo');
+        }
+    }
+
+    function restartAcomp() {
+        if (loopAcomp) loopAcomp.dispose();
+        loopAcomp = new Tone.Loop(time => {
+            if (!acordeSeleccionado) return;
+            const notas = acordeSeleccionado.notes;
+            if (acompStyle === 'marcado') {
+                instruments[currentInstrument].triggerAttackRelease(notas.map(n => n + "4"), "4n", time);
+            } 
+            else if (acompStyle === 'arpegiado') {
+                const step = Math.floor((Tone.Transport.seconds % (60/bpm * 2)) / (60/bpm * 0.5)) % notas.length;
+                instruments[currentInstrument].triggerAttackRelease(notas[step] + "4", "8n", time);
+            }
+            else if (acompStyle === 'avanzado') {
+                const beat = Math.floor(Tone.Transport.ticks / 120) % 8;
+                if (beat === 0 || beat === 4) {
+                    instruments[currentInstrument].triggerAttackRelease([notas[0] + "2", notas[0] + "3"], "4n", time, 0.8);
+                }
+                const arpIndex = beat % notas.length;
+                instruments[currentInstrument].triggerAttackRelease(notas[arpIndex] + "4", "8n", time, 0.6);
+            }
+        }, "8n").start(0);
+    }
+
+    function playClick(frequency, volume) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = metroWaveform;
+        osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+        gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    }
+
+    let metronomoActivo = false;
+    const workerCode = `let timer = null; let interval = 500; self.onmessage = (e) => { if (e.data === "start") { if(timer) clearInterval(timer); timer = setInterval(() => self.postMessage("tick"), interval); } else if (e.data === "stop") { clearInterval(timer); timer = null; } else if (typeof e.data === "number") { interval = e.data; if (timer) { clearInterval(timer); timer = setInterval(() => self.postMessage("tick"), interval); } } };`;
+    const blob = new Blob([workerCode], { type: "application/javascript" });
+    const worker = new Worker(URL.createObjectURL(blob));
+    
+    worker.onmessage = () => { 
+        if (!metronomoActivo) return; 
+        const isAccent = tiempoActual % compas === 0;
+        playClick(isAccent ? 1000 : 500, isAccent ? 0.8 : 0.4);
+        tiempoActual++; 
+    };
+
+    function setCompas(num, btn) {
+        compas = num;
+        tiempoActual = 0;
+        document.querySelectorAll('#metronomo-modal .btn-opcion').forEach(b => { if(b.innerText.includes('/')) b.classList.remove('active')});
+        btn.classList.add('active');
+    }
+
+    function setMetroSound(type, btn) {
+        const types = { 'sinusoidal': 'sine', 'cuadrada': 'square', 'triangular': 'triangle' };
+        metroWaveform = types[type];
+        document.querySelectorAll('#metronomo-modal .btn-opcion').forEach(b => { if(!b.innerText.includes('/')) b.classList.remove('active')});
+        btn.classList.add('active');
+    }
+
+    function toggleMetronomo() { 
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        metronomoActivo = !metronomoActivo; 
+        const btnPiano = document.getElementById('btn-metronomo');
+        const btnModal = document.getElementById('btn-toggle-play');
+        if (metronomoActivo) { 
+            tiempoActual = 0;
+            worker.postMessage((60/bpm)*1000); 
+            worker.postMessage("start"); 
+            btnPiano.classList.add('activo');
+            btnModal.innerText = "PARAR";
+            btnModal.style.background = "#ff4444";
+        } else { 
+            worker.postMessage("stop"); 
+            btnPiano.classList.remove('activo'); 
+            btnModal.innerText = "INICIAR";
+            btnModal.style.background = "var(--brillo)";
+        } 
+    }
+
+    const notasInfo = [{ amer: 'C', lat: 'Do', b: false }, { amer: 'C#', lat: 'Do#', b: true }, { amer: 'D', lat: 'Re', b: false }, { amer: 'D#', lat: 'Re#', b: true }, { amer: 'E', lat: 'Mi', b: false }, { amer: 'F', lat: 'Fa', b: false }, { amer: 'F#', lat: 'Fa#', b: true }, { amer: 'G', lat: 'Sol', b: false }, { amer: 'G#', lat: 'Sol#', b: true }, { amer: 'A', lat: 'La', b: false }, { amer: 'A#', lat: 'La#', b: true }, { amer: 'B', lat: 'Si', b: false }];
+
+    function renderizarPiano() {
+        const svg = document.getElementById('piano-svg');
+        const W_BLANCA = 70, H_BLANCA = 450, W_NEGRA = 42, H_NEGRA = 280;
+        let xPos = 0; const blancas = [], negras = [];
+        for (let oct = 0; oct <= 8; oct++) {
+            notasInfo.forEach((n, i) => {
+                if (oct === 0 && i < 9) return; 
+                if (oct === 8 && i > 0) return; 
+                const notaNombre = n.amer + oct;
+                if (!n.b) { blancas.push({ x: xPos, nota: notaNombre, label: n.amer + oct }); xPos += W_BLANCA; }
+                else { negras.push({ x: xPos - (W_NEGRA / 2), nota: notaNombre, label: n.amer + oct }); }
+            });
+        }
+        svg.setAttribute("width", xPos); svg.setAttribute("height", H_BLANCA);
+        blancas.forEach(b => svg.appendChild(crearTecla(b.x, 0, W_BLANCA, H_BLANCA, "var(--blanco)", b.nota, b.label, false)));
+        negras.forEach(n => svg.appendChild(crearTecla(n.x, 0, W_NEGRA, H_NEGRA, "var(--negro)", n.nota, n.label, true)));
+        setTimeout(centrarEnRango4, 100);
+    }
+
+    function crearTecla(x, y, w, h, color, nota, label, esNegra) {
+        const ns = "http://www.w3.org/2000/svg";
+        const g = document.createElementNS(ns, "g");
+        g.setAttribute("class", "tecla-svg"); g.id = `tecla-${nota}`;
+        const rect = document.createElementNS(ns, "rect");
+        rect.setAttribute("x", x); rect.setAttribute("y", y); rect.setAttribute("width", w); rect.setAttribute("height", h);
+        rect.setAttribute("fill", color); rect.setAttribute("rx", 5); rect.setAttribute("stroke", "#555");
+        const text = document.createElementNS(ns, "text");
+        text.setAttribute("x", x + w/2); text.setAttribute("y", h - 20); text.setAttribute("text-anchor", "middle");
+        text.setAttribute("fill", esNegra ? "var(--dorado)" : "#888"); text.textContent = label;
+        g.appendChild(rect); g.appendChild(text);
+
+        const notaOn = async (e) => {
+            e.preventDefault();
+            if (e.type === 'mouseenter' && !isMouseDown) return;
+            let clickY = e.touches ? e.touches[0].clientY : e.clientY;
+            let rectBounds = rect.getBoundingClientRect();
+            let relativeY = (clickY - rectBounds.top) / rectBounds.height;
+            let velocity = Math.max(0.1, Math.min(1.0, relativeY)); 
+            limpiarMarcasPiano();
+            await Tone.start();
+            instruments[currentInstrument].triggerAttack(nota, undefined, velocity);
+            rect.classList.add('tecla-activa-visual');
+        };
+
+        const notaOff = (e) => {
+            e.preventDefault();
+            if(!pedalSostenido) {
+                instruments[currentInstrument].triggerRelease(nota);
+            }
+            rect.classList.remove('tecla-activa-visual');
+        };
+
+        g.addEventListener('mousedown', notaOn);
+        g.addEventListener('mouseenter', notaOn);
+        g.addEventListener('mouseup', notaOff);
+        g.addEventListener('mouseleave', notaOff);
+        g.addEventListener('touchstart', notaOn, {passive: false});
+        g.addEventListener('touchend', notaOff, {passive: false});
+        return g;
+    }
+
+    function centrarEnRango4() {
+        const teclaDo4 = document.getElementById('tecla-C4');
+        const container = document.getElementById('piano-scroll-container');
+        if (teclaDo4 && container) container.scrollTop = teclaDo4.getBBox().x;
+    }
+
+    renderizarPiano();
+</script>
+</body>
+</html>
+

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Directorio | Graduale Nostrum</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        :root {
+            --primary: #2C211F; 
+            --accent: #B8860B;  
+            --accent-light: #d4af37;
+            --bg: #FDFBF7;
+            --surface: rgba(255, 255, 255, 0.85);
+            --text: #3E322E;
+            --shadow: 0 10px 30px rgba(78, 52, 46, 0.12);
+            --border: 1px solid rgba(184, 134, 11, 0.25);
+            --glass: blur(12px) saturate(180%);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg); 
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48ZyBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNCODg2MEIiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTAgMGg0MHY0MEgwVjB6bTIwIDIwaDIwdjIwSDIWMjB6TTAAyMBoMjB2MjBIMFYyMHoyMCAwaDIwdjIwSDIwVjB6Ii8+PC9nPjwvZz48L3N2Zz4=');
+            color: var(--text); 
+            margin: 0; 
+            padding-bottom: 80px; 
+        }
+        
+        header { 
+            background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%); 
+            color: white; padding: 25px 15px; text-align: center; 
+            border-bottom: 2px solid var(--accent);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .header-logo { width: 60px; height: auto; margin-bottom: 10px; }
+
+        .container { max-width: 500px; margin: auto; padding: 15px; box-sizing: border-box; }
+
+        .profile-container, .user-item {
+            background-color: var(--surface); 
+            backdrop-filter: var(--glass); 
+            -webkit-backdrop-filter: var(--glass);
+            border: var(--border);
+            border-radius: 22px; 
+            box-shadow: var(--shadow);
+            margin-bottom: 18px;
+            overflow: hidden;
+        }
+
+        .cover-wrapper {
+            width: 100%; height: 130px; background: #4E342E; 
+            position: relative; overflow: hidden;
+            border-bottom: 3px solid var(--accent);
+        }
+        #userCover { width: 100%; height: 100%; object-fit: cover; }
+        
+        .btn-edit-cover {
+            position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.6);
+            color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 6px 12px;
+            font-size: 0.72rem; cursor: pointer;
+        }
+
+        .avatar-wrapper { position: absolute; top: 75px; left: 25px; z-index: 10; }
+        .avatar-main {
+            width: 95px; height: 95px; border-radius: 50%; 
+            border: 5px solid white; object-fit: cover; 
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+        }
+
+        .profile-header-info { padding: 55px 25px 18px; }
+        #viewNombre { font-family: 'Cinzel', serif; font-size: 1.4rem; margin: 0; color: var(--primary); }
+        #viewVozBadge { 
+            display: inline-block; background: var(--primary); color: white; 
+            padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; margin-top: 6px;
+        }
+
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
+        .data-item { display: flex; flex-direction: column; background: rgba(184, 134, 11, 0.05); padding: 10px; border-radius: 12px; }
+        .data-label { font-size: 0.65rem; color: var(--accent); font-weight: bold; text-transform: uppercase; }
+        .data-value { font-size: 0.9rem; font-weight: 600; }
+
+        .edit-block { display: none; padding: 20px; border-top: 1px solid rgba(0,0,0,0.05); }
+        .input-styled {
+            width: 100%; border: 1px solid rgba(0,0,0,0.1); padding: 12px;
+            border-radius: 12px; margin-top: 5px; box-sizing: border-box;
+        }
+
+        .btn-gold { 
+            background: linear-gradient(145deg, var(--accent-light), var(--accent));
+            color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; 
+            cursor: pointer; text-transform: uppercase; width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+
+        .btn-contact {
+            color: white; border: none; padding: 8px 15px; border-radius: 10px; 
+            font-size: 0.85rem; font-weight: bold; cursor: pointer; text-transform: uppercase; width: auto; 
+            display: none; align-items: center; justify-content: center; gap: 6px; text-decoration: none; margin: 0 auto 15px;
+        }
+
+        .social-links { display: flex; justify-content: center; gap: 15px; padding: 10px 20px; flex-wrap: wrap; }
+        .social-links a { color: var(--primary); font-size: 1.4rem; transition: 0.3s; }
+        .social-links a:hover { color: var(--accent); transform: scale(1.1); }
+
+        .user-item { display: flex; align-items: center; gap: 15px; padding: 12px; cursor: pointer; }
+        .user-item img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; border: 2px solid var(--accent); }
+        .user-info b { font-family: 'Cinzel', serif; color: var(--primary); display: block; }
+        .user-info span { font-size: 0.8rem; color: var(--accent); }
+
+        .nav-bottom {
+            position: fixed; bottom: 0; width: 100%; background: var(--primary);
+            display: flex; justify-content: space-around; padding: 15px 0;
+            border-top: 3px solid var(--accent); z-index: 1000;
+        }
+        .nav-bottom i { color: rgba(255,255,255,0.5); font-size: 1.5rem; cursor: pointer; }
+        .nav-bottom i.active { color: var(--accent-light); }
+
+        .loading-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%; 
+            background: rgba(253, 251, 247, 0.9); display:none; align-items:center; justify-content:center; z-index:9999;
+        }
+
+        .empty-state { text-align: center; padding: 40px 20px; color: #888; }
+        .empty-state i { font-size: 3rem; margin-bottom: 10px; opacity: 0.3; }
+
+        /* Estilos Solicitudes */
+        .solicitud-card {
+            background: #fff; padding: 12px; border-radius: 15px; margin-bottom: 10px;
+            border: 1px solid var(--accent); display: flex; align-items: center; justify-content: space-between;
+            box-shadow: var(--shadow);
+        }
+        .btn-mini { padding: 6px 12px; border-radius: 8px; border: none; font-size: 0.75rem; cursor: pointer; color: white; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div id="loading" class="loading-overlay">
+    <div style="text-align:center;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size:2rem; color:var(--accent);"></i>
+        <p style="color:var(--primary); font-family:'Cinzel'; margin-top:10px;">Cargando...</p>
+    </div>
+</div>
+
+<header>
+    <img src="iconos/logo.png" alt="Logo" class="header-logo">
+    <h1 style="font-family: 'Cinzel', serif; margin: 0; font-size: 1.4rem; letter-spacing: 1px;">DIRECTORIO DE CANTORES</h1>
+    <p style="font-family: 'Cinzel', serif; margin: 5px 0 0; font-size: 0.85rem; color: var(--accent-light); font-weight: bold;">GRADUALE NOSTRUM</p>
+</header>
+
+<div class="container">
+    <div id="view-amigos" class="section">
+        <div id="listaUsuarios"></div>
+    </div>
+
+    <div id="view-favoritos" class="section" style="display:none;">
+        <h4 style="font-family:'Cinzel'; margin: 0 0 10px; color:var(--primary); text-align: center;">Solicitudes Recibidas</h4>
+        <div id="listaSolicitudes"></div>
+        <hr style="border:0; border-top:1px solid rgba(184, 134, 11, 0.2); margin:20px 0;">
+        <h4 style="font-family:'Cinzel'; margin: 0 0 10px; color:var(--primary); text-align: center;">Mis Favoritos</h4>
+        <div id="listaFavoritos">
+            <div class="empty-state">
+                <i class="fas fa-heart"></i>
+                <p>Aún no has agregado amigos a tu lista preferida.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-profile" class="section" style="display:none;">
+        <div class="profile-container">
+            <div class="cover-wrapper">
+                <img src="https://via.placeholder.com/500x130?text=..." id="userCover">
+                <button class="btn-edit-cover" id="editCoverBtn" onclick="document.getElementById('coverInput').click()"><i class="fas fa-image"></i></button>
+                <input type="file" id="coverInput" style="display:none;" accept="image/*" onchange="subirImagen(this, 'cover')">
+            </div>
+            <div class="avatar-wrapper">
+                <img src="https://ui-avatars.com/api/?name=..." id="userPhoto" class="avatar-main">
+                <button id="editAvatarBtn" onclick="document.getElementById('avatarInput').click()" style="position:absolute; bottom:0; right:0; background:var(--accent); border:none; border-radius:50%; width:30px; height:30px; color:white; cursor:pointer;"><i class="fas fa-camera"></i></button>
+                <input type="file" id="avatarInput" style="display:none;" accept="image/*" onchange="subirImagen(this, 'avatar')">
+            </div>
+            
+            <div class="profile-header-info">
+                <h2 id="viewNombre">Cargando...</h2>
+                <span id="viewVozBadge">-</span>
+            </div>
+
+            <div class="data-grid" id="dataViewGrid">
+                <div class="data-item"><span class="data-label">Género</span><span class="data-value" id="valGenero">-</span></div>
+                <div class="data-item"><span class="data-label">Edad</span><span class="data-value" id="valEdad">-</span></div>
+                <div class="data-item"><span class="data-label">Ocupación</span><span class="data-value" id="valOcupacion">-</span></div>
+                <div class="data-item"><span class="data-label">Rango Vocal</span><span class="data-value" id="valRango">-</span></div>
+                <div class="data-item" style="grid-column: 1 / -1;"><span class="data-label">Instrumentos</span><span class="data-value" id="valInstrumentos">-</span></div>
+            </div>
+
+            <div class="social-links" id="viewSocial"></div>
+            <p id="msgPrivacidad" style="text-align:center; font-size:0.8rem; color:#888; display:none; padding:10px;">Las redes sociales son privadas.</p>
+
+            <div style="padding: 0 20px 20px; text-align: center; display: flex; flex-direction: column; gap: 10px;">
+                <a id="btnContactar" href="#" class="btn-contact">
+                    <i id="iconContactar"></i> <span id="textContactar">Contactar</span>
+                </a>
+                
+                <button class="btn-gold" id="btnSeguir" onclick="gestionarSeguimiento()" style="display:none;">
+                    <i class="fas fa-user-plus"></i> Seguir Cantor
+                </button>
+
+                <button class="btn-gold" id="btnChat" onclick="irAlChat()" style="display:none; margin-top:5px;">
+                    <i class="fas fa-paper-plane"></i> Enviar Mensaje
+                </button>
+
+                <button class="btn-gold" id="btnEditProfile" onclick="toggleEditMode(true)"><i class="fas fa-edit"></i> Editar mi Ficha</button>
+            </div>
+
+            <div class="edit-block" id="editBlock">
+                <h4 style="margin:5px 0 10px; font-family:'Cinzel'; font-size:0.8rem; color:var(--accent);">Privacidad</h4>
+                <select id="editPrivacidad" class="input-styled" style="margin-bottom:15px; border:1px solid var(--accent);">
+                    <option value="publico">Perfil Público (Todos ven mis redes)</option>
+                    <option value="privado">Privado (Solo seguidores aceptados)</option>
+                </select>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <input type="text" id="editNombre" class="input-styled" placeholder="Nombre">
+                    <input type="text" id="editApellido" class="input-styled" placeholder="Apellido">
+                </div>
+                <h4 style="margin:15px 0 5px; font-family:'Cinzel'; font-size:0.8rem;">Información Personal</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <input type="date" id="editNacimiento" class="input-styled">
+                    <select id="editGenero" class="input-styled">
+                        <option value="">Género...</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                    </select>
+                </div>
+                <select id="editVoz" class="input-styled" style="margin-top:10px;">
+                    <option value="">Tipo de Voz...</option>
+                    <option value="Soprano">Soprano</option>
+                    <option value="Mezzosoprano">Mezzosoprano</option>
+                    <option value="Contralto">Contralto</option>
+                    <option value="Tenor">Tenor</option>
+                    <option value="Baritono">Baritono</option>
+                    <option value="Bajo">Bajo</option>
+                </select>
+                <input type="text" id="editOcupacion" class="input-styled" placeholder="Ocupación (Ej. Director)">
+                <div style="display:grid; grid-template-columns: 1fr auto; gap:10px; align-items: flex-end;">
+                    <input type="text" id="editRango" class="input-styled" placeholder="Rango Vocal">
+                    <button class="btn-gold" style="margin-top:5px; padding: 12px 15px; font-size: 0.8rem;" onclick="descubrirRango()"><i class="fas fa-microphone"></i> Descubrir</button>
+                </div>
+                <input type="text" id="editInstrumentos" class="input-styled" placeholder="Instrumentos">
+                <h4 style="margin:15px 0 5px; font-family:'Cinzel'; font-size:0.8rem;">Contacto Directo</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <input type="tel" id="editTelefono" class="input-styled" placeholder="Teléfono/WhatsApp">
+                    <select id="editTipoContacto" class="input-styled">
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="llamada">Llamada</option>
+                    </select>
+                </div>
+                <h4 style="margin:15px 0 5px; font-family:'Cinzel'; font-size:0.8rem;">Redes (Usuario)</h4>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                    <input type="text" id="editFb" class="input-styled" placeholder="Facebook">
+                    <input type="text" id="editIg" class="input-styled" placeholder="Instagram">
+                    <input type="text" id="editX" class="input-styled" placeholder="X (Twitter)">
+                    <input type="text" id="editTk" class="input-styled" placeholder="TikTok">
+                    <input type="text" id="editTh" class="input-styled" placeholder="Threads">
+                    <input type="text" id="editMs" class="input-styled" placeholder="Messenger">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button class="btn-gold" style="background:#888;" onclick="toggleEditMode(false)">Cancelar</button>
+                    <button class="btn-gold" onclick="guardarPerfil()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<nav class="nav-bottom">
+    <i class="fas fa-users active" id="nav-amigos" onclick="switchSection('amigos')"></i>
+    <i class="fas fa-heart" id="nav-favoritos" onclick="switchSection('favoritos')"></i>
+    <i class="fas fa-user" id="nav-profile" onclick="switchSection('profile')"></i>
+</nav>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script type="module">
+    import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
+
+    window.onload = function() {
+        App.addListener('backButton', () => {
+            const pagina = window.location.pathname.split("/").pop();
+
+            if (pagina === 'index.html' || pagina === '') {
+                App.exitApp();
+            } else {
+                window.location.assign('index.html');
+            }
+        });
+    };
+</script>
+
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCx_3nwwj3mKAEmtNVW0OaKamuaovhcM-w",
+        authDomain: "graduale-nostrum.firebaseapp.com",
+        projectId: "graduale-nostrum",
+        storageBucket: "graduale-nostrum.firebasestorage.app",
+        messagingSenderId: "534378937675",
+        appId: "1:534378937675:web:677bbc4eb55ef3e6ed7cce"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    let userEmail = "";
+    let viewingEmail = "";
+    let unsubscribeSeguimiento = null;
+    let estadoActualSeguimiento = null;
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            userEmail = user.email.toLowerCase();
+            cargarPerfil(userEmail);
+            cargarIntegrantes();
+            escucharSolicitudes();
+            escucharFavoritos();
+        }
+    });
+
+    function calcularEdad(fechaNac) {
+        if(!fechaNac) return "-";
+        const hoy = new Date();
+        const cumple = new Date(fechaNac);
+        let edad = hoy.getFullYear() - cumple.getFullYear();
+        const m = hoy.getMonth() - cumple.getMonth();
+        if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) edad--;
+        return edad;
+    }
+
+    async function cargarPerfil(email) {
+        viewingEmail = email;
+        const doc = await db.collection("usuarios").doc(email).get();
+        if (doc.exists) {
+            const d = doc.data();
+            const nombreFull = `${d.nombre || ''} ${d.apellido || ''}`.trim() || email;
+            const esPropio = (email === userEmail);
+            
+            document.getElementById('viewNombre').innerText = nombreFull;
+            document.getElementById('viewVozBadge').innerText = d.voz || "Cantor";
+            document.getElementById('valEdad').innerText = calcularEdad(d.fechaNacimiento);
+            document.getElementById('valGenero').innerText = d.genero || "-";
+            document.getElementById('valOcupacion').innerText = d.ocupacionCoro || "-";
+            document.getElementById('valRango').innerText = d.rangoVocal || "-";
+            document.getElementById('valInstrumentos').innerText = d.instrumentos || "-";
+            document.getElementById('userPhoto').src = d.avatar || `https://ui-avatars.com/api/?name=${nombreFull}`;
+            document.getElementById('userCover').src = d.cover || "https://via.placeholder.com/500x130?text=Graduale+Nostrum";
+
+            document.getElementById('btnEditProfile').style.display = esPropio ? 'flex' : 'none';
+            document.getElementById('editCoverBtn').style.display = esPropio ? 'block' : 'none';
+            document.getElementById('editAvatarBtn').style.display = esPropio ? 'block' : 'none';
+            
+            const btnSeguir = document.getElementById('btnSeguir');
+            const btnChat = document.getElementById('btnChat');
+
+            if (esPropio) {
+                btnSeguir.style.display = 'none';
+                btnChat.style.display = 'none';
+                mostrarRedes(d, true);
+            } else {
+                btnSeguir.style.display = 'flex';
+                escucharEstadoSeguimiento(email, (estado) => {
+                    const accesoPermitido = (d.privacidad === 'publico' || estado === 'aceptada');
+                    mostrarRedes(d, accesoPermitido);
+                    verificarSeguimientoMutuo(email);
+                });
+            }
+
+            if(esPropio) {
+                document.getElementById('editPrivacidad').value = d.privacidad || "publico";
+                document.getElementById('editNombre').value = d.nombre || "";
+                document.getElementById('editApellido').value = d.apellido || "";
+                document.getElementById('editNacimiento').value = d.fechaNacimiento || "";
+                document.getElementById('editGenero').value = d.genero || "";
+                document.getElementById('editVoz').value = d.voz || "";
+                document.getElementById('editOcupacion').value = d.ocupacionCoro || "";
+                document.getElementById('editRango').value = d.rangoVocal || "";
+                document.getElementById('editInstrumentos').value = d.instrumentos || "";
+                document.getElementById('editTelefono').value = d.telefono || "";
+                document.getElementById('editTipoContacto').value = d.tipoContacto || "whatsapp";
+                document.getElementById('editFb').value = d.fb || "";
+                document.getElementById('editIg').value = d.ig || "";
+                document.getElementById('editX').value = d.x || "";
+                document.getElementById('editTk').value = d.tk || "";
+                document.getElementById('editTh').value = d.th || "";
+                document.getElementById('editMs').value = d.ms || "";
+            }
+        }
+    }
+
+    async function verificarSeguimientoMutuo(emailDestino) {
+        const btnChat = document.getElementById('btnChat');
+        
+        // Primero vemos si yo lo sigo (aceptado)
+        const yoSigo = await db.collection("solicitudes")
+            .where("desde", "==", userEmail)
+            .where("para", "==", emailDestino)
+            .where("estado", "==", "aceptada")
+            .get();
+
+        // Segundo vemos si él me sigue (aceptado)
+        const elSigue = await db.collection("solicitudes")
+            .where("desde", "==", emailDestino)
+            .where("para", "==", userEmail)
+            .where("estado", "==", "aceptada")
+            .get();
+
+        if (!yoSigo.empty && !elSigue.empty) {
+            btnChat.style.display = 'flex';
+        } else {
+            btnChat.style.display = 'none';
+        }
+    }
+
+    function irAlChat() {
+        // Redirige a tu sección o página de chat pasando el email
+        window.location.href = `mensajes.html?chat=${viewingEmail}`;
+    }
+
+    function mostrarRedes(d, permitido) {
+        const socialDiv = document.getElementById('viewSocial');
+        const btnContactar = document.getElementById('btnContactar');
+        const msgPrivacidad = document.getElementById('msgPrivacidad');
+        
+        socialDiv.innerHTML = "";
+        
+        if (!permitido) {
+            btnContactar.style.display = 'none';
+            msgPrivacidad.style.display = 'block';
+            return;
+        }
+
+        msgPrivacidad.style.display = 'none';
+
+        if(d.telefono) {
+            btnContactar.style.display = 'inline-flex';
+            const iconContactar = document.getElementById('iconContactar');
+            const textContactar = document.getElementById('textContactar');
+            if(d.tipoContacto === 'llamada') {
+                btnContactar.href = `tel:${d.telefono}`;
+                btnContactar.style.background = 'linear-gradient(145deg, #B8860B, #8B6508)';
+                iconContactar.className = 'fas fa-phone-alt';
+                textContactar.innerText = 'Llamar';
+            } else {
+                btnContactar.href = `https://wa.me/${d.telefono.replace(/\D/g,'')}`;
+                btnContactar.style.background = '#25D366';
+                iconContactar.className = 'fab fa-whatsapp';
+                textContactar.innerText = 'WhatsApp';
+            }
+        } else {
+            btnContactar.style.display = 'none';
+        }
+
+        const networks = [
+            { id: 'fb', icon: 'fab fa-facebook', url: 'https://facebook.com/' },
+            { id: 'ig', icon: 'fab fa-instagram', url: 'https://instagram.com/' },
+            { id: 'x', icon: 'fab fa-x-twitter', url: 'https://x.com/' },
+            { id: 'tk', icon: 'fab fa-tiktok', url: 'https://tiktok.com/@' },
+            { id: 'th', icon: 'fab fa-threads', url: 'https://threads.net/@' },
+            { id: 'ms', icon: 'fab fa-facebook-messenger', url: 'https://m.me/' }
+        ];
+        networks.forEach(net => {
+            if(d[net.id]) socialDiv.innerHTML += `<a href="${net.url}${d[net.id]}" target="_blank"><i class="${net.icon}"></i></a>`;
+        });
+    }
+
+    function escucharEstadoSeguimiento(emailDestino, callback) {
+        if (unsubscribeSeguimiento) unsubscribeSeguimiento();
+        
+        unsubscribeSeguimiento = db.collection("solicitudes")
+            .where("desde", "==", userEmail)
+            .where("para", "==", emailDestino)
+            .onSnapshot(snap => {
+                const btn = document.getElementById('btnSeguir');
+                if (snap.empty) {
+                    estadoActualSeguimiento = null;
+                    btn.innerHTML = '<i class="fas fa-user-plus"></i> Seguir Cantor';
+                    btn.style.background = 'linear-gradient(145deg, var(--accent-light), var(--accent))';
+                    if(callback) callback(null);
+                } else {
+                    const doc = snap.docs[0];
+                    estadoActualSeguimiento = doc.data().estado;
+                    if (estadoActualSeguimiento === "pendiente") {
+                        btn.innerHTML = '<i class="fas fa-clock"></i> Cancelar Solicitud';
+                        btn.style.background = '#888';
+                    } else if (estadoActualSeguimiento === "aceptada") {
+                        btn.innerHTML = '<i class="fas fa-check"></i> Siguiendo';
+                        btn.style.background = 'var(--primary)';
+                    }
+                    if(callback) callback(estadoActualSeguimiento);
+                }
+            });
+    }
+
+    async function gestionarSeguimiento() {
+        if (estadoActualSeguimiento === "pendiente" || estadoActualSeguimiento === "aceptada") {
+            const confirm = await Swal.fire({
+                title: estadoActualSeguimiento === "pendiente" ? '¿Cancelar solicitud?' : '¿Dejar de seguir?',
+                text: "Esta acción no se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#B8860B',
+                confirmButtonText: 'Sí, confirmar'
+            });
+            if (!confirm.isConfirmed) return;
+            const snap = await db.collection("solicitudes").where("desde", "==", userEmail).where("para", "==", viewingEmail).get();
+            if (!snap.empty) {
+                const batch = db.batch();
+                snap.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+            }
+            return;
+        }
+        try {
+            await db.collection("solicitudes").add({
+                desde: userEmail,
+                para: viewingEmail,
+                estado: "pendiente",
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            Swal.fire({ icon: 'success', title: 'Solicitud enviada', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+        } catch (e) { Swal.fire('Error', 'No se pudo enviar la solicitud.', 'error'); }
+    }
+
+    function escucharSolicitudes() {
+        db.collection("solicitudes")
+            .where("para", "==", userEmail)
+            .where("estado", "==", "pendiente")
+            .onSnapshot(snap => {
+                const div = document.getElementById('listaSolicitudes');
+                div.innerHTML = "";
+                if(snap.empty) div.innerHTML = "<p style='text-align:center; color:gray; font-size:0.8rem;'>Sin solicitudes.</p>";
+                snap.forEach(async doc => {
+                    const data = doc.data();
+                    const userSnap = await db.collection("usuarios").doc(data.desde).get();
+                    const u = userSnap.data() || {};
+                    const nombre = `${u.nombre || ''} ${u.apellido || ''}`.trim() || data.desde;
+                    div.innerHTML += `
+                        <div class="solicitud-card">
+                            <span style="font-size:0.85rem;"><b>${nombre}</b></span>
+                            <div style="display:flex; gap:5px;">
+                                <button class="btn-mini" style="background:#2ecc71;" onclick="responderSolicitud('${doc.id}', 'aceptada')">Aceptar</button>
+                                <button class="btn-mini" style="background:#e74c3c;" onclick="responderSolicitud('${doc.id}', 'rechazada')">No</button>
+                            </div>
+                        </div>`;
+                });
+            });
+    }
+
+    async function responderSolicitud(id, nuevoEstado) {
+        if (nuevoEstado === 'aceptada') {
+            await db.collection("solicitudes").doc(id).update({ estado: 'aceptada' });
+        } else {
+            await db.collection("solicitudes").doc(id).delete();
+        }
+    }
+
+    function escucharFavoritos() {
+        db.collection("solicitudes")
+            .where("desde", "==", userEmail)
+            .where("estado", "==", "aceptada")
+            .onSnapshot(snap => {
+                const container = document.getElementById('listaFavoritos');
+                container.innerHTML = "";
+                if (snap.empty) {
+                    container.innerHTML = '<div class="empty-state"><i class="fas fa-heart"></i><p>Aún no tienes favoritos.</p></div>';
+                    return;
+                }
+                snap.forEach(async doc => {
+                    const seg = doc.data();
+                    const uDoc = await db.collection("usuarios").doc(seg.para).get();
+                    if(uDoc.exists) {
+                        const u = uDoc.data();
+                        const nombre = `${u.nombre || ''} ${u.apellido || ''}`.trim();
+                        container.innerHTML += `
+                            <div class="user-item" onclick="verOtroPerfil('${u.email}')">
+                                <img src="${u.avatar || 'https://ui-avatars.com/api/?name='+nombre}">
+                                <div class="user-info">
+                                    <b>${nombre}</b>
+                                    <span>${u.voz || 'Cantor'}</span>
+                                </div>
+                            </div>`;
+                    }
+                });
+            });
+    }
+
+    async function guardarPerfil() {
+        document.getElementById('loading').style.display = 'flex';
+        const data = {
+            privacidad: document.getElementById('editPrivacidad').value,
+            nombre: document.getElementById('editNombre').value,
+            apellido: document.getElementById('editApellido').value,
+            fechaNacimiento: document.getElementById('editNacimiento').value,
+            genero: document.getElementById('editGenero').value,
+            voz: document.getElementById('editVoz').value,
+            ocupacionCoro: document.getElementById('editOcupacion').value,
+            rangoVocal: document.getElementById('editRango').value,
+            instrumentos: document.getElementById('editInstrumentos').value,
+            telefono: document.getElementById('editTelefono').value,
+            tipoContacto: document.getElementById('editTipoContacto').value,
+            fb: document.getElementById('editFb').value,
+            ig: document.getElementById('editIg').value,
+            x: document.getElementById('editX').value,
+            tk: document.getElementById('editTk').value,
+            th: document.getElementById('editTh').value,
+            ms: document.getElementById('editMs').value,
+            email: userEmail
+        };
+        await db.collection("usuarios").doc(userEmail).set(data, { merge: true });
+        await cargarPerfil(userEmail);
+        toggleEditMode(false);
+        document.getElementById('loading').style.display = 'none';
+        Swal.fire({ icon: 'success', title: 'Perfil Guardado', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+    }
+
+    function cargarIntegrantes() {
+        db.collection("usuarios").orderBy("nombre").onSnapshot(snap => {
+            const list = document.getElementById('listaUsuarios');
+            list.innerHTML = "";
+            snap.forEach(doc => {
+                const u = doc.data();
+                const nombre = `${u.nombre || ''} ${u.apellido || ''}`.trim() || u.email;
+                list.innerHTML += `
+                    <div class="user-item" onclick="verOtroPerfil('${u.email}')">
+                        <img src="${u.avatar || 'https://ui-avatars.com/api/?name='+nombre}">
+                        <div class="user-info">
+                            <b>${nombre}</b>
+                            <span>${u.voz || 'Cantor'}</span>
+                        </div>
+                    </div>`;
+            });
+        });
+    }
+
+    function switchSection(s) {
+        document.querySelectorAll('.section').forEach(x => x.style.display = 'none');
+        document.querySelectorAll('.nav-bottom i').forEach(i => i.classList.remove('active'));
+        document.getElementById('view-' + s).style.display = 'block';
+        document.getElementById('nav-' + s).classList.add('active');
+        if(s === 'profile') cargarPerfil(userEmail);
+    }
+
+    function verOtroPerfil(email) {
+        switchSection('profile');
+        cargarPerfil(email);
+    }
+
+    function toggleEditMode(s) {
+        document.getElementById('editBlock').style.display = s ? 'block' : 'none';
+    }
+
+    function descubrirRango() {
+        window.open('afinador.html', 'AfinadorRango', 'width=400,height=600');
+    }
+
+    async function subirImagen(input, tipo) {
+        if (!input.files[0]) return;
+        document.getElementById('loading').style.display = 'flex';
+        const formData = new FormData();
+        formData.append("image", input.files[0]);
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=50c9c685ce6d8f81fc02752e8ebceebf`, { method: "POST", body: formData });
+        const data = await res.json();
+        if (data.success) {
+            await db.collection("usuarios").doc(userEmail).set({ [tipo]: data.data.url }, { merge: true });
+            cargarPerfil(userEmail);
+        }
+        document.getElementById('loading').style.display = 'none';
+    }
+</script>
+</body>
+</html>
+

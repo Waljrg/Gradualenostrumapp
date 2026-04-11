@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Agenda | Graduale Nostrum</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root { --primary: #2C211F; --accent: #B8860B; --bg: #FDFBF7; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 100px; color: var(--primary); }
+        header { background: var(--primary); color: #E8D4A2; padding: 20px; text-align: center; border-bottom: 4px solid var(--accent); }
+        
+        /* Estilos nuevos para el encabezado */
+        .logo-header { width: 50px; height: auto; margin-bottom: 5px; }
+        h1 { font-family: 'Cinzel', serif; margin: 0; font-size: 1.6rem; letter-spacing: 2px; }
+        .subtitle { font-family: 'Inter', sans-serif; font-size: 0.7rem; font-weight: 600; letter-spacing: 3px; opacity: 0.9; margin-top: 2px; }
+        
+        .user-info { font-size: 0.8rem; color: #E8D4A2; opacity: 0.8; margin-top: 10px; min-height: 15px; }
+        .container { padding: 15px; max-width: 500px; margin: auto; }
+        
+        .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 5px solid var(--accent); box-shadow: 0 3px 10px rgba(0,0,0,0.05); position: relative; }
+        .card.personal { border-left-color: #795548; background: #fffdf9; }
+        .card.personal::after { content: "PERSONAL"; position: absolute; top: 10px; right: 40px; font-size: 0.6rem; background: #eee; padding: 2px 5px; border-radius: 4px; color: #666; }
+        
+        .card h3 { margin: 0 0 5px 0; font-size: 1.1rem; padding-right: 25px; }
+        .card p { margin: 0; font-size: 0.9rem; opacity: 0.8; white-space: pre-wrap; }
+        .card .fecha { font-size: 0.7rem; color: var(--accent); font-weight: bold; margin-bottom: 5px; display: block; }
+        
+        .btn-delete { position: absolute; top: 15px; right: 15px; color: #b71c1c; cursor: pointer; opacity: 0.6; transition: 0.3s; padding: 5px; }
+        .btn-delete:hover { opacity: 1; }
+
+        #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 20px; width: 85%; max-width: 400px; border-radius: 15px; max-height: 90vh; overflow-y: auto; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-family: inherit; }
+        label { font-size: 0.8rem; font-weight: bold; color: var(--primary); margin-top: 5px; display: block; }
+        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-add { background: var(--primary); color: white; }
+        
+        .fab { 
+            position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; border-radius: 50%; 
+            background: var(--accent); color: var(--primary); display: none; align-items: center; 
+            justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-size: 1.5rem; border: none; cursor: pointer; 
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <img src="iconos/logo.png" alt="Logo" class="logo-header">
+    <h1>AGENDA</h1>
+    <div class="subtitle">GRADUALE NOSTRUM</div>
+    <div id="userDisplayName" class="user-info">Verificando sesión...</div>
+</header>
+
+<div class="container" id="listaActividades">
+    <p style="text-align:center; opacity:0.5;">Cargando agenda...</p>
+</div>
+
+<button class="fab" id="btnNuevo" onclick="abrirModal()">
+    <i class="fas fa-plus"></i>
+</button>
+
+<div id="modal">
+    <div class="modal-content">
+        <h2 id="modalTitle" style="font-family: 'Cinzel'; font-size: 1.2rem;">Nueva Actividad</h2>
+        <p id="modalDesc" style="font-size: 0.8rem; margin-bottom: 10px; color: #666;"></p>
+        
+        <label for="fecha_agenda">Fecha y hora del evento:</label>
+        <input type="datetime-local" id="fecha_agenda">
+        
+        <input type="text" id="titulo" placeholder="Título">
+        <textarea id="descripcion" rows="3" placeholder="Detalles..."></textarea>
+        
+        <button class="btn btn-add" id="btnGuardar" onclick="guardarActividad()">PUBLICAR</button>
+        <button class="btn" style="background:#eee; margin-top:5px;" onclick="document.getElementById('modal').style.display='none'">CANCELAR</button>
+    </div>
+</div>
+<script type="module">
+    import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
+
+    window.onload = function() {
+        App.addListener('backButton', () => {
+            const pagina = window.location.pathname.split("/").pop();
+
+            if (pagina === 'index.html' || pagina === '') {
+                App.exitApp();
+            } else {
+                window.location.assign('index.html');
+            }
+        });
+    };
+</script>
+
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCx_3nwwj3mKAEmtNVW0OaKamuaovhcM-w",
+        authDomain: "graduale-nostrum.firebaseapp.com",
+        projectId: "graduale-nostrum",
+        storageBucket: "graduale-nostrum.firebasestorage.app",
+        messagingSenderId: "534378937675",
+        appId: "1:534378937675:web:677bbc4eb55ef3e6ed7cce",
+        measurementId: "G-LJJLQXQXY1"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const DIRECTOR_EMAIL = "waljrg@gmail.com";
+    let unsubscribe = null;
+
+    auth.onAuthStateChanged(user => {
+        const info = document.getElementById('userDisplayName');
+        const fab = document.getElementById('btnNuevo');
+
+        if (user) {
+            info.innerText = `👤 ${user.email}`;
+            fab.style.display = 'flex';
+            cargarAgenda(user);
+        } else {
+            info.innerHTML = `<a href="login.html" style="color:#E8D4A2; text-decoration:underline;">Inicia sesión para participar</a>`;
+            fab.style.display = 'none';
+            document.getElementById('listaActividades').innerHTML = "<p style='text-align:center; opacity:0.5;'>Inicia sesión para ver la agenda.</p>";
+        }
+    });
+
+    function abrirModal() {
+        if (!auth.currentUser) return;
+        const userEmail = auth.currentUser.email.toLowerCase();
+        const isDirector = userEmail === DIRECTOR_EMAIL.toLowerCase();
+        
+        const ahora = new Date();
+        ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+        document.getElementById('fecha_agenda').value = ahora.toISOString().slice(0, 16);
+
+        document.getElementById('modalTitle').innerText = isDirector ? "Nueva Actividad Pública" : "Nueva Nota Personal";
+        document.getElementById('modalDesc').innerText = isDirector ? "Esto lo verán todos los usuarios." : "Esto solo lo podrás ver tú.";
+        document.getElementById('modal').style.display = 'flex';
+    }
+
+    function cargarAgenda(user) {
+        if (unsubscribe) unsubscribe();
+        const userEmail = user.email.toLowerCase();
+
+        unsubscribe = db.collection("agenda_publica")
+            .where("autor", "in", [DIRECTOR_EMAIL.toLowerCase(), userEmail])
+            .onSnapshot(snap => {
+                const list = document.getElementById('listaActividades');
+                list.innerHTML = "";
+                
+                let actividades = [];
+                snap.forEach(doc => {
+                    actividades.push({ id: doc.id, ...doc.data() });
+                });
+
+                actividades.sort((a, b) => {
+                    const fechaA = a.fecha_programada ? a.fecha_programada.seconds : 0;
+                    const fechaB = b.fecha_programada ? b.fecha_programada.seconds : 0;
+                    return fechaB - fechaA;
+                });
+
+                if (actividades.length === 0) {
+                    list.innerHTML = "<p style='text-align:center; opacity:0.5;'>No hay actividades ni notas.</p>";
+                    return;
+                }
+
+                actividades.forEach(d => {
+                    const esDelDirector = d.autor.toLowerCase() === DIRECTOR_EMAIL.toLowerCase();
+                    const esMio = d.autor.toLowerCase() === userEmail;
+                    
+                    const timestamp = d.fecha_programada || d.fecha;
+                    const fecha = timestamp ? new Date(timestamp.seconds * 1000).toLocaleDateString('es-NI', { 
+                        weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+                    }) : 'Reciente...';
+                    
+                    const clasePersonal = !esDelDirector ? 'personal' : '';
+                    const botonBorrar = esMio ? `<i class="fas fa-trash-can btn-delete" onclick="eliminarActividad('${d.id}')"></i>` : '';
+
+                    list.innerHTML += `
+                        <div class="card ${clasePersonal}">
+                            <span class="fecha">${fecha}</span>
+                            ${botonBorrar}
+                            <h3>${d.titulo}</h3>
+                            <p>${d.descripcion}</p>
+                        </div>`;
+                });
+            }, err => {
+                console.error("Error al cargar:", err);
+            });
+    }
+
+    async function eliminarActividad(id) {
+        if (!confirm("¿Estás seguro de que deseas eliminar esta nota?")) return;
+        try {
+            await db.collection("agenda_publica").doc(id).delete();
+        } catch (e) {
+            console.error(e);
+            alert("Error al eliminar. Puede que no tengas permisos.");
+        }
+    }
+
+    async function guardarActividad() {
+        const u = auth.currentUser;
+        if (!u) return;
+
+        const tit = document.getElementById('titulo').value.trim();
+        const desc = document.getElementById('descripcion').value.trim();
+        const fInput = document.getElementById('fecha_agenda').value;
+        const btn = document.getElementById('btnGuardar');
+
+        if (!tit) { alert("El título es obligatorio."); return; }
+        if (!fInput) { alert("La fecha es obligatoria."); return; }
+
+        btn.disabled = true;
+        btn.innerText = "GUARDANDO...";
+
+        try {
+            const fechaSeleccionada = new Date(fInput);
+
+            await db.collection("agenda_publica").add({
+                titulo: tit,
+                descripcion: desc || "Sin descripción",
+                fecha: firebase.firestore.FieldValue.serverTimestamp(),
+                fecha_programada: firebase.firestore.Timestamp.fromDate(fechaSeleccionada),
+                autor: u.email.toLowerCase()
+            });
+            
+            document.getElementById('titulo').value = "";
+            document.getElementById('descripcion').value = "";
+            document.getElementById('modal').style.display = 'none';
+        } catch (e) {
+            console.error(e);
+            alert("Error al guardar.");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "PUBLICAR";
+        }
+    }
+</script>
+</body>
+</html>
+

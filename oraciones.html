@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Oraciones - Graduale Nostrum</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            background-color: #e8e2d2;
+            background-image: url('https://www.transparenttextures.com/patterns/paper-fibers.png');
+            color: #2c2420;
+            font-family: 'Playfair Display', serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .contenedor {
+            width: 90%;
+            max-width: 1000px;
+            background: #ffffff;
+            padding: 60px 40px;
+            border: 4px double #8b4513;
+            outline: 1px solid #d4af37;
+            outline-offset: -15px;
+            border-radius: 2px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            position: relative;
+            text-align: center;
+        }
+
+        /* Adornos de esquinas */
+        .contenedor::before, .contenedor::after, 
+        .esquina-inf-izq, .esquina-inf-der {
+            content: "✦";
+            position: absolute;
+            color: #d4af37;
+            font-size: 25px;
+        }
+        .contenedor::before { top: 20px; left: 20px; }
+        .contenedor::after { top: 20px; right: 20px; }
+        .esquina-inf-izq { bottom: 20px; left: 20px; }
+        .esquina-inf-der { bottom: 20px; right: 20px; }
+
+        .logo-principal {
+            width: 120px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: #8b4513;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            margin: 0;
+            font-size: 3rem;
+            font-weight: 700;
+        }
+
+        .subtitulo-adorno {
+            color: #d4af37;
+            font-size: 1.2rem;
+            letter-spacing: 5px;
+            margin-bottom: 50px;
+            text-transform: uppercase;
+            font-family: 'Cinzel', serif;
+        }
+
+        /* Botonera de pantalla completa */
+        .grid-botones {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            padding: 20px;
+        }
+
+        .btn-misa {
+            background: #8b4513;
+            color: #d4af37;
+            font-family: 'Cinzel', serif;
+            border: 2px solid #d4af37;
+            padding: 40px 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.4s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .btn-misa i {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .btn-misa:hover {
+            background: #d4af37;
+            color: #8b4513;
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(139, 69, 19, 0.3);
+        }
+
+        /* --- ESTILOS DEL VISOR (MODAL) --- */
+        #visor-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(44, 36, 32, 0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .visor-contenido {
+            background: #fdfaf3;
+            width: 90%;
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 50px;
+            border: 2px solid #d4af37;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            position: relative;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .cerrar-visor {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+            color: #8b4513;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        /* Estilos del texto MD dentro del visor */
+        #contenido-oracion {
+            text-align: left;
+            line-height: 1.8;
+            font-size: 1.25rem;
+        }
+
+        #contenido-oracion h1, #contenido-oracion h2 {
+            text-align: center;
+            font-family: 'Cinzel', serif;
+            color: #8b4513;
+            border-bottom: 1px solid #d4af37;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        #contenido-oracion p { margin-bottom: 20px; }
+        
+        #contenido-oracion em { color: #8b4513; font-style: italic; }
+
+        @media (max-width: 600px) {
+            .grid-botones {
+                grid-template-columns: 1fr;
+            }
+            h1 { font-size: 2rem; }
+            .visor-contenido { padding: 30px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="contenedor">
+        <div class="esquina-inf-izq"></div>
+        <div class="esquina-inf-der"></div>
+        
+        <img src="iconos/logo.png" alt="Logo" class="logo-principal">
+        <h1>Oraciones</h1>
+        <div class="subtitulo-adorno">Graduale Nostrum</div>
+        
+        <div class="grid-botones">
+            <a href="javascript:void(0)" onclick="abrirOracion('md/oae.md')" class="btn-misa">
+                <i class="fas fa-book-open"></i>
+                Oración antes del ensayo
+            </a>
+            <a href="javascript:void(0)" onclick="abrirOracion('md/ode.md')" class="btn-misa">
+                <i class="fas fa-heart"></i>
+                Oración después del ensayo
+            </a>
+            <a href="javascript:void(0)" onclick="abrirOracion('md/oam.md')" class="btn-misa">
+                <i class="fas fa-cross"></i>
+                Oración antes de Misa
+            </a>
+            <a href="javascript:void(0)" onclick="abrirOracion('md/odm.md')" class="btn-misa">
+                <i class="fas fa-dove"></i>
+                Oración después de Misa
+            </a>
+        </div>
+
+        <div style="margin-top: 40px; color: #d4af37; font-size: 1.5rem;">
+            <i class="fas fa-ellipsis-h"></i>
+        </div>
+    </div>
+
+    <div id="visor-modal">
+        <div class="visor-contenido">
+            <span class="cerrar-visor" onclick="cerrarVisor()"><i class="fas fa-times"></i></span>
+            <div id="contenido-oracion">
+                </div>
+            <div style="text-align: center; margin-top: 30px; color: #d4af37;">
+                <i class="fas fa-leaf"></i>
+            </div>
+        </div>
+    </div>
+<script type="module">
+    import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
+
+    window.onload = function() {
+        App.addListener('backButton', () => {
+            const pagina = window.location.pathname.split("/").pop();
+
+            if (pagina === 'index.html' || pagina === '') {
+                App.exitApp();
+            } else {
+                window.location.assign('index.html');
+            }
+        });
+    };
+</script>
+
+
+    <script>
+        async function abrirOracion(ruta) {
+            const visor = document.getElementById('visor-modal');
+            const contenido = document.getElementById('contenido-oracion');
+            
+            try {
+                const response = await fetch(ruta);
+                if (!response.ok) throw new Error("No se pudo cargar la oración.");
+                const texto = await response.text();
+                
+                // Convertir MD a HTML usando marked.js
+                contenido.innerHTML = marked.parse(texto);
+                
+                visor.style.display = 'flex';
+                document.body.style.overflow = 'hidden'; // Bloquea scroll fondo
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+
+        function cerrarVisor() {
+            document.getElementById('visor-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Cerrar al hacer clic fuera del cuadro blanco
+        window.onclick = function(event) {
+            const visor = document.getElementById('visor-modal');
+            if (event.target == visor) {
+                cerrarVisor();
+            }
+        }
+    </script>
+
+</body>
+</html>
+
