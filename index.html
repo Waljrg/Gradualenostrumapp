@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Plataforma Musical | Inicio</title>
+    <meta name="theme-color" content="#261C1B">
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -33,7 +34,7 @@
             flex-direction: column;
             min-height: 100vh;
             overflow-x: hidden;
-            background-color: #FDFBF7;
+            background-color: #261C1B; /* Cambiado para evitar flash blanco */
         }
 
         body::before {
@@ -55,7 +56,7 @@
         #intro-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--primary);
+            background-color: #261C1B; /* Cambiado según tu preferencia */
             z-index: 1000;
             display: flex;
             align-items: center;

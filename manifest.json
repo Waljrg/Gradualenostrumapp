@@ -6,8 +6,8 @@
   "start_url": "index.html",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "​#261C1B",
-  "theme_color": "​#261C1B",
+  "background_color": "#261C1B",
+  "theme_color": "#261C1B",
   "dir": "ltr",
   "lang": "es-ES",
   "prefer_related_applications": false,
@@ -28,21 +28,62 @@
       "src": "Iconos/logo_maskable.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "maskable"
     }
   ],
   "shortcuts": [
     {
-      "name": "Graduale Nostrum",
-      "short_name": "Graduale Nostrum",
-      "description": "Aplicacion oficial del Coro Parroquial San Francisco de Asís - Camoapa ",
+      "name": "Abrir Cantoral",
+      "short_name": "Cantoral",
+      "description": "Acceso directo al cancionero",
       "url": "cantoral.html",
+      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Afinador de Instrumentos",
+      "short_name": "Afinador",
+      "url": "afinador.html",
+      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Oraciones Diarias",
+      "short_name": "Oraciones",
+      "url": "oraciones.html",
+      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Agenda Litúrgica",
+      "short_name": "Agenda",
+      "url": "agenda.html",
+      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Calendario de Eventos",
+      "short_name": "Calendario",
+      "url": "calendario.html",
+      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Entrenamiento Auditivo",
+      "short_name": "Entrenamiento",
+      "url": "entrenamiento.html",
+      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Comunidad Social",
+      "short_name": "Social",
+      "url": "social.html",
+      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Vaticano News",
+      "short_name": "Vaticano",
+      "url": "vatican.html",
       "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
     },
     {
       "name": "Practicar Piano",
       "short_name": "Piano",
-      "description": "Abrir el simulador de piano",
       "url": "piano.html",
       "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
     }
@@ -57,5 +98,4 @@
     }
   ]
 }
-
 
