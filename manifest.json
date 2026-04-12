@@ -6,8 +6,8 @@
   "start_url": "index.html",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FDFBF7",
-  "theme_color": "#2C211F",
+  "background_color": "​#261C1B",
+  "theme_color": "​#261C1B",
   "dir": "ltr",
   "lang": "es-ES",
   "prefer_related_applications": false,
@@ -33,9 +33,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Abrir Cantoral",
-      "short_name": "Cantoral",
-      "description": "Acceso directo al cancionero",
+      "name": "Graduale Nostrum",
+      "short_name": "Graduale Nostrum",
+      "description": "Aplicacion oficial del Coro Parroquial San Francisco de Asís - Camoapa ",
       "url": "cantoral.html",
       "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
     },
