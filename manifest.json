@@ -1,4 +1,3 @@
-
 {
   "name": "Graduale Nostrum",
   "short_name": "Graduale",
@@ -14,19 +13,19 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "Iconos/logo.png",
+      "src": "Iconos/logo1.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "Iconos/logo.png",
+      "src": "Iconos/logo512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "Iconos/logo.png",
+      "src": "Iconos/logo_maskable.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -38,19 +37,19 @@
       "short_name": "Cantoral",
       "description": "Acceso directo al cancionero",
       "url": "cantoral.html",
-      "icons": [{ "src": "Iconos/logo.png", "sizes": "192x192" }]
+      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
     },
     {
       "name": "Practicar Piano",
       "short_name": "Piano",
       "description": "Abrir el simulador de piano",
       "url": "piano.html",
-      "icons": [{ "src": "Iconos/logo.png", "sizes": "192x192" }]
+      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
     }
   ],
   "screenshots": [
     {
-      "src": "Iconos/logo.png",
+      "src": "Iconos/carga.png",
       "sizes": "1080x2400",
       "type": "image/png",
       "form_factor": "narrow",
@@ -58,3 +57,5 @@
     }
   ]
 }
+
+
