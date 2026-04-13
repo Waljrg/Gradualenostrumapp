@@ -39,6 +39,7 @@
             border-bottom: 2px solid var(--accent);
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             position: relative;
+            flex-shrink: 0;
         }
 
         .header-logo { width: 50px; height: auto; margin-bottom: 5px; }
@@ -107,6 +108,7 @@
             align-items: center;
             gap: 12px;
             position: relative;
+            flex-shrink: 0;
         }
 
         .chat-recipient-bar img { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--accent); }
@@ -120,14 +122,15 @@
             cursor: pointer;
         }
 
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .online { background: #4CAF50; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; transition: background 0.3s; }
+        .online { background: #4CAF50; box-shadow: 0 0 5px #4CAF50; }
         .offline { background: #9e9e9e; }
         #chatStatus { font-size: 0.75rem; color: var(--accent); font-weight: 500; }
 
         #chatBox {
             flex: 1;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             padding: 20px 15px;
             display: flex;
             flex-direction: column;
@@ -136,6 +139,7 @@
             background-size: cover;
             background-position: center;
             scroll-behavior: smooth;
+            padding-bottom: 100px;
         }
 
         .msg {
@@ -404,9 +408,9 @@
             if(chatConEmail) {
                 secretKey = [miEmail, chatConEmail].sort().join("_") + "_GN_REPLY_2026";
                 aplicarWallpaperGuardado();
-                configurarPresencia();
+                configurarPresencia(); // REAL: Marca MI estado como Online/Offline
                 cargarInfoDestinatario();
-                escucharPresenciaDestinatario();
+                escucharPresenciaDestinatario(); // REAL: Lee el estado del otro
                 escucharMensajes();
                 initBubbleDrag();
                 initOverlayPersistence();
@@ -572,29 +576,72 @@
         document.getElementById('msgInput').focus();
     }
     function cancelarRespuesta() { mensajeAResponder = null; document.getElementById('replyPreview').style.display = 'none'; }
+    
+    // FUNCION REAL DE PRESENCIA PROPIA
     function configurarPresencia() {
         const myStatusRef = rtdb.ref('/status/' + miEmailKey);
-        rtdb.ref('.info/connected').on('value', snap => {
+        const connectionRef = rtdb.ref('.info/connected');
+
+        connectionRef.on('value', snap => {
             if (snap.val() === false) return;
+            // Cuando me desconecto, marca mi estado y el tiempo
             myStatusRef.onDisconnect().set({ state: 'offline', last_changed: firebase.database.ServerValue.TIMESTAMP }).then(() => {
+                // Cuando estoy activo, marca online
                 myStatusRef.set({ state: 'online', last_changed: firebase.database.ServerValue.TIMESTAMP });
             });
         });
+
+        // Asegurar que al cerrar o cambiar visibilidad se marque offline
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === 'hidden') {
+                myStatusRef.set({ state: 'offline', last_changed: firebase.database.ServerValue.TIMESTAMP });
+            } else {
+                myStatusRef.set({ state: 'online', last_changed: firebase.database.ServerValue.TIMESTAMP });
+            }
+        });
     }
+
+    // FUNCION REAL DE LECTURA DE PRESENCIA DEL OTRO
     function escucharPresenciaDestinatario() {
         rtdb.ref('/status/' + chatConEmailKey).on('value', snap => {
             const data = snap.val();
             const statusText = document.getElementById('chatStatus'), statusDot = document.getElementById('statusDot');
-            if (data && data.state === 'online') { statusText.innerText = "En línea"; statusDot.className = "status-dot online"; }
-            else { statusText.innerText = data ? "Últ. vez " + new Date(data.last_changed).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "Desconectado"; statusDot.className = "status-dot offline"; }
+            
+            if (data && data.state === 'online') { 
+                statusText.innerText = "En línea"; 
+                statusDot.className = "status-dot online"; 
+            } else if (data && data.last_changed) {
+                const ultimaVez = new Date(data.last_changed);
+                const hoy = new Date();
+                let formato = ultimaVez.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                
+                if(ultimaVez.toDateString() !== hoy.toDateString()) {
+                    formato = ultimaVez.toLocaleDateString([], {day:'2-digit', month:'2-digit'}) + " " + formato;
+                }
+
+                statusText.innerText = "Últ. vez " + formato; 
+                statusDot.className = "status-dot offline"; 
+            } else {
+                statusText.innerText = "Desconectado";
+                statusDot.className = "status-dot offline";
+            }
         });
-        rtdb.ref('/typing/' + chatConEmailKey + '_to_' + miEmailKey).on('value', snap => { if (snap.val() === true) document.getElementById('chatStatus').innerText = "Escribiendo..."; });
+
+        // Escribiendo...
+        rtdb.ref('/typing/' + chatConEmailKey + '_to_' + miEmailKey).on('value', snap => { 
+            if (snap.val() === true) {
+                const statusText = document.getElementById('chatStatus');
+                statusText.innerText = "Escribiendo..."; 
+            }
+        });
     }
+
     function manejarEscritura() {
         rtdb.ref('/typing/' + miEmailKey + '_to_' + chatConEmailKey).set(true);
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(() => { rtdb.ref('/typing/' + miEmailKey + '_to_' + chatConEmailKey).set(false); }, 2000);
     }
+
     function encryptE2EE(text) { return CryptoJS.AES.encrypt(text, secretKey).toString(); }
     function decryptE2EE(ciphertext) { try { return CryptoJS.AES.decrypt(ciphertext, secretKey).toString(CryptoJS.enc.Utf8); } catch(e) { return ""; } }
     async function cargarInfoDestinatario() {
