@@ -2,501 +2,565 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Afinador Imperial Pro | Master Voice Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-<script type="module" src="backbutton.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Plataforma Musical | Inicio</title>
+    <meta name="theme-color" content="#261C1B">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <style>
         :root {
-            --primary: #1A1514; 
+            --primary: #2C211F; 
             --accent: #B8860B;  
-            --accent-light: #E8D4A2;
-            --gold-gradient: linear-gradient(135deg, #B8860B 0%, #F3CF7A 50%, #B8860B 100%);
-            --bg: #0F0D0C;
-            --surface: #1E1A19;
-            --text: #E8D4A2;
-            --radius: 20px;
+            --text-light: #E8D4A2;
+            --surface: rgba(255, 255, 255, 0.95); 
+            --text-dark: #3E322E;
+            --radius-lg: 20px;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            --border-gold: 2px solid #D4AF37;
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            margin: 0;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            margin: 0;
-            overflow: hidden;
+            overflow-x: hidden;
+            background-color: #261C1B; /* Cambiado para evitar flash blanco */
         }
 
-        #saved-profile {
-            position: absolute;
-            top: 20px;
-            background: rgba(184, 134, 11, 0.15);
-            border: 1px solid var(--accent);
-            padding: 10px 20px;
-            border-radius: 50px;
-            display: none;
-            backdrop-filter: blur(5px);
-            z-index: 5;
-        }
-
-        #saved-profile span {
-            font-family: 'Cinzel', serif;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-            color: var(--accent-light);
-        }
-
-        .tuner-card {
-            background: var(--surface);
-            padding: 40px;
-            border-radius: var(--radius);
-            border: 2px solid var(--accent);
-            box-shadow: 0 0 50px rgba(184, 134, 11, 0.2);
-            text-align: center;
-            max-width: 420px;
-            width: 90%;
-            position: relative;
-        }
-
-        h1 {
-            font-family: 'Cinzel', serif;
-            background: var(--gold-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0 0 30px 0;
-            letter-spacing: 3px;
-        }
-
-        .view { display: none; }
-        .view.active { display: block; animation: fadeIn 0.5s ease; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .range-vocal-ui, .voice-train-ui {
-            background: rgba(0,0,0,0.3);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid var(--accent);
-        }
-
-        .step-indicator {
-            font-family: 'Cinzel', serif;
-            color: var(--accent-light);
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-            letter-spacing: 1px;
-        }
-
-        .capture-box {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .note-slot {
-            background: #2c211f;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #444;
-        }
-
-        .note-slot.active { border-color: #FFD700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
-
-        .slot-label { font-size: 0.6rem; color: #888; text-transform: uppercase; }
-        .slot-val { font-size: 1.4rem; font-family: 'Cinzel', serif; color: white; display: block; }
-
-        .stability-bar {
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 6px;
-            background: #333;
-            border-radius: 3px;
-            margin-top: 10px;
-            overflow: hidden;
-        }
-
-        #stability-fill, #train-stability-fill {
-            width: 0%;
             height: 100%;
-            background: var(--gold-gradient);
-            transition: width 0.1s linear;
+            z-index: -1;
+            background-image: url('Iconos/fondo.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            will-change: transform;
         }
 
-        .gauge-outer {
-            width: 200px;
-            height: 200px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
-            background: radial-gradient(circle, #2c211f 0%, #0f0d0c 100%);
-            border: 4px solid var(--accent);
-            position: relative;
+        /* --- PANTALLA DE INTRO LENTA Y FLUIDA --- */
+        #intro-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #261C1B; /* Cambiado según tu preferencia */
+            z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: opacity 2s cubic-bezier(0.4, 0, 0.2, 1), visibility 2s;
+            perspective: 1200px;
         }
 
-        .gauge-outer.tuned { border-color: #FFF; box-shadow: 0 0 30px #FFD700; }
-
-        #note-display { font-family: 'Cinzel', serif; font-size: 4rem; color: white; }
-        
-        .meter-container { width: 100%; height: 30px; position: relative; margin: 15px 0; }
-        .scale { width: 100%; height: 2px; background: #333; position: absolute; top: 50%; }
-        #needle-pro {
-            width: 3px; height: 20px; background: var(--gold-gradient);
-            position: absolute; left: 50%; top: 5px; transform: translateX(-50%);
-            transition: left 0.05s linear;
+        .intro-content {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            will-change: transform, opacity;
         }
 
-        .btn-main {
-            background: var(--gold-gradient); color: var(--primary);
-            border: none; padding: 18px; border-radius: 12px;
-            font-family: 'Cinzel', serif; font-weight: 700;
-            width: 100%; cursor: pointer; margin-bottom: 10px;
+        #intro-logo {
+            width: 150px;
+            opacity: 0;
+            transform: translateZ(-1200px) rotateY(1080deg);
+            animation: zoomInSpin 5.0s cubic-bezier(0.2, 1, 0.3, 1) forwards, 
+                       floatUp 1.5s cubic-bezier(0.45, 0, 0.55, 1) 5.0s forwards;
         }
 
-        .btn-secondary {
-            background: rgba(184, 134, 11, 0.2); color: var(--accent-light);
-            border: 1px solid var(--accent); padding: 12px; border-radius: 10px;
-            font-family: 'Cinzel', serif; font-size: 0.8rem;
-            width: 100%; cursor: pointer; margin-bottom: 10px; transition: 0.3s;
+        #intro-title-container {
+            width: 0;
+            overflow: hidden;
+            margin-top: 30px;
+            opacity: 0;
+            animation: fadeInTitle 1s cubic-bezier(0.4, 0, 0.2, 1) 5s forwards;
         }
-        .btn-secondary:hover { background: rgba(184, 134, 11, 0.4); }
 
-        .btn-back { color: var(--accent); background: none; border: none; cursor: pointer; font-family: 'Cinzel', serif; text-decoration: underline; }
+        #intro-title-img { width: 280px; max-width: 80vw; }
 
-        #result-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--surface); border-radius: var(--radius);
-            display: none; flex-direction: column; justify-content: center; align-items: center;
+        #intro-pax {
+            font-family: 'Cinzel', serif;
+            color: var(--accent);
+            letter-spacing: 6px;
+            margin-top: 20px;
+            min-height: 1.5em;
+            font-size: 1.1rem;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.6);
+        }
+
+        @keyframes zoomInSpin {
+            to { opacity: 1; transform: translateZ(0) rotateY(0deg); }
+        }
+
+        @keyframes floatUp {
+            to { transform: translateY(-40px); }
+        }
+
+        @keyframes fadeInTitle { 
+            from { opacity: 0; width: 0; }
+            to { opacity: 1; width: 100%; }
+        }
+
+        .shrink-all {
+            animation: finalShrink 2s cubic-bezier(0.7, 0, 0.3, 1) forwards;
+        }
+
+        @keyframes finalShrink {
+            to { transform: scale(0.3) translateY(-180%); opacity: 0; filter: blur(15px); }
+        }
+
+        /* --- FIN INTRO --- */
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%);
+            color: white;
+            padding: 1.5rem 1rem 2.5rem;
+            text-align: center;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: var(--shadow);
+            position: relative;
             z-index: 10;
+            opacity: 0;
+            animation: fadeIn 1.5s ease 8.5s forwards;
         }
+
+        /* Clase para saltar animación */
+        .no-animation {
+            animation: none !important;
+            opacity: 1 !important;
+        }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        .header-logo {
+            width: 80px; 
+            height: auto;
+            margin-bottom: 10px;
+            filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.5));
+            animation: rotateLogo 8s infinite linear, shineLogo 3s infinite ease-in-out;
+        }
+
+        @keyframes rotateLogo {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        @keyframes shineLogo {
+            0%, 100% { filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.5)) brightness(1); }
+            50% { filter: drop-shadow(0px 0px 15px rgba(212, 175, 55, 0.8)) brightness(1.4); }
+        }
+
+        .title-img-container {
+            width: 90%;
+            max-width: 300px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .title-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .title-img-container::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                to right, 
+                rgba(212, 175, 55, 0) 0%, 
+                rgba(212, 175, 55, 0.4) 50%, 
+                rgba(212, 175, 55, 0) 100%
+            );
+            transform: skewX(-25deg);
+            animation: sweep 7s infinite ease-in-out;
+            z-index: 2;
+        }
+
+        @keyframes sweep {
+            0% { left: -150%; }
+            30% { left: 150%; }
+            100% { left: 150%; }
+        }
+
+        .subtitle-pax {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            margin-top: -2px;
+            letter-spacing: 3px;
+            font-weight: 400;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            background: linear-gradient(to right, #B8860B 20%, #FDFBF7 50%, #B8860B 80%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shineText 5s linear infinite;
+        }
+
+        @keyframes shineText {
+            to { background-position: 200% center; }
+        }
+
+        .hub-container {
+            padding: 10px;
+            max-width: 400px;
+            margin: -20px auto 0;
+            width: 100%;
+            flex: 1;
+            position: relative;
+            z-index: 20;
+            opacity: 0;
+            animation: fadeIn 1.5s ease 8.8s forwards;
+        }
+
+        .grid-apps {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px;
+            padding: 10px;
+        }
+
+        .app-card {
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.3) !important; 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15); 
+            border-radius: var(--radius-lg);
+            text-decoration: none;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            text-align: center;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .app-card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                to right, 
+                rgba(212, 175, 55, 0) 0%, 
+                rgba(212, 175, 55, 0.15) 50%, 
+                rgba(212, 175, 55, 0) 100%
+            );
+            transform: skewX(-25deg);
+            animation: sweep 6s infinite ease-in-out;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .grid-apps a:nth-child(odd)::after { animation-delay: 0.5s; animation-duration: 6.5s; }
+        .grid-apps a:nth-child(even)::after { animation-delay: 1.5s; animation-duration: 7s; }
+        #btnDirector::after { animation-delay: 2.5s; animation-duration: 5.5s; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); }
+
+        .app-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent) !important;
+            box-shadow: 0 12px 40px rgba(184, 134, 11, 0.2);
+        }
+
+        #btnDirector {
+            display: none;
+            background: linear-gradient(135deg, #B8860B 0%, #8B6508 100%);
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 0 15px rgba(184, 134, 11, 0.5);
+        }
+
+        #btnDirector i, #btnDirector span {
+            color: white !important;
+        }
+
+        .login-bar {
+            grid-column: span 2;
+            background: linear-gradient(145deg, #3e2f2c, #1f1716);
+            color: var(--text-light);
+            padding: 15px;
+            border-radius: 15px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 5px;
+            border: 1px solid var(--accent);
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.4);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: pointer;
+        }
+
+        .login-bar:active { 
+            transform: scale(0.98);
+        }
+        
+        .app-card:active { transform: scale(0.93); }
+
+        .app-card i { 
+            font-size: 1.5rem; 
+            color: var(--accent); 
+            margin-bottom: 6px;
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.2));
+            position: relative; z-index: 3;
+        }
+
+        .app-card span { 
+            font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.6rem; 
+            text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.1; 
+            position: relative; z-index: 3;
+        }
+
+        footer {
+            padding: 15px; text-align: center;
+            background: rgba(253, 251, 247, 0.92); 
+            border-top: 1px solid rgba(184, 134, 11, 0.2);
+            margin-top: 20px;
+            opacity: 0;
+            animation: fadeIn 1.5s ease 9.2s forwards;
+        }
+
+        .btn-vatican {
+            display: inline-block; text-decoration: none; color: var(--accent);
+            font-family: 'Cinzel', serif; font-size: 0.7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+            padding: 4px 12px; border: 1px solid var(--accent); border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 8px; }
+        .footer-links a { text-decoration: none; color: var(--text-dark); font-size: 0.6rem; font-weight: 600; text-transform: uppercase; opacity: 0.8; }
+        .copyright { font-size: 0.55rem; color: #666; margin: 0; line-height: 1.2; }
     </style>
 </head>
 <body>
 
-<div id="saved-profile">
-    <span>MI VOZ: <b id="profile-text">--</b> | RANGO: <b id="profile-range">--</b></span>
-</div>
-
-<div class="tuner-card">
-    <div id="result-overlay">
-        <h1 style="font-size: 1.2rem;">Tu Tesitura es:</h1>
-        <div id="final-voice-type" style="font-family: 'Cinzel'; font-size: 2.5rem; color: #FFD700; margin: 20px 0;">--</div>
-        <p id="final-range-text" style="font-family: 'JetBrains Mono'; font-size: 0.9rem;">--</p>
-        <button class="btn-main" style="width: 80%; margin-top: 30px;" onclick="resetRangeCapture()">REPETIR PRUEBA</button>
-        <button class="btn-back" onclick="stopApp()">VOLVER AL MENÚ</button>
-    </div>
-
-    <div id="menu-view" class="view active">
-        <h1>Afinador Imperial</h1>
-        <button class="btn-main" onclick="initAndStart('Guitarra')">Afinador de Guitarra</button>
-        <button class="btn-main" onclick="initAndStart('Rango')">Analizador de Tesitura</button>
-        <button class="btn-main" onclick="initAndStart('Voz')">Entrenamiento Vocal</button>
-    </div>
-
-    <div id="tuner-view" class="view">
-        <h1 id="title-text">PRO TUNER</h1>
-        
-        <div id="range-vocal-ui" class="range-vocal-ui" style="display: none;">
-            <div class="step-indicator" id="step-msg">Canta la nota más GRAVE que puedas</div>
-            <div class="capture-box">
-                <div class="note-slot" id="slot-low"><span class="slot-label">Grave</span><span class="slot-val" id="low-val">--</span></div>
-                <div class="note-slot" id="slot-high"><span class="slot-label">Aguda</span><span class="slot-val" id="high-val">--</span></div>
-            </div>
-            <div class="stability-bar"><div id="stability-fill"></div></div>
+<div id="intro-overlay">
+    <div class="intro-content" id="intro-box">
+        <img src="Iconos/logo.png" id="intro-logo" alt="Logo">
+        <div id="intro-title-container">
+            <img src="Iconos/gn.png" id="intro-title-img" alt="Graduale Nostrum">
         </div>
-
-        <div id="voice-train-ui" class="voice-train-ui" style="display: none;">
-            <div class="step-indicator">Escucha y Repite la Nota de tu Rango</div>
-            <button class="btn-secondary" id="btn-piano-single" onclick="playTargetNote()">REPRODUCIR PIANO (NOTA)</button>
-            <button class="btn-secondary" id="btn-piano-seq" onclick="playVocalSequence()">EJERCICIO "MA-MA" (PIANO)</button>
-            <div class="stability-bar" style="margin-top:15px;"><div id="train-stability-fill"></div></div>
-        </div>
-
-        <div id="guitar-grid" class="string-selector" style="display:none; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 20px;">
-            <button class="string-btn" onclick="setTarget(82.41, 0)" style="background:rgba(184,134,11,0.1); border:1px solid var(--accent); color:var(--accent-light); border-radius:5px; padding:5px;">E2</button>
-            <button class="string-btn" onclick="setTarget(110.00, 1)" style="background:rgba(184,134,11,0.1); border:1px solid var(--accent); color:var(--accent-light); border-radius:5px; padding:5px;">A2</button>
-            <button class="string-btn" onclick="setTarget(146.83, 2)" style="background:rgba(184,134,11,0.1); border:1px solid var(--accent); color:var(--accent-light); border-radius:5px; padding:5px;">D3</button>
-            <button class="string-btn" onclick="setTarget(196.00, 3)" style="background:rgba(184,134,11,0.1); border:1px solid var(--accent); color:var(--accent-light); border-radius:5px; padding:5px;">G3</button>
-            <button class="string-btn" onclick="setTarget(246.94, 4)" style="background:rgba(184,134,11,0.1); border:1px solid var(--accent); color:var(--accent-light); border-radius:5px; padding:5px;">B3</button>
-            <button class="string-btn" onclick="setTarget(329.63, 5)" style="background:rgba(184,134,11,0.1); border:1px solid var(--accent); color:var(--accent-light); border-radius:5px; padding:5px;">E4</button>
-        </div>
-
-        <div class="gauge-outer" id="gauge">
-            <div id="note-display">--</div>
-            <div style="position:absolute; bottom:15px; font-family:'JetBrains Mono'; font-size:0.7rem;">
-                <span id="freq-pro">0.00</span> Hz
-            </div>
-        </div>
-
-        <div class="meter-container">
-            <div class="scale"></div>
-            <div id="needle-pro"></div>
-        </div>
-
-        <button class="btn-back" onclick="stopApp()">← CANCELAR</button>
+        <div id="intro-pax"></div>
     </div>
 </div>
-<script type="module">
-    import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
 
-    window.onload = function() {
-        App.addListener('backButton', () => {
-            const pagina = window.location.pathname.split("/").pop();
+<header id="main-header">
+    <div class="welcome-text">
+        <img src="Iconos/logo.png" alt="Logo" class="header-logo">
+        <div class="title-img-container">
+            <img src="Iconos/gn.png" alt="Graduale Nostrum" class="title-img">
+        </div>
+        <div class="subtitle-pax">Pax et Bonum</div>
+    </div>
+</header>
 
-            if (pagina === 'index.html' || pagina === '') {
-                App.exitApp();
-            } else {
-                window.location.assign('index.html');
-            }
-        });
-    };
-</script>
+<div class="hub-container" id="main-hub">
+    <div class="grid-apps">
+        <a onclick="accesoProtegido('cantoral.html', this)" class="app-card">
+            <i class="fas fa-book-open"></i>
+            <span>Cantoral</span>
+        </a>
+        <a onclick="accesoProtegido('oraciones.html', this)" class="app-card">
+            <i class="fas fa-hands-praying"></i>
+            <span>Oraciones</span>
+        </a>
+        <a onclick="accesoProtegido('agenda.html', this)" class="app-card">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Agenda</span>
+        </a>
+        <a onclick="accesoProtegido('entrenamiento.html', this)" class="app-card">
+            <i class="fas fa-dumbbell"></i>
+            <span>Entrenamiento</span>
+        </a>
+        <a onclick="accesoProtegido('piano.html', this)" class="app-card">
+            <i class="fas fa-music"></i>
+            <span>Piano</span>
+        </a>
+        <a onclick="accesoProtegido('afinador.html', this)" class="app-card">
+            <i class="fas fa-microphone"></i>
+            <span>Afinador</span>
+        </a>
+        <a onclick="accesoProtegido('Formación/Formación.html', this)" class="app-card">
+            <i class="fas fa-graduation-cap"></i>
+            <span>Formación</span>
+        </a>
+        <a onclick="accesoProtegido('social.html', this)" class="app-card">
+            <i class="fas fa-users"></i>
+            <span>Perfiles</span>
+        </a>
+        <a onclick="accesoProtegido('calendario.html', this)" class="app-card">
+            <i class="fas fa-calendar-check"></i>
+            <span>Calendario</span>
+        </a>
 
+        <a id="btnDirector" href="director.html" class="app-card">
+            <i class="fas fa-star"></i>
+            <span>Director</span>
+        </a>
+
+        <div id="authBtn" class="login-bar" onclick="gestionarSesion()">
+            <i id="authIcon" class="fas fa-sign-in-alt"></i>
+            <span id="authText">INICIAR SESIÓN</span>
+        </div>
+    </div>
+</div>
+
+<footer id="main-footer">
+    <a href="vatican.html" class="btn-vatican">Vatican</a>
+    <div class="footer-links">
+        <a href="acercade.html">Acerca de</a>
+        <a href="pdp.html">Política de Privacidad</a>
+    </div>
+    <p class="copyright">
+        &copy; 2026 Walter Reyes y Coro Parroquial San Francisco de Asís - Camoapa
+    </p>
+</footer>
 
 <script>
-    let audioCtx, analyser, microphone, scriptNode;
-    let currentMode = "";
-    let targetFreq = null;
-    let stage = 0, capturedLow = null, capturedHigh = null;
-    let stabilityCounter = 0, lastStableNote = "";
-    let piano;
-
-    const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-
-    // Redirigir a index.html al presionar botón atrás físico
-    function handleHardwareBack() {
-        history.pushState(null, null, window.location.pathname);
-        window.addEventListener('popstate', function (event) {
-            window.location.assign('index.html');
+    // Registro del Service Worker Profesional
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registrado', reg))
+                .catch(err => console.warn('Error SW', err));
         });
     }
 
-    window.onload = function() {
-        loadVocalProfile();
-        handleHardwareBack();
+    window.addEventListener('DOMContentLoaded', () => {
+        const introOverlay = document.getElementById('intro-overlay');
+        const header = document.getElementById('main-header');
+        const hub = document.getElementById('main-hub');
+        const footer = document.getElementById('main-footer');
+        const introPax = document.getElementById('intro-pax');
+        const text = "Pax et Bonum";
+
+        // Comprobar si ya se mostró la intro en esta sesión
+        if (sessionStorage.getItem('introMostrada')) {
+            // Quitar overlay y animaciones
+            introOverlay.style.display = 'none';
+            header.classList.add('no-animation');
+            hub.classList.add('no-animation');
+            footer.classList.add('no-animation');
+        } else {
+            // Ejecutar secuencia normal de animación
+            setTimeout(() => {
+                let i = 0;
+                const timer = setInterval(() => {
+                    if (i < text.length) {
+                        introPax.innerHTML += text.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(timer);
+                        setTimeout(finalizarIntro, 1200);
+                    }
+                }, 180); 
+            }, 5500); 
+        }
+    });
+
+    function finalizarIntro() {
+        const introBox = document.getElementById('intro-box');
+        const overlay = document.getElementById('intro-overlay');
+        introBox.classList.add('shrink-all');
+        
+        // Guardar que la intro ya se mostró
+        sessionStorage.setItem('introMostrada', 'true');
+
+        setTimeout(() => {
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.visibility = 'hidden'; }, 2000);
+        }, 1500);
+    }
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCx_3nwwj3mKAEmtNVW0OaKamuaovhcM-w",
+        authDomain: "graduale-nostrum.firebaseapp.com",
+        projectId: "graduale-nostrum",
+        storageBucket: "graduale-nostrum.firebasestorage.app",
+        messagingSenderId: "534378937675",
+        appId: "1:534378937675:web:677bbc4eb55ef3e6ed7cce",
+        measurementId: "G-LJJLQXQXY1"
     };
 
-    async function initAndStart(mode) {
-        await Tone.start();
-        
-        if (!piano) {
-            piano = new Tone.Sampler({
-                urls: {
-                    A0: "A0.mp3", C1: "C1.mp3", "D#1": "Ds1.mp3", "F#1": "Fs1.mp3",
-                    A1: "A1.mp3", C2: "C2.mp3", "D#2": "Ds2.mp3", "F#2": "Fs2.mp3",
-                    A2: "A2.mp3", C3: "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3",
-                    A3: "A3.mp3", C4: "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3",
-                    A4: "A4.mp3", C5: "C5.mp3", "D#5": "Ds5.mp3", "F#5": "Fs5.mp3",
-                    A5: "A5.mp3", C6: "C6.mp3"
-                },
-                release: 1,
-                baseUrl: "https://tonejs.github.io/audio/salamander/"
-            }).toDestination();
-        }
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const DIRECTOR_EMAIL = "waljrg@gmail.com";
+    let usuarioLogueado = false;
 
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
-        if (audioCtx.state === 'suspended') await audioCtx.resume();
-        
-        Tone.loaded().then(() => {
-            startApp(mode);
-        });
-    }
-
-    function loadVocalProfile() {
-        const type = localStorage.getItem('imperial_voice_type'), range = localStorage.getItem('imperial_voice_range');
-        if (type && range) {
-            document.getElementById('saved-profile').style.display = 'block';
-            document.getElementById('profile-text').innerText = type;
-            document.getElementById('profile-range').innerText = range;
-        }
-    }
-
-    function generateRandomVocalTask() {
-        let pool = [130.81, 146.83, 164.81, 174.61, 196.00, 220.00, 246.94, 261.63];
-        const savedType = localStorage.getItem('imperial_voice_type');
-
-        if (savedType === "SOPRANO") pool = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25];
-        else if (savedType === "MEZZO") pool = [220.00, 246.94, 261.63, 329.63, 349.23, 440.00];
-        else if (savedType === "CONTRALTO") pool = [174.61, 196.00, 220.00, 261.63, 293.66, 349.23];
-        else if (savedType === "TENOR") pool = [130.81, 146.83, 174.61, 196.00, 220.00, 261.63];
-        else if (savedType === "BARÍTONO") pool = [110.00, 130.81, 146.83, 164.81, 196.00, 220.00];
-        else if (savedType === "BAJO") pool = [82.41, 98.00, 110.00, 130.81, 146.83, 164.81];
-
-        targetFreq = pool[Math.floor(Math.random() * pool.length)];
-        stabilityCounter = 0;
-        playTargetNote();
-    }
-
-    function playTargetNote() {
-        if (!piano || !targetFreq) return;
-        piano.triggerAttackRelease(targetFreq, "1.5");
-    }
-
-    function playVocalSequence() {
-        if (!piano || !targetFreq) return;
-        const now = Tone.now();
-        const intervals = [0, 2, 4, 5, 7, 5, 4, 2, 0];
-        intervals.forEach((interval, i) => {
-            const freq = targetFreq * Math.pow(2, interval / 12);
-            piano.triggerAttackRelease(freq, "8n", now + i * 0.45);
-        });
-    }
-
-    function playSuccessTone() {
-        if (piano) piano.triggerAttackRelease("C5", "8n");
-    }
-
-    async function startApp(mode) {
-        currentMode = mode;
-        document.getElementById('menu-view').classList.remove('active');
-        document.getElementById('tuner-view').classList.add('active');
-        document.getElementById('range-vocal-ui').style.display = (mode === 'Rango' ? 'block' : 'none');
-        document.getElementById('voice-train-ui').style.display = (mode === 'Voz' ? 'block' : 'none');
-        document.getElementById('guitar-grid').style.display = (mode === 'Guitarra' ? 'grid' : 'none');
-        document.getElementById('title-text').innerText = mode === 'Voz' ? 'ENTRENAMIENTO' : mode.toUpperCase();
-
-        if (mode === 'Rango') resetRangeCapture();
-        if (mode === 'Voz') generateRandomVocalTask();
-
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true } });
-        microphone = audioCtx.createMediaStreamSource(stream);
-        analyser = audioCtx.createAnalyser(); 
-        analyser.fftSize = 4096;
-        scriptNode = audioCtx.createScriptProcessor(2048, 1, 1);
-
-        scriptNode.onaudioprocess = (e) => {
-            const freq = detectPitchYIN(e.inputBuffer.getChannelData(0), audioCtx.sampleRate);
-            if (freq > 40 && freq < 1500) processAudioFrame(freq);
-            else { stabilityCounter = 0; updateStabilityBar(0); }
-        };
-        microphone.connect(scriptNode); 
-        scriptNode.connect(audioCtx.destination);
-    }
-
-    function processAudioFrame(freq) {
-        document.getElementById('freq-pro').innerText = freq.toFixed(2);
-        const semi = 12 * (Math.log2(freq / 440)), noteNum = Math.round(semi) + 69;
-        document.getElementById('note-display').innerText = NOTES[(noteNum % 12 + 12) % 12];
-        
-        const diffCents = targetFreq ? 1200 * Math.log2(freq / targetFreq) : 1200 * Math.log2(freq / (440 * Math.pow(2, Math.round(semi) / 12)));
-        document.getElementById('needle-pro').style.left = (50 + diffCents/2) + "%";
-
-        const isTuned = Math.abs(diffCents) < 5;
-        document.getElementById('gauge').classList.toggle('tuned', isTuned);
-
-        const noteName = NOTES[(noteNum % 12 + 12) % 12] + (Math.floor(noteNum / 12) - 1);
-        if (currentMode === 'Rango') handleRangeLogic(noteName, freq);
-        if (currentMode === 'Voz') handleTrainLogic(isTuned);
-    }
-
-    function handleTrainLogic(isTuned) {
-        if (isTuned) {
-            stabilityCounter++;
-            updateStabilityBar((stabilityCounter / 40) * 100);
-            if (stabilityCounter >= 40) {
-                playSuccessTone();
-                setTimeout(() => generateRandomVocalTask(), 1200);
-            }
+    auth.onAuthStateChanged((user) => {
+        const authText = document.getElementById('authText');
+        const authIcon = document.getElementById('authIcon');
+        const btnDirector = document.getElementById('btnDirector');
+        if (user) {
+            usuarioLogueado = true;
+            authText.innerText = "CERRAR SESIÓN";
+            authIcon.className = "fas fa-sign-out-alt";
+            if (user.email === DIRECTOR_EMAIL) btnDirector.style.display = "flex";
         } else {
-            stabilityCounter = Math.max(0, stabilityCounter - 0.5);
-            updateStabilityBar((stabilityCounter / 40) * 100);
+            usuarioLogueado = false;
+            authText.innerText = "INICIAR SESIÓN";
+            authIcon.className = "fas fa-sign-in-alt";
+            btnDirector.style.display = "none";
+        }
+    });
+
+    function gestionarSesion() {
+        if (usuarioLogueado) {
+            auth.signOut().then(() => { alert("Has cerrado sesión."); });
+        } else {
+            window.location.href = "login.html";
         }
     }
 
-    function updateStabilityBar(val) {
-        const id = currentMode === 'Rango' ? 'stability-fill' : 'train-stability-fill';
-        const el = document.getElementById(id);
-        if (el) el.style.width = val + "%";
-    }
-
-    function handleRangeLogic(noteName, freq) {
-        if (noteName === lastStableNote) {
-            stabilityCounter++;
-            updateStabilityBar((stabilityCounter / 30) * 100);
-            if (stabilityCounter >= 30) {
-                if (stage === 0) {
-                    capturedLow = { name: noteName, freq: freq };
-                    document.getElementById('low-val').innerText = noteName;
-                    document.getElementById('slot-low').classList.remove('active');
-                    document.getElementById('slot-high').classList.add('active');
-                    document.getElementById('step-msg').innerText = "Canta la nota más AGUDA";
-                    playSuccessTone(); stage = 1; stabilityCounter = 0;
-                } else {
-                    capturedHigh = { name: noteName, freq: freq };
-                    document.getElementById('high-val').innerText = noteName;
-                    showFinalResult();
-                }
-            }
-        } else { lastStableNote = noteName; stabilityCounter = 0; updateStabilityBar(0); }
-    }
-
-    function showFinalResult() {
-        let type = capturedLow.freq > 165 ? "SOPRANO" : capturedLow.freq > 145 ? "MEZZO" : capturedLow.freq > 125 ? "CONTRALTO" : capturedLow.freq > 105 ? "TENOR" : capturedLow.freq > 85 ? "BARÍTONO" : "BAJO";
-        const range = `${capturedLow.name}-${capturedHigh.name}`;
-        
-        document.getElementById('final-voice-type').innerText = type;
-        document.getElementById('final-range-text').innerText = range;
-        
-        localStorage.setItem('imperial_voice_type', type);
-        localStorage.setItem('imperial_voice_range', range);
-        loadVocalProfile();
-        
-        document.getElementById('result-overlay').style.display = "flex";
-        playSuccessTone();
-
-        // INTEGRACIÓN CON DIRECTORIO: Envía el dato a la ventana principal
-        if (window.opener) {
-            window.opener.postMessage({ rangoVocal: range }, "*");
-            // Opcional: Cerrar automáticamente después de 2 segundos para volver al perfil
-            setTimeout(() => { window.close(); }, 2500);
+    function accesoProtegido(url, element) {
+        if (usuarioLogueado) {
+            window.location.href = url;
+        } else {
+            alert("Debes iniciar sesión para usar esta herramienta.");
+            window.location.href = "login.html";
         }
     }
-
-    function resetRangeCapture() {
-        stage = 0; capturedLow = null; capturedHigh = null;
-        document.getElementById('low-val').innerText = "--"; 
-        document.getElementById('high-val').innerText = "--";
-        document.getElementById('slot-low').classList.add('active'); 
-        document.getElementById('slot-high').classList.remove('active');
-        document.getElementById('result-overlay').style.display = "none";
-    }
-
-    function detectPitchYIN(buffer, sr) {
-        const threshold = 0.1, halfSize = Math.floor(buffer.length / 2);
-        let yinBuffer = new Float32Array(halfSize);
-        for (let tau = 0; tau < halfSize; tau++) {
-            for (let i = 0; i < halfSize; i++) {
-                const delta = buffer[i] - buffer[i + tau];
-                yinBuffer[tau] += delta * delta;
-            }
-        }
-        let runningSum = 0; yinBuffer[0] = 1;
-        for (let tau = 1; tau < halfSize; tau++) { runningSum += yinBuffer[tau]; yinBuffer[tau] *= tau / runningSum; }
-        let tau = -1;
-        for (let t = 1; t < halfSize; t++) { if (yinBuffer[t] < threshold) { while (t + 1 < halfSize && yinBuffer[t + 1] < yinBuffer[t]) t++; tau = t; break; } }
-        if (tau === -1) return -1;
-        let betterTau = tau, x0 = tau - 1, x2 = tau + 1;
-        if (x0 >= 0 && x2 < halfSize) { const s0 = yinBuffer[x0], s1 = yinBuffer[tau], s2 = yinBuffer[x2]; betterTau = tau + (s2 - s0) / (2 * (2 * s1 - s2 - s0)); }
-        return sr / betterTau;
-    }
-
-    function stopApp() {
-        if (microphone) { microphone.disconnect(); scriptNode.disconnect(); }
-        document.getElementById('tuner-view').classList.remove('active');
-        document.getElementById('menu-view').classList.add('active');
-        document.getElementById('result-overlay').style.display = "none";
-        targetFreq = null;
-    }
-    
-    function setTarget(f) { targetFreq = f; }
 </script>
+
 </body>
 </html>
 
