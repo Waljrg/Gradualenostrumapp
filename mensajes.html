@@ -600,41 +600,37 @@
             }
         });
     }
+// FUNCION REAL DE LECTURA DE PRESENCIA DEL OTRO (MEJORADA)
+function escucharPresenciaDestinatario() {
+    const statusRef = rtdb.ref('/status/' + chatConEmailKey);
+    
+    statusRef.on('value', snap => {
+        const data = snap.val();
+        const statusText = document.getElementById('chatStatus');
+        const statusDot = document.getElementById('statusDot');
 
-    // FUNCION REAL DE LECTURA DE PRESENCIA DEL OTRO
-    function escucharPresenciaDestinatario() {
-        rtdb.ref('/status/' + chatConEmailKey).on('value', snap => {
-            const data = snap.val();
-            const statusText = document.getElementById('chatStatus'), statusDot = document.getElementById('statusDot');
-            
-            if (data && data.state === 'online') { 
-                statusText.innerText = "En línea"; 
-                statusDot.className = "status-dot online"; 
-            } else if (data && data.last_changed) {
-                const ultimaVez = new Date(data.last_changed);
-                const hoy = new Date();
-                let formato = ultimaVez.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                
-                if(ultimaVez.toDateString() !== hoy.toDateString()) {
-                    formato = ultimaVez.toLocaleDateString([], {day:'2-digit', month:'2-digit'}) + " " + formato;
-                }
+        if (data && data.state === 'online') {
+            statusText.innerText = "En línea";
+            statusDot.className = "status-dot online";
+        } 
+        else if (data && data.last_changed) {
+            statusText.innerText = "Últ. vez " + formatRelativeTime(data.last_changed);
+            statusDot.className = "status-dot offline";
+        } 
+        else {
+            statusText.innerText = "Desconectado";
+            statusDot.className = "status-dot offline";
+        }
+    });
 
-                statusText.innerText = "Últ. vez " + formato; 
-                statusDot.className = "status-dot offline"; 
-            } else {
-                statusText.innerText = "Desconectado";
-                statusDot.className = "status-dot offline";
-            }
-        });
-
-        // Escribiendo...
-        rtdb.ref('/typing/' + chatConEmailKey + '_to_' + miEmailKey).on('value', snap => { 
-            if (snap.val() === true) {
-                const statusText = document.getElementById('chatStatus');
-                statusText.innerText = "Escribiendo..."; 
-            }
-        });
-    }
+    // Escribiendo... (esto ya lo tenías y funciona bien)
+    rtdb.ref('/typing/' + chatConEmailKey + '_to_' + miEmailKey).on('value', snap => { 
+        if (snap.val() === true) {
+            const statusText = document.getElementById('chatStatus');
+            statusText.innerText = "Escribiendo..."; 
+        }
+    });
+}
 
     function manejarEscritura() {
         rtdb.ref('/typing/' + miEmailKey + '_to_' + chatConEmailKey).set(true);
@@ -652,7 +648,32 @@
             document.getElementById('chatAvatar').src = d.avatar || `https://ui-avatars.com/api/?name=${d.nombre}`;
         }
     }
+// === NUEVA FUNCIÓN: Tiempo relativo (hace cuánto) ===
+function formatRelativeTime(timestamp) {
+    if (!timestamp) return "Desconectado";
 
+    const now = Date.now();
+    const diffMs = now - timestamp;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMin / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMin < 1) return "hace un momento";
+    if (diffMin < 60) return `hace ${diffMin} min`;
+    if (diffHours < 24) return `hace ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+
+    // Más de 1 día
+    const fecha = new Date(timestamp);
+    const hoy = new Date();
+    const ayer = new Date(hoy);
+    ayer.setDate(ayer.getDate() - 1);
+
+    if (fecha.toDateString() === ayer.toDateString()) {
+        return "ayer a las " + fecha.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+    return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) + 
+           " a las " + fecha.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}  
     async function enviarMensaje(contenido = null, tipo = "text") {
         const input = document.getElementById('msgInput');
         const dataOriginal = contenido || input.value.trim();
