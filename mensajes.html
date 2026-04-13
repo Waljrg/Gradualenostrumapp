@@ -674,51 +674,46 @@ function formatRelativeTime(timestamp) {
     return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) + 
            " a las " + fecha.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }  
-    async function enviarMensaje(contenido = null, tipo = "text") {
-        const input = document.getElementById('msgInput');
-        const dataOriginal = contenido || input.value.trim();
+async function enviarMensaje(contenido = null, tipo = "text") {
+    const input = document.getElementById('msgInput');
+    const dataOriginal = contenido || input.value.trim();
+    
+    if (!dataOriginal || !chatConEmail) return;
+
+    console.log("✅ Intentando enviar mensaje:", dataOriginal);  // ← Agrega esto
+
+    const tempId = "temp_" + Date.now();
+
+    try {
+        const textoCifrado = encryptE2EE(dataOriginal);
+        let msgObj = { 
+            emisor: miEmail, 
+            receptor: chatConEmail, 
+            texto: textoCifrado, 
+            tipo: tipo, 
+            status: 'sent', 
+            timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+        };
+
+        // ... (el resto igual)
+
+        mensajesCache.push(msgLocal);
+        localStorage.setItem(localHistoryKey, JSON.stringify(mensajesCache));
         
-        if (!dataOriginal || !chatConEmail) return;
+        console.log("📦 Mensaje agregado al cache. Total mensajes:", mensajesCache.length); // ← Agrega
 
-        const tempId = "temp_" + Date.now();
+        renderizarChat();   // ← Asegúrate que se llama aquí
 
-        try {
-            const textoCifrado = encryptE2EE(dataOriginal);
-            let msgObj = { 
-                emisor: miEmail, 
-                receptor: chatConEmail, 
-                texto: textoCifrado, 
-                tipo: tipo, 
-                status: 'sent', 
-                timestamp: firebase.firestore.FieldValue.serverTimestamp() 
-            };
+        if (!contenido) input.value = "";
 
-            if (mensajeAResponder) { 
-                msgObj.replyTo = decryptE2EE(mensajeAResponder.texto).substring(0, 50); 
-                msgObj.replyId = mensajeAResponder.id; 
-                cancelarRespuesta(); 
-            }
+        await db.collection("bridge").add(msgObj);
+        console.log("🚀 Mensaje enviado a Firestore correctamente");
 
-            const localHistoryKey = `history_${[miEmail, chatConEmail].sort().join("_")}`;
-            const msgLocal = { ...msgObj, id: tempId, timestamp: { seconds: Math.floor(Date.now() / 1000) } };
-            mensajesCache.push(msgLocal);
-            localStorage.setItem(localHistoryKey, JSON.stringify(mensajesCache));
-            renderizarChat();
-
-            if (!contenido) input.value = "";
-
-            await db.collection("bridge").add(msgObj);
-            
-        } catch (error) {
-            console.error("Error en envío:", error);
-            const index = mensajesCache.findIndex(m => m.id === tempId);
-            if(index !== -1) {
-                mensajesCache[index].status = 'error';
-                renderizarChat();
-            }
-        }
+    } catch (error) {
+        console.error("❌ Error al enviar mensaje:", error);
+        // ... 
     }
-
+}
 function escucharMensajes() {
     const localHistoryKey = `history_${[miEmail, chatConEmail].sort().join("_")}`;
     mensajesCache = JSON.parse(localStorage.getItem(localHistoryKey) || "[]");
@@ -781,18 +776,54 @@ function escucharMensajes() {
 
 function renderizarChat() {
     const box = document.getElementById('chatBox');
-    const infoE2EE = box.querySelector('.e2ee-info');
+    if (!box) return;
+
+    const infoE2EE = box.querySelector('.e2ee-info') || document.createElement('div');
+    infoE2EE.className = 'e2ee-info';
+    infoE2EE.innerHTML = '<i class="fas fa-lock"></i> Cifrado E2EE: Privacidad total.';
+
     box.innerHTML = ""; 
-    if(infoE2EE) box.appendChild(infoE2EE);
+    box.appendChild(infoE2EE);
     
-    mensajesCache.forEach(m => {
-        // ... (todo el código de los mensajes se queda igual)
+    if (mensajesCache.length === 0) {
+        box.innerHTML += '<div style="text-align:center; color:#999; padding:40px;">No hay mensajes aún</div>';
+        return;
+    }
+
+    // Ordenar por tiempo (importante)
+    mensajesCache.sort((a, b) => {
+        const ta = a.timestamp?.seconds || a.timestamp || 0;
+        const tb = b.timestamp?.seconds || b.timestamp || 0;
+        return ta - tb;
     });
-    
-    // ←←← ESTO ES LO NUEVO:
-    setTimeout(() => {
-        box.scrollTop = box.scrollHeight;
-    }, 30);
+
+    mensajesCache.forEach(m => {
+        const decryptedText = m.tipo === "text" ? decryptE2EE(m.texto) : "[Multimedia]";
+        
+        const isSent = m.emisor === miEmail;
+        
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `msg ${isSent ? 'sent' : 'received'}`;
+        
+        let html = '';
+        if (m.tipo === "image") {
+            html = `<img src="\( {decryptedText}" class="chat-img" onclick="window.open(' \){decryptedText}')">`;
+        } else if (m.tipo === "audio") {
+            html = `<div class="audio-player"><i class="fas fa-play" onclick="playAudio('${decryptedText}', this)"></i> Audio</div>`;
+        } else {
+            html = `<div>${decryptedText}</div>`;
+        }
+        
+        msgDiv.innerHTML = html + `
+            <div class="msg-meta">
+                ${new Date((m.timestamp?.seconds || m.timestamp) * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+                ${isSent ? '<span class="tick-icon tick-read">✓✓</span>' : ''}
+            </div>`;
+        
+        box.appendChild(msgDiv);
+    });
+
+    setTimeout(() => { box.scrollTop = box.scrollHeight; }, 100);
 }
 
     function playAudio(base64, btn) { const audio = new Audio(base64); btn.className = "fas fa-pause"; audio.play(); audio.onended = () => btn.className = "fas fa-play"; }
