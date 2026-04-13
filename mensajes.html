@@ -325,10 +325,13 @@
     <i class="fas fa-cog btn-gallery" onclick="abrirGaleria()"></i>
 </div>
 
-<div id="chatBox">
-    <div class="e2ee-info"><i class="fas fa-lock"></i> Cifrado E2EE: Privacidad total.</div>
+<div class="e2ee-info">
+    <i class="fas fa-lock"></i>
+    Los mensajes están cifrados de extremo a extremo. Ni Graduale Nostrum ni terceros pueden leerlos o escucharlos, solo las personas en este chat. 
+    <span onclick="mostrarInfoGN()" style="color: var(--accent); text-decoration: underline; cursor: pointer; font-weight: 600;">
+        Para más información, haz clic aquí.
+    </span>
 </div>
-
 <div id="galleryModal">
     <div class="gallery-header">
         <i class="fas fa-arrow-left" onclick="cerrarGaleria()"></i>
@@ -372,6 +375,34 @@
         <button class="btn-send" onclick="enviarMensaje()">
             <i class="fas fa-paper-plane"></i>
         </button>
+    </div>
+</div>
+<!-- Modal Información GN -->
+<div id="modalInfoGN" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center;">
+    <div style="background: var(--bg); width: 92%; max-width: 420px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(184,134,11,0.4); max-height: 85vh; display: flex; flex-direction: column;">
+        
+        <!-- Header del modal -->
+        <div style="background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%); color: white; padding: 15px 18px; display: flex; align-items: center; gap: 12px; border-bottom: 2px solid var(--accent);">
+            <i class="fas fa-shield-alt" style="font-size: 1.4rem;"></i>
+            <div>
+                <h2 style="margin: 0; font-family: 'Cinzel', serif; font-size: 1.25rem;">Graduale Nostrum</h2>
+                <p style="margin: 2px 0 0; font-size: 0.85rem; opacity: 0.9;">Información de Cifrado E2EE</p>
+            </div>
+            <i onclick="cerrarModalGN()" class="fas fa-times" style="margin-left: auto; font-size: 1.5rem; cursor: pointer;"></i>
+        </div>
+
+        <!-- Contenido -->
+        <div id="contenidoGN" style="flex: 1; padding: 20px; overflow-y: auto; font-family: 'Inter', sans-serif; line-height: 1.6; color: var(--text); font-size: 0.95rem;">
+            <!-- Aquí se cargará el contenido de Gn.json -->
+            Cargando información...
+        </div>
+
+        <!-- Footer -->
+        <div style="padding: 15px; text-align: center; border-top: var(--border); background: white;">
+            <button onclick="cerrarModalGN()" style="background: var(--accent); color: white; border: none; padding: 10px 24px; border-radius: 25px; font-weight: 600; cursor: pointer;">
+                Entendido
+            </button>
+        </div>
     </div>
 </div>
 
@@ -905,6 +936,55 @@ function renderizarChat() {
     async function toggleAudioRecording() { if (!isRecording) { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); mediaRecorder = new MediaRecorder(stream); audioChunks = []; mediaRecorder.ondataavailable = e => audioChunks.push(e.data); mediaRecorder.onstop = () => { const reader = new FileReader(); reader.readAsDataURL(new Blob(audioChunks)); reader.onloadend = () => enviarMensaje(reader.result, "audio"); stream.getTracks().forEach(t => t.stop()); }; mediaRecorder.start(); isRecording = true; document.getElementById('btnMic').style.color = "red"; } else { mediaRecorder.stop(); isRecording = false; document.getElementById('btnMic').style.color = "var(--accent)"; } }
     let isRecording = false, mediaRecorder, audioChunks;
     function procesarImagen(input) { const reader = new FileReader(); reader.onload = e => enviarMensaje(e.target.result, "image"); reader.readAsDataURL(input.files[0]); }
+// ==================== MODAL INFORMACIÓN GN ====================
+async function mostrarInfoGN() {
+    const modal = document.getElementById('modalInfoGN');
+    const contenidoDiv = document.getElementById('contenidoGN');
+    
+    modal.style.display = 'flex';
+    
+    try {
+        // Cambia la ruta si tu archivo Gn.json está en otra carpeta
+        const response = await fetch('Gn.json');
+        
+        if (!response.ok) throw new Error('No se pudo cargar Gn.json');
+        
+        const data = await response.json();
+        
+        let html = '';
+        
+        if (data.titulo) {
+            html += `<h3 style="font-family: 'Cinzel', serif; color: var(--accent); margin-top: 0;">${data.titulo}</h3>`;
+        }
+        
+        if (data.texto) {
+            html += `<p style="white-space: pre-line;">${data.texto}</p>`;
+        }
+        
+        // Si tienes más secciones en el JSON, se mostrarán también
+        if (data.secciones && Array.isArray(data.secciones)) {
+            data.secciones.forEach(seccion => {
+                html += `<h4 style="margin-top: 20px; color: var(--primary); border-bottom: 1px solid var(--accent-light); padding-bottom: 6px;">${seccion.titulo}</h4>`;
+                html += `<p style="white-space: pre-line;">${seccion.texto}</p>`;
+            });
+        }
+        
+        contenidoDiv.innerHTML = html || '<p style="color:#999;">No hay información disponible en este momento.</p>';
+        
+    } catch (error) {
+        console.error("Error cargando Gn.json:", error);
+        contenidoDiv.innerHTML = `
+            <p style="color: #d32f2f; text-align: center;">
+                <i class="fas fa-exclamation-triangle"></i><br>
+                No se pudo cargar la información.<br>
+                <small>Verifica que el archivo <strong>Gn.json</strong> exista en la carpeta.</small>
+            </p>`;
+    }
+}
+
+function cerrarModalGN() {
+    document.getElementById('modalInfoGN').style.display = 'none';
+}
 </script>
 </body>
 </html>
