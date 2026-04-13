@@ -679,11 +679,11 @@ async function enviarMensaje(contenido = null, tipo = "text") {
     const dataOriginal = contenido || input.value.trim();
     
     if (!dataOriginal || !chatConEmail) {
-        console.log("❌ No hay texto o chat vacío");
+        console.log("❌ No hay contenido para enviar");
         return;
     }
 
-    console.log("📤 Enviando mensaje:", dataOriginal.substring(0, 60));
+    console.log("📤 Intentando enviar:", dataOriginal.substring(0, 50));
 
     const tempId = "temp_" + Date.now();
     const localHistoryKey = `history_${[miEmail, chatConEmail].sort().join("_")}`;
@@ -691,7 +691,7 @@ async function enviarMensaje(contenido = null, tipo = "text") {
     try {
         const textoCifrado = encryptE2EE(dataOriginal);
 
-        let msgObj = { 
+        const msgObj = { 
             emisor: miEmail, 
             receptor: chatConEmail, 
             texto: textoCifrado, 
@@ -700,13 +700,14 @@ async function enviarMensaje(contenido = null, tipo = "text") {
             timestamp: firebase.firestore.FieldValue.serverTimestamp() 
         };
 
+        // Si hay respuesta
         if (mensajeAResponder) { 
             msgObj.replyTo = decryptE2EE(mensajeAResponder.texto).substring(0, 50); 
             msgObj.replyId = mensajeAResponder.id; 
             cancelarRespuesta(); 
         }
 
-        // Versión local para mostrar inmediatamente
+        // Guardar localmente (para que tú lo veas)
         const msgLocal = { 
             ...msgObj, 
             id: tempId, 
@@ -716,20 +717,25 @@ async function enviarMensaje(contenido = null, tipo = "text") {
         mensajesCache.push(msgLocal);
         localStorage.setItem(localHistoryKey, JSON.stringify(mensajesCache));
 
-        console.log("✅ Mensaje guardado en cache. Total:", mensajesCache.length);
+        console.log("✅ Guardado en cache local");
 
-        // Forzar renderizado inmediato
         renderizarChat();
 
         if (!contenido) input.value = "";
 
         // Enviar a Firestore
-        await db.collection("bridge").add(msgObj);
-        console.log("🚀 Mensaje enviado a Firestore OK");
+        const docRef = await db.collection("bridge").add(msgObj);
+        console.log("🚀 Mensaje guardado en Firestore con ID:", docRef.id);
 
     } catch (error) {
-        console.error("❌ Error completo al enviar:", error);
-        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo enviar el mensaje' });
+        console.error("❌ Error al enviar mensaje:", error.message || error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de envío',
+            text: 'El mensaje no llegó a los demás. Revisa la consola.',
+            toast: true,
+            position: 'top-end'
+        });
     }
 }
 function escucharMensajes() {
