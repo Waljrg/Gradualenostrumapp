@@ -272,7 +272,25 @@
         .reaction-row span { font-size: 1.3rem; cursor: pointer; }
         .delete-option { padding: 8px; color: #d32f2f; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: center; }
         .e2ee-info { font-size: 0.65rem; text-align: center; color: var(--accent); padding: 10px; font-style: italic; }
+/* Estados de ticks mejorados */
+.tick-pending { color: #9e9e9e; font-size: 0.75rem; }     /* enviando */
+.tick-sent    { color: #9e9e9e; font-size: 0.75rem; }     /* enviado (gris) */
+.tick-delivered { color: #2196F3; font-size: 0.75rem; }   /* entregado (azul) */
+.tick-read    { color: #D4AF37; font-size: 0.75rem; }     /* leído (dorado) */
+
+.tick-error   { color: #f44336; font-size: 0.8rem; }      /* error (rojo) */
+
+.msg-meta {
+    font-size: 0.65rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 4px;
+    opacity: 0.85;
+}
     </style>
+    
 </head>
 <body onclick="cerrarReacciones()">
 
@@ -678,12 +696,7 @@ async function enviarMensaje(contenido = null, tipo = "text") {
     const input = document.getElementById('msgInput');
     const dataOriginal = contenido || input.value.trim();
     
-    if (!dataOriginal || !chatConEmail) {
-        console.log("❌ No hay contenido para enviar");
-        return;
-    }
-
-    console.log("📤 Intentando enviar:", dataOriginal.substring(0, 50));
+    if (!dataOriginal || !chatConEmail) return;
 
     const tempId = "temp_" + Date.now();
     const localHistoryKey = `history_${[miEmail, chatConEmail].sort().join("_")}`;
@@ -700,41 +713,55 @@ async function enviarMensaje(contenido = null, tipo = "text") {
             timestamp: firebase.firestore.FieldValue.serverTimestamp() 
         };
 
-        // Si hay respuesta
         if (mensajeAResponder) { 
             msgObj.replyTo = decryptE2EE(mensajeAResponder.texto).substring(0, 50); 
             msgObj.replyId = mensajeAResponder.id; 
             cancelarRespuesta(); 
         }
 
-        // Guardar localmente (para que tú lo veas)
+        // Versión local (muestra inmediatamente con reloj)
         const msgLocal = { 
             ...msgObj, 
             id: tempId, 
-            timestamp: { seconds: Math.floor(Date.now() / 1000) } 
+            timestamp: { seconds: Math.floor(Date.now() / 1000) },
+            status: 'sending'                     // ← Enviando (⏳)
         };
 
         mensajesCache.push(msgLocal);
         localStorage.setItem(localHistoryKey, JSON.stringify(mensajesCache));
-
-        console.log("✅ Guardado en cache local");
-
-        renderizarChat();
+        renderizarChat();                         // Muestra ⏳ inmediatamente
 
         if (!contenido) input.value = "";
 
         // Enviar a Firestore
         const docRef = await db.collection("bridge").add(msgObj);
-        console.log("🚀 Mensaje guardado en Firestore con ID:", docRef.id);
+        
+        // Actualizar a "enviado" (✓ gris)
+        const index = mensajesCache.findIndex(m => m.id === tempId);
+        if (index !== -1) {
+            mensajesCache[index].status = 'sent';
+            mensajesCache[index].id = docRef.id;   // Guardamos el ID real
+            localStorage.setItem(localHistoryKey, JSON.stringify(mensajesCache));
+            renderizarChat();
+        }
 
     } catch (error) {
-        console.error("❌ Error al enviar mensaje:", error.message || error);
+        console.error("❌ Error al enviar:", error);
+
+        const index = mensajesCache.findIndex(m => m.id === tempId);
+        if (index !== -1) {
+            mensajesCache[index].status = 'error';
+            localStorage.setItem(localHistoryKey, JSON.stringify(mensajesCache));
+            renderizarChat();
+        }
+
         Swal.fire({
             icon: 'error',
-            title: 'Error de envío',
-            text: 'El mensaje no llegó a los demás. Revisa la consola.',
+            title: 'Error',
+            text: 'No se pudo enviar el mensaje',
             toast: true,
-            position: 'top-end'
+            position: 'top-end',
+            timer: 2000
         });
     }
 }
@@ -798,15 +825,9 @@ function escucharMensajes() {
 }
 
 function renderizarChat() {
-    console.log("🔄 Renderizando chat - Mensajes:", mensajesCache.length);
-
     const box = document.getElementById('chatBox');
-    if (!box) {
-        console.error("❌ No se encontró el chatBox");
-        return;
-    }
+    if (!box) return;
 
-    // Mantener info E2EE
     let infoE2EE = box.querySelector('.e2ee-info');
     if (!infoE2EE) {
         infoE2EE = document.createElement('div');
@@ -818,58 +839,68 @@ function renderizarChat() {
     box.appendChild(infoE2EE);
 
     if (mensajesCache.length === 0) {
-        box.innerHTML += '<div style="text-align:center; padding:80px 20px; color:#999;">Aún no hay mensajes.<br>Envía el primero.</div>';
+        box.innerHTML += '<div style="text-align:center; padding:80px 20px; color:#999;">No hay mensajes aún.</div>';
         return;
     }
 
-    // Ordenar por tiempo
-    mensajesCache.sort((a, b) => {
-        const ta = a.timestamp?.seconds || a.timestamp || 0;
-        const tb = b.timestamp?.seconds || b.timestamp || 0;
-        return ta - tb;
-    });
+    // Ordenar mensajes por tiempo
+    mensajesCache.sort((a, b) => (a.timestamp?.seconds || 0) - (b.timestamp?.seconds || 0));
 
     mensajesCache.forEach(m => {
         const isSent = (m.emisor || "").toLowerCase() === miEmail.toLowerCase();
 
-        let text = "";
-        try {
-            text = m.tipo === "text" ? decryptE2EE(m.texto) : (m.tipo === "image" ? "[Imagen]" : "[Audio]");
-        } catch(e) {
-            text = "[Error descifrar]";
+        let contentHTML = '';
+        if (m.tipo === "image") {
+            const url = decryptE2EE(m.texto);
+            contentHTML = `<img src="\( {url}" class="chat-img" onclick="window.open(' \){url}')">`;
+        } else if (m.tipo === "audio") {
+            const url = decryptE2EE(m.texto);
+            contentHTML = `<div class="audio-player"><i class="fas fa-play" onclick="playAudio('${url}', this)"></i> Audio</div>`;
+        } else {
+            const text = decryptE2EE(m.texto);
+            contentHTML = `<div>${text}</div>`;
         }
+
+        // === ESTADOS DEL MENSAJE (solo para mensajes enviados por mí) ===
+        let statusHTML = '';
+        if (isSent) {
+            const status = m.status || 'sent';
+
+            if (status === 'sending') {
+                statusHTML = '<span class="tick-pending">⏳</span>';
+            } 
+            else if (status === 'error') {
+                statusHTML = '<span class="tick-error">⚠️</span>';
+            } 
+            else if (status === 'sent') {
+                statusHTML = '<span class="tick-sent">✓</span>';
+            } 
+            else if (status === 'delivered') {
+                statusHTML = '<span class="tick-delivered">✓✓</span>';
+            } 
+            else if (status === 'read') {
+                statusHTML = '<span class="tick-read">✓✓</span>';
+            }
+        }
+
+        const timeStr = new Date((m.timestamp?.seconds || Date.now()/1000) * 1000)
+                          .toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
 
         const msgDiv = document.createElement('div');
         msgDiv.className = `msg ${isSent ? 'sent' : 'received'}`;
-
-        let htmlContent = '';
-        if (m.tipo === "image") {
-            const url = decryptE2EE(m.texto);
-            htmlContent = `<img src="\( {url}" class="chat-img" style="max-width:100%; border-radius:10px;" onclick="window.open(' \){url}')">`;
-        } else if (m.tipo === "audio") {
-            const url = decryptE2EE(m.texto);
-            htmlContent = `<div class="audio-player"><i class="fas fa-play" onclick="playAudio('${url}', this)"></i> Audio</div>`;
-        } else {
-            htmlContent = `<div>${text}</div>`;
-        }
-
-        msgDiv.innerHTML = htmlContent + `
+        msgDiv.innerHTML = contentHTML + `
             <div class="msg-meta">
-                ${new Date((m.timestamp?.seconds || Date.now()/1000) * 1000).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}
-                ${isSent ? ' <span class="tick-icon tick-read">✓✓</span>' : ''}
+                ${timeStr}
+                ${statusHTML}
             </div>`;
 
         box.appendChild(msgDiv);
     });
 
-    // Scroll automático
     setTimeout(() => {
         box.scrollTop = box.scrollHeight;
     }, 100);
-
-    console.log("✅ Chat renderizado correctamente");
 }
-
     function playAudio(base64, btn) { const audio = new Audio(base64); btn.className = "fas fa-pause"; audio.play(); audio.onended = () => btn.className = "fas fa-play"; }
     async function toggleAudioRecording() { if (!isRecording) { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); mediaRecorder = new MediaRecorder(stream); audioChunks = []; mediaRecorder.ondataavailable = e => audioChunks.push(e.data); mediaRecorder.onstop = () => { const reader = new FileReader(); reader.readAsDataURL(new Blob(audioChunks)); reader.onloadend = () => enviarMensaje(reader.result, "audio"); stream.getTracks().forEach(t => t.stop()); }; mediaRecorder.start(); isRecording = true; document.getElementById('btnMic').style.color = "red"; } else { mediaRecorder.stop(); isRecording = false; document.getElementById('btnMic').style.color = "var(--accent)"; } }
     let isRecording = false, mediaRecorder, audioChunks;
