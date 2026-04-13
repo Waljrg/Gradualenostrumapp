@@ -1,4 +1,4 @@
 {
-  "titulo": "E2EE",
+  "titulo": "E2EE - Cifrado de Extremo a Extremo",
   "texto": "¿Qué significa el cifrado de extremo a extremo?\n\nImagina que cada mensaje que envías se guarda en una caja fuerte con un candado físico. El mensaje sale de tu dispositivo bajo llave y solo el destinatario tiene la llave única para abrir esa caja.\n\n1. Privacidad Total\nNi el servidor que transmite los datos, ni los desarrolladores de la aplicación, ni posibles atacantes externos pueden acceder al contenido. Para el sistema, el mensaje es simplemente una serie de caracteres aleatorios e ilegibles.\n\n2. Seguridad Automática\nNo es necesario configurar nada especial. En sistemas modernos, el cifrado ocurre en segundo plano cada vez que envías un texto, una nota de voz, una imagen o un archivo.\n\n3. Verificación de Identidad\nCada chat tiene un código de seguridad único (a menudo visualizado como un código QR o una serie de números). Este código sirve para confirmar que tus llamadas y mensajes enviados a ese chat están efectivamente cifrados."
 }
