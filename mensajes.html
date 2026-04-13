@@ -679,11 +679,11 @@ async function enviarMensaje(contenido = null, tipo = "text") {
     const dataOriginal = contenido || input.value.trim();
     
     if (!dataOriginal || !chatConEmail) {
-        console.log("❌ No hay contenido o chatConEmail vacío");
+        console.log("❌ No hay texto o chat vacío");
         return;
     }
 
-    console.log("📤 Intentando enviar mensaje:", dataOriginal.substring(0, 50) + "...");
+    console.log("📤 Enviando mensaje:", dataOriginal.substring(0, 60));
 
     const tempId = "temp_" + Date.now();
     const localHistoryKey = `history_${[miEmail, chatConEmail].sort().join("_")}`;
@@ -700,55 +700,36 @@ async function enviarMensaje(contenido = null, tipo = "text") {
             timestamp: firebase.firestore.FieldValue.serverTimestamp() 
         };
 
-        // Si hay mensaje en respuesta
         if (mensajeAResponder) { 
             msgObj.replyTo = decryptE2EE(mensajeAResponder.texto).substring(0, 50); 
             msgObj.replyId = mensajeAResponder.id; 
             cancelarRespuesta(); 
         }
 
-        // === Crear versión local para mostrar inmediatamente ===
+        // Versión local para mostrar inmediatamente
         const msgLocal = { 
             ...msgObj, 
             id: tempId, 
             timestamp: { seconds: Math.floor(Date.now() / 1000) } 
         };
 
-        // Agregar al cache y guardar en localStorage
         mensajesCache.push(msgLocal);
         localStorage.setItem(localHistoryKey, JSON.stringify(mensajesCache));
 
-        console.log("✅ Mensaje agregado al cache. Total mensajes:", mensajesCache.length);
+        console.log("✅ Mensaje guardado en cache. Total:", mensajesCache.length);
 
-        // Renderizar inmediatamente
+        // Forzar renderizado inmediato
         renderizarChat();
 
-        // Limpiar input si es mensaje de texto
         if (!contenido) input.value = "";
 
-        // === Enviar a Firestore (bridge) ===
+        // Enviar a Firestore
         await db.collection("bridge").add(msgObj);
-        
-        console.log("🚀 Mensaje enviado correctamente a Firestore");
+        console.log("🚀 Mensaje enviado a Firestore OK");
 
     } catch (error) {
-        console.error("❌ Error al enviar mensaje:", error);
-        
-        // Marcar como error si ya está en el cache
-        const index = mensajesCache.findIndex(m => m.id === tempId);
-        if (index !== -1) {
-            mensajesCache[index].status = 'error';
-            renderizarChat();
-        }
-
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'No se pudo enviar el mensaje',
-            toast: true,
-            position: 'top-end',
-            timer: 3000
-        });
+        console.error("❌ Error completo al enviar:", error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo enviar el mensaje' });
     }
 }
 function escucharMensajes() {
@@ -811,77 +792,76 @@ function escucharMensajes() {
 }
 
 function renderizarChat() {
-    console.log("🔄 Renderizando chat - Mensajes en cache:", mensajesCache.length);  // ← importante para debug
+    console.log("🔄 Renderizando chat - Mensajes:", mensajesCache.length);
 
     const box = document.getElementById('chatBox');
     if (!box) {
-        console.error("❌ No se encontró el elemento chatBox");
+        console.error("❌ No se encontró el chatBox");
         return;
     }
 
-    // Guardamos el mensaje de E2EE si existe
-    const infoE2EE = box.querySelector('.e2ee-info') || 
-                     document.createElement('div');
-    infoE2EE.className = 'e2ee-info';
-    infoE2EE.innerHTML = '<i class="fas fa-lock"></i> Cifrado E2EE: Privacidad total.';
+    // Mantener info E2EE
+    let infoE2EE = box.querySelector('.e2ee-info');
+    if (!infoE2EE) {
+        infoE2EE = document.createElement('div');
+        infoE2EE.className = 'e2ee-info';
+        infoE2EE.innerHTML = '<i class="fas fa-lock"></i> Cifrado E2EE: Privacidad total.';
+    }
 
-    box.innerHTML = ''; 
+    box.innerHTML = '';
     box.appendChild(infoE2EE);
 
     if (mensajesCache.length === 0) {
-        const empty = document.createElement('div');
-        empty.style.textAlign = 'center';
-        empty.style.color = '#999';
-        empty.style.padding = '50px 20px';
-        empty.innerHTML = 'No hay mensajes todavía.<br>Envía uno para comenzar.';
-        box.appendChild(empty);
+        box.innerHTML += '<div style="text-align:center; padding:80px 20px; color:#999;">Aún no hay mensajes.<br>Envía el primero.</div>';
         return;
     }
 
-    // Ordenar mensajes por tiempo
+    // Ordenar por tiempo
     mensajesCache.sort((a, b) => {
-        const timeA = (a.timestamp?.seconds || a.timestamp || 0) * 1000;
-        const timeB = (b.timestamp?.seconds || b.timestamp || 0) * 1000;
-        return timeA - timeB;
+        const ta = a.timestamp?.seconds || a.timestamp || 0;
+        const tb = b.timestamp?.seconds || b.timestamp || 0;
+        return ta - tb;
     });
 
-    mensajesCache.forEach((m, index) => {
-        const isSent = m.emisor === miEmail || m.emisor?.toLowerCase() === miEmail;
+    mensajesCache.forEach(m => {
+        const isSent = (m.emisor || "").toLowerCase() === miEmail.toLowerCase();
 
-        const decrypted = m.tipo === "text" ? decryptE2EE(m.texto) : 
-                         (m.tipo === "image" ? "[Imagen]" : "[Audio]");
+        let text = "";
+        try {
+            text = m.tipo === "text" ? decryptE2EE(m.texto) : (m.tipo === "image" ? "[Imagen]" : "[Audio]");
+        } catch(e) {
+            text = "[Error descifrar]";
+        }
 
         const msgDiv = document.createElement('div');
         msgDiv.className = `msg ${isSent ? 'sent' : 'received'}`;
-        msgDiv.style.opacity = '1'; // fuerza visibilidad
 
-        let contentHTML = '';
-
+        let htmlContent = '';
         if (m.tipo === "image") {
-            const realUrl = decryptE2EE(m.texto);
-            contentHTML = `<img src="\( {realUrl}" class="chat-img" style="max-width:100%; border-radius:10px;" onclick="window.open(' \){realUrl}')">`;
+            const url = decryptE2EE(m.texto);
+            htmlContent = `<img src="\( {url}" class="chat-img" style="max-width:100%; border-radius:10px;" onclick="window.open(' \){url}')">`;
         } else if (m.tipo === "audio") {
-            const realUrl = decryptE2EE(m.texto);
-            contentHTML = `<div class="audio-player"><i class="fas fa-play" onclick="playAudio('${realUrl}', this)"></i> Mensaje de audio</div>`;
+            const url = decryptE2EE(m.texto);
+            htmlContent = `<div class="audio-player"><i class="fas fa-play" onclick="playAudio('${url}', this)"></i> Audio</div>`;
         } else {
-            contentHTML = `<div>${decrypted}</div>`;
+            htmlContent = `<div>${text}</div>`;
         }
 
-        msgDiv.innerHTML = contentHTML + `
+        msgDiv.innerHTML = htmlContent + `
             <div class="msg-meta">
-                ${new Date((m.timestamp?.seconds || m.timestamp || Date.now()/1000) * 1000)
-                    .toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'})}
+                ${new Date((m.timestamp?.seconds || Date.now()/1000) * 1000).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}
                 ${isSent ? ' <span class="tick-icon tick-read">✓✓</span>' : ''}
             </div>`;
 
         box.appendChild(msgDiv);
     });
 
-    // Scroll al final
+    // Scroll automático
     setTimeout(() => {
         box.scrollTop = box.scrollHeight;
-        console.log("⬇️ Chat scrolleado al final");
     }, 100);
+
+    console.log("✅ Chat renderizado correctamente");
 }
 
     function playAudio(base64, btn) { const audio = new Audio(base64); btn.className = "fas fa-pause"; audio.play(); audio.onended = () => btn.className = "fas fa-play"; }
