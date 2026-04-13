@@ -139,7 +139,7 @@
             background-size: cover;
             background-position: center;
             scroll-behavior: smooth;
-            padding-bottom: 100px;
+            padding-bottom: 120px;
         }
 
         .msg {
@@ -408,9 +408,9 @@
             if(chatConEmail) {
                 secretKey = [miEmail, chatConEmail].sort().join("_") + "_GN_REPLY_2026";
                 aplicarWallpaperGuardado();
-                configurarPresencia(); // REAL: Marca MI estado como Online/Offline
+                configurarPresencia();
                 cargarInfoDestinatario();
-                escucharPresenciaDestinatario(); // REAL: Lee el estado del otro
+                escucharPresenciaDestinatario();
                 escucharMensajes();
                 initBubbleDrag();
                 initOverlayPersistence();
@@ -577,21 +577,17 @@
     }
     function cancelarRespuesta() { mensajeAResponder = null; document.getElementById('replyPreview').style.display = 'none'; }
     
-    // FUNCION REAL DE PRESENCIA PROPIA
     function configurarPresencia() {
         const myStatusRef = rtdb.ref('/status/' + miEmailKey);
         const connectionRef = rtdb.ref('.info/connected');
 
         connectionRef.on('value', snap => {
             if (snap.val() === false) return;
-            // Cuando me desconecto, marca mi estado y el tiempo
             myStatusRef.onDisconnect().set({ state: 'offline', last_changed: firebase.database.ServerValue.TIMESTAMP }).then(() => {
-                // Cuando estoy activo, marca online
                 myStatusRef.set({ state: 'online', last_changed: firebase.database.ServerValue.TIMESTAMP });
             });
         });
 
-        // Asegurar que al cerrar o cambiar visibilidad se marque offline
         document.addEventListener("visibilitychange", () => {
             if (document.visibilityState === 'hidden') {
                 myStatusRef.set({ state: 'offline', last_changed: firebase.database.ServerValue.TIMESTAMP });
@@ -601,7 +597,6 @@
         });
     }
 
-    // FUNCION REAL DE LECTURA DE PRESENCIA DEL OTRO
     function escucharPresenciaDestinatario() {
         rtdb.ref('/status/' + chatConEmailKey).on('value', snap => {
             const data = snap.val();
@@ -614,11 +609,9 @@
                 const ultimaVez = new Date(data.last_changed);
                 const hoy = new Date();
                 let formato = ultimaVez.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                
                 if(ultimaVez.toDateString() !== hoy.toDateString()) {
                     formato = ultimaVez.toLocaleDateString([], {day:'2-digit', month:'2-digit'}) + " " + formato;
                 }
-
                 statusText.innerText = "Últ. vez " + formato; 
                 statusDot.className = "status-dot offline"; 
             } else {
@@ -627,7 +620,6 @@
             }
         });
 
-        // Escribiendo...
         rtdb.ref('/typing/' + chatConEmailKey + '_to_' + miEmailKey).on('value', snap => { 
             if (snap.val() === true) {
                 const statusText = document.getElementById('chatStatus');
@@ -753,7 +745,14 @@
             initSwipe(msgDiv, m);
             box.appendChild(msgDiv);
         });
-        box.scrollTop = box.scrollHeight;
+        
+        // ACTUALIZACIÓN: Scroll forzado al final cada vez que se renderiza
+        setTimeout(() => {
+            box.scrollTo({
+                top: box.scrollHeight,
+                behavior: 'smooth'
+            });
+        }, 100);
     }
 
     function playAudio(base64, btn) { const audio = new Audio(base64); btn.className = "fas fa-pause"; audio.play(); audio.onended = () => btn.className = "fas fa-play"; }
@@ -763,4 +762,3 @@
 </script>
 </body>
 </html>
-
