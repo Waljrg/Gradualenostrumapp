@@ -194,6 +194,12 @@
             opacity: 0.8;
         }
 
+        .tick-icon { font-size: 0.7rem; margin-left: 3px; }
+        .tick-error { color: #f44336; }
+        .tick-sent { color: #bdbdbd; }
+        .tick-received { color: #2196F3; }
+        .tick-read { color: #D4AF37; }
+
         #galleryModal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -408,12 +414,10 @@
         } else { window.location.href = "index.html"; }
     });
 
-    // --- Lógica de Almacenamiento Local (APK/Memoria) ---
     async function guardarEnDispositivo(base64Data, tipo) {
         const fileName = `GN_${Date.now()}.${tipo === 'image' ? 'jpg' : 'mp3'}`;
         const folder = tipo === 'image' ? 'GN_Imagenes' : 'GN_Audio';
         
-        // Simulación para Web / Lógica para Capacitor Filesystem
         if (window.Capacitor && window.Capacitor.Plugins.Filesystem) {
             try {
                 const { Filesystem } = window.Capacitor.Plugins;
@@ -425,7 +429,6 @@
                 });
             } catch (e) { console.error("Error guardando en disco APK:", e); }
         } else {
-            // Backup para web: Descarga automática
             const link = document.createElement('a');
             link.href = base64Data;
             link.download = fileName;
@@ -435,7 +438,6 @@
         }
     }
 
-    // --- Lógica de Burbuja ---
     function activarBurbuja() {
         const bubble = document.getElementById('floatingBubble');
         const avatar = document.getElementById('chatAvatar').src;
@@ -497,7 +499,6 @@
         }
     }
 
-    // --- Sistema de Búsqueda ---
     function toggleSearchBar(show) {
         const bar = document.getElementById('searchBar');
         bar.style.display = show ? 'flex' : 'none';
@@ -519,10 +520,18 @@
         });
     }
 
-    // --- Galería & Wallpaper ---
     function aplicarWallpaperGuardado() {
         const saved = localStorage.getItem(`wp_${chatConEmailKey}`);
-        if(saved) document.getElementById('chatBox').style.setProperty('--chat-wallpaper', saved.startsWith('http') || saved.startsWith('data') ? `url(${saved})` : saved);
+        const chatBox = document.getElementById('chatBox');
+        if(saved) {
+            if(saved.startsWith('url') || saved.startsWith('data:image')) {
+                chatBox.style.backgroundImage = saved.startsWith('url') ? saved : `url(${saved})`;
+                chatBox.style.backgroundColor = 'transparent';
+            } else {
+                chatBox.style.backgroundImage = 'none';
+                chatBox.style.backgroundColor = saved;
+            }
+        }
     }
     function switchTab(tab) {
         activeTab = tab;
@@ -551,7 +560,6 @@
     function abrirGaleria() { renderGallery(); document.getElementById('galleryModal').style.display = 'flex'; }
     function cerrarGaleria() { document.getElementById('galleryModal').style.display = 'none'; }
 
-    // --- Lógica Puente Firebase (Auto-borrado) ---
     function initSwipe(el, data) {
         let startX = 0;
         el.addEventListener('touchstart', e => startX = e.touches[0].clientX);
@@ -597,15 +605,50 @@
             document.getElementById('chatAvatar').src = d.avatar || `https://ui-avatars.com/api/?name=${d.nombre}`;
         }
     }
+
     async function enviarMensaje(contenido = null, tipo = "text") {
         const input = document.getElementById('msgInput');
-        const data = contenido || input.value.trim();
-        if (!data || !chatConEmail) return;
-        const chatId = [miEmail, chatConEmail].sort().join("_");
-        let msgObj = { emisor: miEmail, receptor: chatConEmail, texto: encryptE2EE(data), tipo: tipo, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
-        if (mensajeAResponder) { msgObj.replyTo = decryptE2EE(mensajeAResponder.texto).substring(0, 50); msgObj.replyId = mensajeAResponder.id; cancelarRespuesta(); }
-        if (!contenido) input.value = "";
-        await db.collection("bridge").add(msgObj);
+        const dataOriginal = contenido || input.value.trim();
+        
+        if (!dataOriginal || !chatConEmail) return;
+
+        const tempId = "temp_" + Date.now();
+
+        try {
+            const textoCifrado = encryptE2EE(dataOriginal);
+            let msgObj = { 
+                emisor: miEmail, 
+                receptor: chatConEmail, 
+                texto: textoCifrado, 
+                tipo: tipo, 
+                status: 'sent', 
+                timestamp: firebase.firestore.FieldValue.serverTimestamp() 
+            };
+
+            if (mensajeAResponder) { 
+                msgObj.replyTo = decryptE2EE(mensajeAResponder.texto).substring(0, 50); 
+                msgObj.replyId = mensajeAResponder.id; 
+                cancelarRespuesta(); 
+            }
+
+            const localHistoryKey = `history_${[miEmail, chatConEmail].sort().join("_")}`;
+            const msgLocal = { ...msgObj, id: tempId, timestamp: { seconds: Math.floor(Date.now() / 1000) } };
+            mensajesCache.push(msgLocal);
+            localStorage.setItem(localHistoryKey, JSON.stringify(mensajesCache));
+            renderizarChat();
+
+            if (!contenido) input.value = "";
+
+            await db.collection("bridge").add(msgObj);
+            
+        } catch (error) {
+            console.error("Error en envío:", error);
+            const index = mensajesCache.findIndex(m => m.id === tempId);
+            if(index !== -1) {
+                mensajesCache[index].status = 'error';
+                renderizarChat();
+            }
+        }
     }
 
     function escucharMensajes() {
@@ -617,8 +660,8 @@
             snap.forEach(async doc => {
                 const m = doc.data();
                 m.id = doc.id;
+                m.status = 'read'; 
                 
-                // Si es multimedia, guardar en carpetas físicas del receptor
                 if (m.tipo === 'image' || m.tipo === 'audio') {
                     const dataReal = decryptE2EE(m.texto);
                     await guardarEnDispositivo(dataReal, m.tipo);
@@ -643,11 +686,23 @@
             const esMio = m.emisor === miEmail, contenido = decryptE2EE(m.texto);
             const fecha = m.timestamp ? new Date(m.timestamp.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "...";
             const msgDiv = document.createElement('div');
-            msgDiv.className = `msg ${esMio ? 'sent' : 'received'}`; msgDiv.id = "msg-" + m.id;
+            msgDiv.className = `msg ${esMio ? 'sent' : 'received'}`; msgDiv.id = "msg-" + (m.id || 'new');
+            
+            let tickHtml = "";
+            if(esMio) {
+                const status = m.status || 'sent';
+                let tickClass = "tick-sent", tickIcon = "fa-check";
+                if(status === 'error') { tickClass = "tick-error"; tickIcon = "fa-exclamation-circle"; }
+                else if(status === 'received') { tickClass = "tick-received"; tickIcon = "fa-check-double"; }
+                else if(status === 'read') { tickClass = "tick-read"; tickIcon = "fa-check-double"; }
+                tickHtml = `<i class="fas ${tickIcon} tick-icon ${tickClass}"></i>`;
+            }
+
             let replyHtml = m.replyTo ? `<div class="reply-content"><b>Citado:</b><br>${m.replyTo}</div>` : '';
             let contentHtml = m.tipo === "image" ? `<img src="${contenido}" class="chat-img">` : 
                               m.tipo === "audio" ? `<div class="audio-player"><i class="fas fa-play" onclick="event.stopPropagation(); playAudio('${contenido}', this)"></i><div style="flex:1;height:3px;background:#ccc"></div></div>` : contenido;
-            msgDiv.innerHTML = `${replyHtml}${contentHtml}<div class="msg-meta">${fecha}</div>`;
+            
+            msgDiv.innerHTML = `${replyHtml}${contentHtml}<div class="msg-meta">${fecha} ${tickHtml}</div>`;
             initSwipe(msgDiv, m);
             box.appendChild(msgDiv);
         });

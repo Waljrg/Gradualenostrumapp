@@ -294,6 +294,8 @@
         const pass = document.getElementById('password').value;
         try {
             await auth.signInWithEmailAndPassword(email, pass);
+            alert("¡Bienvenido!");
+            window.location.href = 'index.html';
         } catch (err) { alert("Error: " + err.message); }
     }
 
@@ -302,6 +304,8 @@
         const pass = document.getElementById('password').value;
         try {
             await auth.createUserWithEmailAndPassword(email, pass);
+            alert("Cuenta creada con éxito");
+            window.location.href = 'index.html';
         } catch (err) { alert("Error al registrar: " + err.message); }
     }
 
@@ -351,6 +355,8 @@
         const code = document.getElementById('verification-code').value;
         try {
             await confirmationResult.confirm(code);
+            alert("Sesión iniciada correctamente");
+            window.location.href = 'index.html';
         } catch (err) { alert("Código incorrecto"); }
     }
 </script>
