@@ -232,10 +232,10 @@
             if(user.email === DIRECTOR_EMAIL) {
                 isAdmin = true;
             } else {
-                const doc = await db.collection("usuarios").doc(user.email).get();
+                const doc = await db.collection("usuarios").doc(user.email || user.phoneNumber).get();
                 isAdmin = doc.exists && doc.data().rol === "admin";
             }
-            console.log("Usuario identificado:", user.email, "Es Admin:", isAdmin);
+            console.log("Usuario identificado:", user.email || user.phoneNumber, "Es Admin:", isAdmin);
             window.location.href = 'index.html';
         } else {
             isAdmin = false;
@@ -310,7 +310,6 @@
 async function loginGoogle() {
     try {
         const result = await auth.signInWithPopup(googleProvider);
-        // Si quieres, puedes mostrar un mensaje
         alert("¡Bienvenido con Google!");
         window.location.href = 'index.html';
     } catch (err) {
@@ -331,17 +330,33 @@ async function loginGoogle() {
     function showPhoneInput() {
         document.getElementById('phone-section').style.display = 'block';
         if (!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 'size': 'normal' });
+            // Se define como 'invisible' para que no estorbe en la UI
+            window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 
+                'size': 'invisible',
+                'callback': (response) => {
+                    // El reCAPTCHA se resolvió solo
+                }
+            });
         }
     }
 
     async function loginPhone() {
         const phoneNumber = document.getElementById('phone').value;
+        if(!phoneNumber.startsWith('+')) {
+            alert("Por favor incluye el código de país (ej: +505)");
+            return;
+        }
         try {
             confirmationResult = await auth.signInWithPhoneNumber(phoneNumber, window.recaptchaVerifier);
             document.getElementById('verification-step').style.display = 'block';
             document.getElementById('send-code').style.display = 'none';
-        } catch (err) { alert("Error SMS: " + err.message); }
+        } catch (err) { 
+            alert("Error SMS: " + err.message);
+            // Resetear reCAPTCHA si falla
+            window.recaptchaVerifier.render().then(function(widgetId) {
+                grecaptcha.reset(widgetId);
+            });
+        }
     }
 
     async function verifyCode() {
@@ -350,7 +365,7 @@ async function loginGoogle() {
             await confirmationResult.confirm(code);
             alert("Sesión iniciada correctamente");
             window.location.href = 'index.html';
-        } catch (err) { alert("Código incorrecto"); }
+        } catch (err) { alert("Código incorrecto o expirado"); }
     }
 </script>
 
