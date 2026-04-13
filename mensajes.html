@@ -139,7 +139,6 @@
             background-size: cover;
             background-position: center;
             scroll-behavior: smooth;
-            padding-bottom: 120px;
         }
 
         .msg {
@@ -261,8 +260,8 @@
 
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-        .input-area-container { background: white; border-top: var(--border); position: fixed; bottom: 0; width: 100%; z-index: 100; }
-        .input-area { padding: 10px 15px 50px 15px; display: flex; gap: 10px; align-items: center; }
+        .input-area-container { background: white; border-top: var(--border); position: sticky; bottom: 0; width: 100%; z-index: 100; }
+        .input-area { padding: 10px 15px 30px 15px; display: flex; gap: 10px; align-items: center; }
         .input-area input[type="text"] { flex: 1; border: 1px solid #ddd; padding: 12px 15px; border-radius: 25px; outline: none; }
         .btn-action { background: none; border: none; color: var(--accent); font-size: 1.3rem; cursor: pointer; }
         .btn-send { background: var(--accent); color: white; border: none; width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(184, 134, 11, 0.3); }
@@ -272,6 +271,9 @@
         .reaction-row span { font-size: 1.3rem; cursor: pointer; }
         .delete-option { padding: 8px; color: #d32f2f; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-align: center; }
         .e2ee-info { font-size: 0.65rem; text-align: center; color: var(--accent); padding: 10px; font-style: italic; }
+        
+        /* Padding extra para que el último mensaje no quede pegado a la barra */
+        #chatBox::after { content: ""; display: block; height: 20px; flex-shrink: 0; }
     </style>
 </head>
 <body onclick="cerrarReacciones()">
@@ -350,7 +352,7 @@
         <button class="btn-action" id="btnMic" onclick="toggleAudioRecording()">
             <i class="fas fa-microphone"></i>
         </button>
-        <input type="text" id="msgInput" placeholder="Escribe un mensaje..." oninput="manejarEscritura()" onkeypress="if(event.key === 'Enter') enviarMensaje()">
+        <input type="text" id="msgInput" placeholder="Escribe un mensaje..." onfocus="irAlFinal()" oninput="manejarEscritura()" onkeypress="if(event.key === 'Enter') enviarMensaje()">
         <button class="btn-send" onclick="enviarMensaje()">
             <i class="fas fa-paper-plane"></i>
         </button>
@@ -417,6 +419,13 @@
             }
         } else { window.location.href = "index.html"; }
     });
+
+    function irAlFinal() {
+        const box = document.getElementById('chatBox');
+        setTimeout(() => {
+            box.scrollTop = box.scrollHeight;
+        }, 300);
+    }
 
     async function guardarEnDispositivo(base64Data, tipo) {
         const fileName = `GN_${Date.now()}.${tipo === 'image' ? 'jpg' : 'mp3'}`;
@@ -522,6 +531,7 @@
             if(text.includes(query)) { msg.style.display = 'flex'; msg.classList.add('highlight'); }
             else { msg.style.display = 'none'; }
         });
+        irAlFinal();
     }
 
     function aplicarWallpaperGuardado() {
@@ -574,6 +584,7 @@
         document.getElementById('replyPreviewText').innerText = data.tipo === "text" ? decryptE2EE(data.texto) : "Multimedia";
         document.getElementById('replyPreview').style.display = 'flex';
         document.getElementById('msgInput').focus();
+        irAlFinal();
     }
     function cancelarRespuesta() { mensajeAResponder = null; document.getElementById('replyPreview').style.display = 'none'; }
     
@@ -609,9 +620,11 @@
                 const ultimaVez = new Date(data.last_changed);
                 const hoy = new Date();
                 let formato = ultimaVez.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                
                 if(ultimaVez.toDateString() !== hoy.toDateString()) {
                     formato = ultimaVez.toLocaleDateString([], {day:'2-digit', month:'2-digit'}) + " " + formato;
                 }
+
                 statusText.innerText = "Últ. vez " + formato; 
                 statusDot.className = "status-dot offline"; 
             } else {
@@ -677,6 +690,7 @@
             renderizarChat();
 
             if (!contenido) input.value = "";
+            irAlFinal();
 
             await db.collection("bridge").add(msgObj);
             
@@ -696,6 +710,7 @@
         renderizarChat();
 
         db.collection("bridge").where("receptor", "==", miEmail).where("emisor", "==", chatConEmail).orderBy("timestamp", "asc").onSnapshot(snap => {
+            let hayNuevos = false;
             snap.forEach(async doc => {
                 const m = doc.data();
                 m.id = doc.id;
@@ -709,8 +724,12 @@
                 mensajesCache.push(m);
                 localStorage.setItem(localHistoryKey, JSON.stringify(mensajesCache));
                 doc.ref.delete();
+                hayNuevos = true;
             });
-            renderizarChat();
+            if(hayNuevos) {
+                renderizarChat();
+                irAlFinal();
+            }
         });
 
         db.collection("bridge").where("emisor", "==", miEmail).onSnapshot(() => renderizarChat());
@@ -745,20 +764,14 @@
             initSwipe(msgDiv, m);
             box.appendChild(msgDiv);
         });
-        
-        // ACTUALIZACIÓN: Scroll forzado al final cada vez que se renderiza
-        setTimeout(() => {
-            box.scrollTo({
-                top: box.scrollHeight,
-                behavior: 'smooth'
-            });
-        }, 100);
+        box.scrollTop = box.scrollHeight;
     }
 
     function playAudio(base64, btn) { const audio = new Audio(base64); btn.className = "fas fa-pause"; audio.play(); audio.onended = () => btn.className = "fas fa-play"; }
-    async function toggleAudioRecording() { if (!isRecording) { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); mediaRecorder = new MediaRecorder(stream); audioChunks = []; mediaRecorder.ondataavailable = e => audioChunks.push(e.data); mediaRecorder.onstop = () => { const reader = new FileReader(); reader.readAsDataURL(new Blob(audioChunks)); reader.onloadend = () => enviarMensaje(reader.result, "audio"); stream.getTracks().forEach(t => t.stop()); }; mediaRecorder.start(); isRecording = true; document.getElementById('btnMic').style.color = "red"; } else { mediaRecorder.stop(); isRecording = false; document.getElementById('btnMic').style.color = "var(--accent)"; } }
+    async function toggleAudioRecording() { if (!isRecording) { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); mediaRecorder = new MediaRecorder(stream); audioChunks = []; mediaRecorder.ondataavailable = e => audioChunks.push(e.data); mediaRecorder.onstop = () => { const reader = new FileReader(); reader.readAsDataURL(new Blob(audioChunks)); reader.onloadend = () => { enviarMensaje(reader.result, "audio"); irAlFinal(); }; stream.getTracks().forEach(t => t.stop()); }; mediaRecorder.start(); isRecording = true; document.getElementById('btnMic').style.color = "red"; } else { mediaRecorder.stop(); isRecording = false; document.getElementById('btnMic').style.color = "var(--accent)"; } }
     let isRecording = false, mediaRecorder, audioChunks;
-    function procesarImagen(input) { const reader = new FileReader(); reader.onload = e => enviarMensaje(e.target.result, "image"); reader.readAsDataURL(input.files[0]); }
+    function procesarImagen(input) { const reader = new FileReader(); reader.onload = e => { enviarMensaje(e.target.result, "image"); irAlFinal(); }; reader.readAsDataURL(input.files[0]); }
 </script>
 </body>
 </html>
+
