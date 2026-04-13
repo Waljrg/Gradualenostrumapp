@@ -326,10 +326,7 @@
 </div>
 
 <div id="chatBox">
-<div class="e2ee-info" style="cursor: pointer;" id="e2eeInfo">
-    <i class="fas fa-lock"></i> 
-    Los mensajes están cifrados de extremo a extremo. Ni Graduale Nostrum ni terceros pueden leerlos o escucharlos, solo las personas en este chat. 
-    <span style="text-decoration: underline; color: var(--accent-light);">Haz clic aquí para más información</span>
+    <div class="e2ee-info"><i class="fas fa-lock"></i>Los mensajes están cifrados de extremo a extremo. Ni Graduale Nostrum ni terceros pueden leerlos o escucharlos, solo las personas en este chat.</div>
 </div>
 
 <div id="galleryModal">
@@ -375,30 +372,6 @@
         <button class="btn-send" onclick="enviarMensaje()">
             <i class="fas fa-paper-plane"></i>
         </button>
-    </div>
-</div>
-<!-- Modal de Información E2EE -->
-<div id="e2eeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 3000; align-items: center; justify-content: center;">
-    <div style="background: var(--bg); width: 92%; max-width: 420px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
-        
-        <!-- Header del modal -->
-        <div style="background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%); color: white; padding: 18px 20px; display: flex; align-items: center; gap: 12px;">
-            <i class="fas fa-lock" style="font-size: 1.4rem;"></i>
-            <h2 style="margin: 0; font-family: 'Cinzel', serif; font-size: 1.25rem;">Cifrado de Extremo a Extremo (E2EE)</h2>
-        </div>
-
-        <!-- Contenido -->
-        <div id="e2eeContent" style="padding: 20px; max-height: 65vh; overflow-y: auto; line-height: 1.6; color: var(--text); font-size: 0.95rem;">
-            <!-- El contenido se cargará aquí desde el JSON -->
-        </div>
-
-        <!-- Footer -->
-        <div style="padding: 15px; text-align: center; border-top: var(--border);">
-            <button onclick="cerrarE2EEModal()" 
-                    style="background: var(--accent); color: white; border: none; padding: 12px 30px; border-radius: 25px; font-weight: 600; cursor: pointer;">
-                Entendido
-            </button>
-        </div>
     </div>
 </div>
 
@@ -932,38 +905,6 @@ function renderizarChat() {
     async function toggleAudioRecording() { if (!isRecording) { const stream = await navigator.mediaDevices.getUserMedia({ audio: true }); mediaRecorder = new MediaRecorder(stream); audioChunks = []; mediaRecorder.ondataavailable = e => audioChunks.push(e.data); mediaRecorder.onstop = () => { const reader = new FileReader(); reader.readAsDataURL(new Blob(audioChunks)); reader.onloadend = () => enviarMensaje(reader.result, "audio"); stream.getTracks().forEach(t => t.stop()); }; mediaRecorder.start(); isRecording = true; document.getElementById('btnMic').style.color = "red"; } else { mediaRecorder.stop(); isRecording = false; document.getElementById('btnMic').style.color = "var(--accent)"; } }
     let isRecording = false, mediaRecorder, audioChunks;
     function procesarImagen(input) { const reader = new FileReader(); reader.onload = e => enviarMensaje(e.target.result, "image"); reader.readAsDataURL(input.files[0]); }
-// === NUEVA FUNCIONALIDAD: Modal E2EE con JSON ===
-const e2eeInfo = {
-    "E2EE": "¿Qué significa el cifrado de extremo a extremo?\n\nImagina que cada mensaje que envías se guarda en una caja fuerte con un candado físico. El mensaje sale de tu dispositivo bajo llave y solo el destinatario tiene la llave única para abrir esa caja.\n\n1. Privacidad Total\nNi el servidor que transmite los datos, ni los desarrolladores de la aplicación, ni posibles atacantes externos pueden acceder al contenido. Para el sistema, el mensaje es simplemente una serie de caracteres aleatorios e ilegibles.\n\n2. Seguridad Automática\nNo es necesario configurar nada especial. En sistemas modernos, el cifrado ocurre en segundo plano cada vez que envías un texto, una nota de voz, una imagen o un archivo.\n\n3. Verificación de Identidad\nCada chat tiene un código de seguridad único (a menudo visualizado como un código QR o una serie de números). Este código sirve para confirmar que tus llamadas y mensajes enviados a ese chat están efectivamente cifrados."
-};
-
-function mostrarInfoE2EE() {
-    const modal = document.getElementById('e2eeModal');
-    const contentDiv = document.getElementById('e2eeContent');
-    
-    let html = '';
-    
-    // Si tienes más secciones en el futuro, puedes iterar sobre el objeto
-    Object.keys(e2eeInfo).forEach(key => {
-        const texto = e2eeInfo[key].replace(/\n/g, '<br><br>');
-        html += `<p style="margin-bottom: 18px;">${texto}</p>`;
-    });
-
-    contentDiv.innerHTML = html;
-    modal.style.display = 'flex';
-}
-
-function cerrarE2EEModal() {
-    document.getElementById('e2eeModal').style.display = 'none';
-}
-
-// === AÑADIR EL EVENTO CLICK AL TEXTO E2EE ===
-document.addEventListener('DOMContentLoaded', () => {
-    const e2eeLink = document.getElementById('e2eeInfo');
-    if (e2eeLink) {
-        e2eeLink.addEventListener('click', mostrarInfoE2EE);
-    }
-});
 </script>
 </body>
 </html>
