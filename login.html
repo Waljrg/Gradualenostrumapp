@@ -219,9 +219,6 @@
     const googleProvider = new firebase.auth.GoogleAuthProvider();
     const facebookProvider = new firebase.auth.FacebookAuthProvider();
 
-    // 3. Inicialización de Plugin Nativo de Google
-    const { GoogleAuth } = Capacitor.Plugins;
-
     // Optimización de persistencia (Modo Offline)
     db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
     db.enablePersistence().catch(err => console.error("Error de persistencia:", err));
@@ -310,26 +307,22 @@
     }
 
     // Función de Google actualizada al Plugin Nativo
-    async function loginGoogle() {
-        try {
-            const user = await GoogleAuth.signIn();
-            const credential = firebase.auth.GoogleAuthProvider.credential(user.authentication.idToken);
-            await auth.signInWithCredential(credential);
-        } catch (err) { 
-            console.error("Error Google Nativo:", err);
-            alert("Error Google: " + (err.message || "No se pudo iniciar sesión")); 
-        }
+async function loginGoogle() {
+    try {
+        const result = await auth.signInWithPopup(googleProvider);
+        // Si quieres, puedes mostrar un mensaje
+        alert("¡Bienvenido con Google!");
+        window.location.href = 'index.html';
+    } catch (err) {
+        console.error("Error Google:", err);
+        alert("Error Google: " + (err.message || "No se pudo iniciar sesión"));
     }
+}
 
     async function loginFacebook() {
         try {
             await auth.signInWithPopup(facebookProvider);
         } catch (err) { alert("Error Facebook: " + err.message); }
-    }
-
-    async function logout() { 
-        await GoogleAuth.signOut();
-        return await auth.signOut(); 
     }
 
     // Lógica de Teléfono
