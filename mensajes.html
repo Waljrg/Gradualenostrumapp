@@ -719,31 +719,64 @@ function formatRelativeTime(timestamp) {
         }
     }
 
-    function escucharMensajes() {
-        const localHistoryKey = `history_${[miEmail, chatConEmail].sort().join("_")}`;
-        mensajesCache = JSON.parse(localStorage.getItem(localHistoryKey) || "[]");
-        renderizarChat();
+function escucharMensajes() {
+    const localHistoryKey = `history_${[miEmail, chatConEmail].sort().join("_")}`;
+    mensajesCache = JSON.parse(localStorage.getItem(localHistoryKey) || "[]");
+    renderizarChat();
 
-        db.collection("bridge").where("receptor", "==", miEmail).where("emisor", "==", chatConEmail).orderBy("timestamp", "asc").onSnapshot(snap => {
-            snap.forEach(async doc => {
-                const m = doc.data();
-                m.id = doc.id;
-                m.status = 'read'; 
-                
-                if (m.tipo === 'image' || m.tipo === 'audio') {
-                    const dataReal = decryptE2EE(m.texto);
-                    await guardarEnDispositivo(dataReal, m.tipo);
+    const chatId = [miEmail, chatConEmail].sort().join("_");
+
+    // Listener para mensajes que me envían a mí
+    db.collection("bridge")
+        .where("receptor", "==", miEmail)
+        .where("emisor", "==", chatConEmail)
+        .orderBy("timestamp", "asc")
+        .onSnapshot(snap => {
+            snap.docChanges().forEach(change => {
+                if (change.type === "added") {
+                    const m = change.doc.data();
+                    m.id = change.doc.id;
+                    m.status = 'read';
+
+                    const decrypted = decryptE2EE(m.texto);
+                    if (m.tipo === 'image' || m.tipo === 'audio') {
+                        guardarEnDispositivo(decrypted, m.tipo);
+                    }
+
+                    // Evitar duplicados
+                    if (!mensajesCache.some(msg => msg.id === m.id)) {
+                        mensajesCache.push(m);
+                    }
+
+                    change.doc.ref.delete();  // borras el bridge
                 }
-
-                mensajesCache.push(m);
-                localStorage.setItem(localHistoryKey, JSON.stringify(mensajesCache));
-                doc.ref.delete();
             });
+            localStorage.setItem(localHistoryKey, JSON.stringify(mensajesCache));
             renderizarChat();
         });
 
-        db.collection("bridge").where("emisor", "==", miEmail).onSnapshot(() => renderizarChat());
-    }
+    // Listener para mis propios mensajes enviados (importante!)
+    db.collection("bridge")
+        .where("emisor", "==", miEmail)
+        .where("receptor", "==", chatConEmail)
+        .orderBy("timestamp", "asc")
+        .onSnapshot(snap => {
+            snap.docChanges().forEach(change => {
+                if (change.type === "added") {
+                    const m = change.doc.data();
+                    m.id = change.doc.id;
+                    m.status = 'sent';   // o 'read' si quieres
+
+                    if (!mensajesCache.some(msg => msg.id === m.id)) {
+                        mensajesCache.push(m);
+                    }
+                    // NO borres aquí los mensajes propios, o quítalo solo si quieres limpiar
+                }
+            });
+            localStorage.setItem(localHistoryKey, JSON.stringify(mensajesCache));
+            renderizarChat();
+        });
+}
 
 
 function renderizarChat() {
