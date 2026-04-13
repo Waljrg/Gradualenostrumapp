@@ -385,10 +385,27 @@
         <div style="background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%); color: white; padding: 16px 20px; display: flex; align-items: center; gap: 12px; border-bottom: 3px solid var(--accent);">
             <i class="fas fa-lock" style="font-size: 1.6rem;"></i>
             <div style="flex: 1;">
-                <h2 id="modalTitulo" style="margin: 0; font-family: 'Cinzel', serif; font-size: 1.35rem; letter-spacing: 0.5px;">
-                    E2EE - Cifrado de Extremo a Extremo
+                <h2 style="margin: 0; font-family: 'Cinzel', serif; font-size: 1.35rem; letter-spacing: 0.5px;">
+                    E2EE
                 </h2>
             </div>
+            <i onclick="cerrarModalGN()" class="fas fa-times" style="font-size: 1.6rem; cursor: pointer; opacity: 0.9;"></i>
+        </div>
+
+        <!-- Contenido -->
+        <div id="contenidoGN" style="flex: 1; padding: 20px 22px; overflow-y: auto; font-family: 'Inter', sans-serif; line-height: 1.65; color: var(--text); font-size: 0.96rem;">
+            Cargando información E2EE...
+        </div>
+
+        <!-- Footer -->
+        <div style="padding: 16px 20px; text-align: center; border-top: var(--border); background: white;">
+            <button onclick="cerrarModalGN()" 
+                    style="background: var(--accent); color: white; border: none; padding: 12px 32px; border-radius: 30px; font-weight: 600; font-size: 1rem; cursor: pointer; box-shadow: 0 3px 10px rgba(184,134,11,0.3);">
+                Entendido
+            </button>
+        </div>
+    </div>
+</div>
             <i onclick="cerrarModalGN()" class="fas fa-times" style="font-size: 1.6rem; cursor: pointer; opacity: 0.9;"></i>
         </div>
 
@@ -991,10 +1008,12 @@ async function mostrarInfoGN() {
     const modal = document.getElementById('modalInfoGN');
     const contenidoDiv = document.getElementById('contenidoGN');
     
-    modal.style.display = 'flex';
+    // Limpiar contenido anterior
     contenidoDiv.innerHTML = `<p style="text-align:center; color:#888; padding: 40px 0;">
         <i class="fas fa-spinner fa-spin"></i><br>Cargando información E2EE...
     </p>`;
+
+    modal.style.display = 'flex';
 
     try {
         const response = await fetch('Gn.json');
@@ -1028,10 +1047,6 @@ async function mostrarInfoGN() {
                 <p style="font-size: 0.9rem; margin-top: 10px;">Asegúrate de que el archivo Gn.json esté en la misma carpeta.</p>
             </div>`;
     }
-}
-
-function cerrarModalGN() {
-    document.getElementById('modalInfoGN').style.display = 'none';
 }
 
 function cerrarModalGN() {
