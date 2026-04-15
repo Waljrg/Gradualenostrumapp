@@ -483,7 +483,22 @@
     font-size: 0.7rem;
     opacity: 0.75;
 }
-
+.btn-info-tono {
+    background: #00695c;
+    color: white;
+    font-size: 0.65rem;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 8px;
+    cursor: pointer;
+}
+.btn-info-tono:hover {
+    background: #00897b;
+}
     </style>
 </head>
 <body data-theme="light">
@@ -855,6 +870,27 @@
         <button onclick="cerrarClassificatioModal()" class="btn" style="width:100%; background:#eee; color:#666;">
             CANCELAR
         </button>
+    </div>
+</div>
+<!-- MODAL INFO TONO CORO - Solo director puede editar -->
+<div id="infoTonoCoroModal" class="notas-modal-overlay" onclick="cerrarInfoTonoCoroModal()">
+    <div class="notas-modal-card" onclick="event.stopPropagation()" style="max-width: 460px;">
+        <h3 style="margin-top:0; font-family:'Cinzel',serif; color:var(--accent);">
+            <i class="fas fa-crown"></i> INFO TONO DEL CORO
+        </h3>
+        <p style="text-align:center; color:#d32f2f; font-size:0.8rem; margin:10px 0 15px 0;">
+            Solo el Director puede editar esta información
+        </p>
+        
+        <textarea id="textareaInfoTonoCoro" class="input-styled" rows="7" 
+            placeholder="Ej: Cantamos medio tono arriba&#10;Capo 2 en guitarra&#10;Tenor prefiere Sib"></textarea>
+
+        <div style="margin-top:25px; display:flex; gap:10px;">
+            <button onclick="cerrarInfoTonoCoroModal()" class="btn btn-dark btn-sm" style="flex:1;">CANCELAR</button>
+            <button onclick="guardarInfoTonoCoro()" class="btn btn-gold" style="flex:2;">
+                <i class="fas fa-save"></i> GUARDAR
+            </button>
+        </div>
     </div>
 </div>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -1944,7 +1980,32 @@ function cerrarAgregarProgModal() {
         let transpoText = currentTranspose !== 0 ? `${transpoSign}${currentTranspose}` : "";
         let originalBadge = `<div class="badge-original-track">${c.tonalidad} ${transpoText}</div>`;
 
-        let htmlTonos = `${originalBadge} <span>${nuevoTono}</span>${btnMyKeyHtml}`;
+// ==================== TONOS + INFO TONO (SOLO DIRECTOR EDITA) ====================
+let htmlTonos = originalBadge + 
+                ' <span style="font-size:1.1rem; font-weight:800;">' + 
+                nuevoTono + 
+                '</span>' + 
+                btnMyKeyHtml;
+
+// Botón INFO TONO - Solo visible para el director
+if (isAdmin) {
+    htmlTonos += `
+        <button onclick="editarInfoTonoCoro('${c.id}')" 
+                class="btn-info-tono" 
+                title="Editar información de tonalidad del coro">
+            <i class="fas fa-edit"></i> INFO TONO
+        </button>`;
+}
+
+// Mostrar información guardada (visible para todos)
+if (c.tonoInfoCoro && c.tonoInfoCoro.trim() !== "") {
+    htmlTonos += `
+        <div style="margin-top:10px; padding:12px; background:#e8f5e9; border-left:5px solid #2e7d32; 
+                    border-radius:8px; font-size:0.85rem; color:#1b5e20; line-height:1.5;">
+            <strong><i class="fas fa-info-circle"></i> Info Tono Coro:</strong><br>
+            ${c.tonoInfoCoro.replace(/\n/g, '<br>')}
+        </div>`;
+}
         if(c.tonalidadSec) htmlTonos += ` <span style="opacity:0.6; font-size: 0.9em;">/ ${c.tonalidadSec}</span>`;
         if(c.tonoPersonal) htmlTonos += ` <span style="background:var(--accent); color:white; padding:2px 10px; border-radius:8px; margin-left:12px; font-size:0.75rem; text-transform: uppercase;">Modo: ${c.tonoPersonal}</span>`;
         
@@ -2311,6 +2372,41 @@ function abrirClassificatioModal() {
 function cerrarClassificatioModal() {
     document.getElementById('classificatioModal').style.display = 'none';
 }
+// ==================== FUNCIONES INFO TONO CORO ====================
+let cantoIdActualInfoTono = null;
+
+function editarInfoTonoCoro(cantoId) {
+    if (!isAdmin) {
+        alert("Solo el Director puede editar esta información.");
+        return;
+    }
+    cantoIdActualInfoTono = cantoId;
+    const canto = cantos.find(c => c.id === cantoId);
+    document.getElementById('textareaInfoTonoCoro').value = canto?.tonoInfoCoro || "";
+    document.getElementById('infoTonoCoroModal').style.display = 'flex';
+}
+
+function guardarInfoTonoCoro() {
+    if (!cantoIdActualInfoTono || !isAdmin) return;
+    
+    const texto = document.getElementById('textareaInfoTonoCoro').value.trim();
+    
+    db.collection("cantos").doc(cantoIdActualInfoTono).update({
+        tonoInfoCoro: texto || null
+    }).then(() => {
+        const canto = cantos.find(c => c.id === cantoIdActualInfoTono);
+        if (canto) canto.tonoInfoCoro = texto || null;
+        
+        cerrarInfoTonoCoroModal();
+        renderTexto();
+        mostrarNotificacion("¡Guardado!", "Información del tono del coro actualizada.", "success");
+    }).catch(err => alert("Error: " + err.message));
+}
+
+function cerrarInfoTonoCoroModal() {
+    document.getElementById('infoTonoCoroModal').style.display = 'none';
+    cantoIdActualInfoTono = null;
+}
    db.collection("cantos").onSnapshot(snap => {
     cantos = [];
     snap.forEach(doc => {
@@ -2319,7 +2415,7 @@ function cerrarClassificatioModal() {
 
         // PEGA LA LÍNEA JUSTO AQUÍ:
         d.notasMelodia = d.notasMelodia || "";
-
+d.tonoInfoCoro = d.tonoInfoCoro || null;
         cantos.push(d);
     });
     renderCantos(cantos);
@@ -2329,4 +2425,3 @@ function cerrarClassificatioModal() {
 </script>
 </body>
 </html>
-
