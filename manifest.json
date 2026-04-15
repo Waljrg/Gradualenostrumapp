@@ -37,19 +37,19 @@
       "short_name": "Cantoral",
       "description": "Acceso directo al cancionero",
       "url": "cantoral.html",
-      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
+      "icons": [{ "src": "Iconos/cantoral.png", "sizes": "192x192" }]
     },
     {
-      "name": "Afinador de Instrumentos",
-      "short_name": "Afinador",
-      "url": "afinador.html",
-      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
+      "name": "Formación Liturgica",
+      "short_name": "Formación",
+      "url": "formación.html",
+      "icons": [{ "src": "Iconos/formacion.png", "sizes": "192x192" }]
     },
     {
       "name": "Oraciones Diarias",
       "short_name": "Oraciones",
       "url": "oraciones.html",
-      "icons": [{ "src": "Iconos/logo1.png", "sizes": "192x192" }]
+      "icons": [{ "src": "Iconos/Oraciones.png", "sizes": "192x192" }]
     },
     {
       "name": "Agenda Litúrgica",
