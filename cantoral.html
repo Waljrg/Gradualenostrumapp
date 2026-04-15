@@ -682,23 +682,9 @@
                     <button class="tool-tag" onclick="insertTag('FINAL:\n')">FINAL</button>
                     <button class="tool-tag" onclick="insertTag('(BIS)')">(BIS)</button>
                 </div>
-<div class="editor-group">
-    <label><i class="fas fa-music"></i> Melodía con Acordes</label>
-    <div style="position:relative;">
-        <textarea id="notasMelodia" class="input-styled" rows="5" 
-                  placeholder="Ejemplo:
-Do   Re   Mi   Fa   Sol
-C    Dm   Em   F    G
-
-O también línea por línea:
-Do (C) Re (Dm) Mi (Em) Fa (F) Sol (G)"
-                  style="font-family: 'JetBrains Mono', monospace; line-height: 1.8; resize: vertical;"></textarea>
-    </div>
-    <small style="color:#888; font-size:0.75rem; margin-top:4px; display:block;">
-        • Notas = sistema latino: <strong>Do Re Mi Fa Sol La Si</strong><br>
-        • Acordes = sistema americano: <strong>C Dm Em F G Am Bb</strong><br>
-        • Formato recomendado: <strong>Do (C) Re (Dm) Mi</strong>
-    </small>
+                <div class="editor-group">
+    <label><i class="fas fa-music"></i> Melodía (Notas)</label>
+    <textarea id="notasMelodia" class="input-styled" rows="3" placeholder="Ej: Do Re Mi Fa... (Separadas por espacio)" style="font-family: 'JetBrains Mono', monospace;"></textarea>
 </div>
                 <div style="position: relative;">
                     <div id="smartChords" style="display: flex; gap: 5px; overflow-x: auto; padding: 5px 0 10px; scrollbar-width: none;"></div>
@@ -2073,65 +2059,38 @@ function cerrarMiTonoModal() {
     function verDetalle(idx, fromSave = false) { currentCantoId = idx; const c = cantos[idx]; const storageKey = `tonoPers_${c.titulo.replace(/\s+/g, '_')}`; c.tonoPersonal = localStorage.getItem(storageKey) || ""; document.getElementById('viewTitulo').innerText = c.titulo; renderTexto(); showView('detailView', false, fromSave); }
     function previsualizarCanto() { currentCantoId = null; document.getElementById('previewBadge').style.display = 'block'; tempCanto = { titulo: document.getElementById('titulo').value || "Vista Previa", autor: document.getElementById('autor').value, letra: document.getElementById('letra').value, tonalidad: document.getElementById('tonalidad').value, tonalidadSec: document.getElementById('tonalidadSec').value, tiempoLiturgico: document.getElementById('tiempoLiturgico').value, momentoMisa: document.getElementById('momentoMisa').value, ritmo: document.getElementById('ritmo').value, tempo: document.getElementById('tempo').value, favorito: false, audioUrl: audioUrlSubido, tonoPersonal: document.getElementById('tonalidadPersonal').value,classificatio: document.getElementById('classificatioHidden').value}; renderTexto(); showView('detailView'); }
 
-async function guardarCanto() {
-    if(!isAdmin) return alert("No tienes permisos.");
-
-    const titulo = document.getElementById('titulo').value.trim();
-    const notasMelodia = document.getElementById('notasMelodia').value.trim();   // ← AQUÍ SE LEE
-
-    const obj = { 
-        titulo: titulo, 
-        autor: document.getElementById('autor').value.trim(),
-        tiempoLiturgico: document.getElementById('tiempoLiturgico').value, 
-        momentoMisa: document.getElementById('momentoMisa').value, 
-        tonalidad: document.getElementById('tonalidad').value, 
-        tonalidadSec: document.getElementById('tonalidadSec').value, 
-        ritmo: document.getElementById('ritmo').value.trim(), 
-        tempo: document.getElementById('tempo').value.trim(), 
-        letra: document.getElementById('letra').value, 
-        classificatio: document.getElementById('classificatioHidden').value,
-        notasMelodia: notasMelodia,                    // ← ESTA LÍNEA FALTABA
-        favorito: currentFirebaseId 
-            ? (cantos.find(c => c.id === currentFirebaseId)?.favorito || false) 
-            : false,
-        audioUrl: audioUrlSubido || (currentFirebaseId 
-            ? (cantos.find(c => c.id === currentFirebaseId)?.audioUrl || null) 
-            : null)
-    };
-
-    if(!obj.titulo || !obj.tiempoLiturgico) 
-        return alert("Faltan datos obligatorios (título y tiempo litúrgico)");
-
-    // Guardar tono personal (MG) en localStorage
-    const storageKey = `tonoPers_${titulo.replace(/\s+/g, '_')}`;
-    if(document.getElementById('tonalidadPersonal').value) {
-        localStorage.setItem(storageKey, document.getElementById('tonalidadPersonal').value);
-    } else {
-        localStorage.removeItem(storageKey);
+    async function guardarCanto() {
+        if(!isAdmin) return alert("No tienes permisos.");
+        const titulo = document.getElementById('titulo').value.trim();
+        const obj = { 
+            titulo: titulo, 
+            autor: document.getElementById('autor').value.trim(),
+            tiempoLiturgico: document.getElementById('tiempoLiturgico').value, 
+            momentoMisa: document.getElementById('momentoMisa').value, 
+            tonalidad: document.getElementById('tonalidad').value, 
+            tonalidadSec: document.getElementById('tonalidadSec').value, 
+            ritmo: document.getElementById('ritmo').value.trim(), 
+            tempo: document.getElementById('tempo').value.trim(), 
+            letra: document.getElementById('letra').value, 
+            favorito: currentFirebaseId ? (cantos.find(c => c.id === currentFirebaseId)?.favorito || false) : false,
+            audioUrl: audioUrlSubido || (currentFirebaseId ? (cantos.find(c => c.id === currentFirebaseId)?.audioUrl || null) : null),
+classificatio: document.getElementById('classificatioHidden').value
+        };
+        if(!obj.titulo || !obj.tiempoLiturgico) return alert("Faltan datos");
+        const storageKey = `tonoPers_${titulo.replace(/\s+/g, '_')}`;
+        if(document.getElementById('tonalidadPersonal').value) localStorage.setItem(storageKey, document.getElementById('tonalidadPersonal').value);
+        else localStorage.removeItem(storageKey);
+        let id = currentFirebaseId; 
+        if(id) await db.collection("cantos").doc(id).update(obj);
+        else { const r = await db.collection("cantos").add(obj); id = r.id; }
+        audioUrlSubido = null;
+        document.getElementById('audioBtn').style.background = "var(--accent)";
+        document.getElementById('audioBtn').innerHTML = '<i class="fas fa-microphone"></i> AUDIO';
+        estrofaCounter = 1; 
+        setTimeout(() => { const newIdx = cantos.findIndex(c => c.id === id); if(newIdx !== -1) verDetalle(newIdx, true); else showView('homeView'); }, 500);
+          const notas = document.getElementById('notasMelodia').value;
+// Agrega 'notasMelodia: notas' al objeto que envías a db.collection("cantos").add(...) o set(...)
     }
-
-    let id = currentFirebaseId; 
-    if(id) {
-        await db.collection("cantos").doc(id).update(obj);
-    } else {
-        const r = await db.collection("cantos").add(obj);
-        id = r.id;
-    }
-
-    // Reset audio button
-    audioUrlSubido = null;
-    document.getElementById('audioBtn').style.background = "var(--accent)";
-    document.getElementById('audioBtn').innerHTML = '<i class="fas fa-microphone"></i> AUDIO';
-
-    estrofaCounter = 1; 
-
-    // Ir al detalle del canto recién guardado
-    setTimeout(() => {
-        const newIdx = cantos.findIndex(c => c.id === id);
-        if(newIdx !== -1) verDetalle(newIdx, true);
-        else showView('homeView');
-    }, 600);
-}
 
     async function borrarCantoActual() {
         if(!isAdmin) return;
@@ -2179,48 +2138,30 @@ document.getElementById('classificatioValue').textContent = c.classificatio || "
         actualizarAcordesInteligentes(); showView('formView'); toggleTools();
         document.getElementById('notasMelodia').value = c.notasMelodia || "";
     }
-let currentNotasMelodia = "";
-
-function abrirClaveSol() {
-    const canto = cantos[currentCantoId] || tempCanto; 
+    function abrirClaveSol() {
+    const canto = cantos[currentCantoId]; 
     
     if (!canto || !canto.notasMelodia) {
-        alert("No hay melodía registrada para este canto.");
+        alert("No hay notas registradas para este canto.");
         return;
     }
 
-    currentNotasMelodia = canto.notasMelodia;
-
-    // Procesar la melodía con acordes
-    const lineas = currentNotasMelodia.trim().split('\n');
-    let htmlNotas = '';
-
-    lineas.forEach(linea => {
-        if (!linea.trim()) {
-            htmlNotas += '<br>';
-            return;
+    let notasArray = canto.notasMelodia.split(/\s+/);
+    
+    // Transportar notas según el ajuste actual
+    let notasTransportadas = notasArray.map(nota => {
+        try {
+            return Tonal.Note.transpose(nota, Tonal.Interval.fromSemitones(currentTranspose));
+        } catch (e) {
+            return nota; 
         }
-
-        // Detectar si hay acordes entre paréntesis: Do (C) Re (Dm)
-        const procesada = linea.replace(/(\b(?:Do|Re|Mi|Fa|Sol|La|Si)(?:#|b)?\b)\s*\(?([A-G][#b]?m?[\w\d\/]*)\)?/gi, 
-            (match, notaLatina, acorde) => {
-                const notaTranspuesta = transposeNote(notaLatina.trim(), currentTranspose);
-                return `<span style="color:#1B5E20; font-weight:800;">${notaTranspuesta}</span> 
-                        <span style="color:#8B4513; font-size:0.95em; vertical-align: super; margin-left:-2px;">(${acorde})</span>`;
-            });
-
-        htmlNotas += `<div style="margin:8px 0; font-family:'JetBrains Mono',monospace; font-size:1.35rem; letter-spacing: 3px;">${procesada}</div>`;
     });
 
-    // Título con transporte actual
-    document.getElementById('notasTitulo').innerHTML = `
-        MELODÍA CON ACORDES 
-        <small style="font-size:0.75rem; opacity:0.7;">(\( {currentTranspose > 0 ? '+' : ''} \){currentTranspose} semitonos)</small>
-    `;
-
-    document.getElementById('notasContenido').innerHTML = htmlNotas || 
-        '<span style="color:#888; font-style:italic;">No se pudo procesar la melodía</span>';
-
+    // Inyectar datos en el modal con diseño
+    document.getElementById('notasTitulo').innerText = `MELODÍA (${currentTranspose > 0 ? '+' : ''}${currentTranspose})`;
+    document.getElementById('notasContenido').innerText = notasTransportadas.join("  ");
+    
+    // Mostrar el modal
     document.getElementById('notasModal').style.display = 'flex';
 }
 
