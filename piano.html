@@ -679,7 +679,14 @@
         const container = document.getElementById('piano-scroll-container');
         if (teclaDo4 && container) container.scrollTop = teclaDo4.getBBox().x;
     }
-
+// Registrar Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('✅ Service Worker del Cantoral activado (funciona sin internet)'))
+      .catch(err => console.log('SW error:', err));
+  });
+}
     renderizarPiano();
 </script>
 </body>
