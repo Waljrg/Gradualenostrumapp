@@ -109,14 +109,78 @@
         .theme-toggle { position: absolute; left: 25px; top: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; }
         .theme-toggle img { width: 25px; height: 25px; }
 
-        .nav-tabs { display: flex; background: url('Iconos/serafin.png'); background-size: cover; margin: -30px 25px 25px; border-radius: var(--radius-md); padding: 8px; box-shadow: var(--shadow); position: relative; z-index: 10; border: var(--border); overflow-x: auto; scrollbar-width: none; justify-content: space-around; }
-        .nav-tabs::-webkit-scrollbar { display: none; }
-        
-        .tab-btn { flex: 1; padding: 2px; border: none; background: none; cursor: pointer; border-radius: 12px; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; height: 60px; overflow: hidden; }
-        .tab-btn img { height: 100%; width: 100%; object-fit: contain; transition: transform 0.3s ease; }
-        .tab-btn.active { background: rgba(184, 134, 11, 0.1); }
-        .tab-btn.active img { transform: scale(1.05); }
+/* === ENCABEZADO - IMÁGENES MÁS GRANDES (Tiempos, Momentos, Programados, Favoritos) === */
+.nav-tabs { 
+    display: flex; 
+    background: url('Iconos/serafin.png'); 
+    background-size: cover; 
+    margin: -35px 20px 28px; 
+    border-radius: var(--radius-md); 
+    padding: 12px 10px; 
+    box-shadow: var(--shadow); 
+    position: relative; 
+    z-index: 10; 
+    border: var(--border); 
+    overflow-x: auto; 
+    scrollbar-width: none; 
+    justify-content: space-around; 
+    gap: 6px;
+}
 
+/* === ENCABEZADO DE CATEGORÍAS - CONTENEDOR AGRANDADO (sin cortar imágenes) === */
+.nav-tabs { 
+    display: flex; 
+    background: url('Iconos/serafin.png'); 
+    background-size: cover; 
+    margin: -38px 20px 30px; 
+    border-radius: var(--radius-md); 
+    padding: 15px 12px;           /* ← Más padding para dar espacio */
+    box-shadow: var(--shadow); 
+    position: relative; 
+    z-index: 10; 
+    border: var(--border); 
+    overflow-x: auto; 
+    scrollbar-width: none; 
+    justify-content: space-around; 
+    gap: 8px;
+}
+
+.tab-btn { 
+    flex: 1; 
+    padding: 10px;                /* ← Aumentado para que la imagen respire */
+    border: none; 
+    background: none; 
+    cursor: pointer; 
+    border-radius: 8px; 
+    transition: all 0.3s ease; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    height: 70px;                /* ← Contenedor más alto */
+    min-width: 80px;
+    overflow: hidden; 
+}
+
+.tab-btn img { 
+    height: 150%;                  /* ← Imagen ocupa casi todo el espacio sin cortarse */
+    width: 150%; 
+    object-fit: contain;          /* ← Esto es clave: mantiene la proporción completa */
+    transition: transform 0.4s ease; 
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+}
+
+.tab-btn.active { 
+    background: rgba(184, 134, 11, 0.20); 
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
+}
+
+.tab-btn.active img { 
+    transform: scale(1.10); 
+}
+
+.tab-btn:hover img {
+    transform: scale(1.07);
+}
         .container { padding: 0 15px 120px; max-width: 100%; box-sizing: border-box; margin: auto; }
         .search-container { position: relative; margin-bottom: 30px; }
         .search-box { background: var(--surface); border-radius: 50px; padding: 8px 15px 8px 25px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow); border: var(--border); }
@@ -709,7 +773,9 @@
                     <input type="range" id="scrollSpeed" min="0" max="100" value="0" style="width: 100%; accent-color: var(--accent);">
                     <span id="speedVal" style="font-size: 0.7rem;">Off</span>
                 </div>
-                <button class="btn btn-gold btn-sm" style="margin-left: auto;" onclick="abrirClaveSol()"><i class="fas fa-clef"></i></button>
+<button class="btn btn-gold btn-sm" onclick="abrirEditorMelodia()">
+    <i class="fas fa-clef"></i> <span style="font-size:0.75rem;">MELODÍA</span>
+</button>
                 <button class="btn btn-gold btn-sm" onclick="toggleShareMenu()"><i class="fas fa-share-alt"></i></button>
                 <button class="btn btn-gold btn-sm" onclick="toggleTools()"><i class="fas fa-cog"></i></button>
             </div>
@@ -880,6 +946,42 @@
                 <i class="fas fa-save"></i> GUARDAR TEXTO
             </button>
         </div>
+    </div>
+</div>
+<!-- ====================== MODAL EDITOR MELODÍA + ACORDES (SOLO DIRECTOR) ====================== -->
+<div id="melodiaEditorModal" class="notas-modal-overlay" onclick="cerrarMelodiaEditor()">
+    <div class="notas-modal-card" onclick="event.stopPropagation()" style="max-width: 520px; width: 92%;">
+        <h3 style="margin-top:0; font-family:'Cinzel',serif; color:var(--accent); text-align:center;">
+            <i class="fas fa-clef"></i> EDITOR DE MELODÍA Y ACORDES
+        </h3>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:15px;">
+            Solo el director puede editar • Visible para todos
+        </p>
+
+        <div class="editor-group">
+            <label style="font-size:0.75rem; font-weight:700; color:var(--accent);">NOTAS DE LA MELODÍA</label>
+            <textarea id="editorNotasMelodia" class="input-styled" rows="5" 
+                placeholder="Ej: Do Re Mi Fa Sol La Si Do&#10;Do4 Re4 Mi4 Fa4 Sol4..."></textarea>
+        </div>
+
+        <div class="editor-group" style="margin-top:18px;">
+            <label style="font-size:0.75rem; font-weight:700; color:var(--accent);">ACORDES PRINCIPALES (opcional)</label>
+            <textarea id="editorAcordesMelodia" class="input-styled" rows="4" 
+                placeholder="Ej: Do - Fa - Sol - Do&#10;C - F - G - C"></textarea>
+        </div>
+
+        <div style="margin-top:25px; display:flex; gap:12px;">
+            <button onclick="cerrarMelodiaEditor()" class="btn btn-dark btn-sm" style="flex:1;">
+                CANCELAR
+            </button>
+            <button onclick="guardarMelodiaEditor()" class="btn btn-gold" style="flex:2;" id="btnGuardarMelodia">
+                <i class="fas fa-save"></i> GUARDAR CAMBIOS
+            </button>
+        </div>
+
+        <small style="display:block; text-align:center; margin-top:15px; color:#888;">
+            Usa notación latina (Do Re Mi...) o americana (C D E...). Separa con espacios.
+        </small>
     </div>
 </div>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -2254,30 +2356,35 @@ document.getElementById('classificatioValue').textContent = c.classificatio || "
         actualizarAcordesInteligentes(); showView('formView'); toggleTools();
         document.getElementById('notasMelodia').value = c.notasMelodia || "";
     }
-    function abrirClaveSol() {
-    const canto = cantos[currentCantoId]; 
-    
-    if (!canto || !canto.notasMelodia) {
-        alert("No hay notas registradas para este canto.");
-        return;
+function abrirClaveSol() {
+    const canto = cantos[currentCantoId];
+    if (!canto) return;
+
+    let contenido = "";
+
+    if (canto.notasMelodia) {
+        let notasTransportadas = canto.notasMelodia.split(/\s+/).map(nota => {
+            try {
+                return Tonal.Note.transpose(nota.replace(/Do|Re|Mi|Fa|Sol|La|Si/, n => americanas[n] || n), 
+                    Tonal.Interval.fromSemitones(currentTranspose));
+            } catch (e) {
+                return nota;
+            }
+        }).join("  ");
+
+        contenido += `🎵 MELODÍA:\n${notasTransportadas}\n\n`;
     }
 
-    let notasArray = canto.notasMelodia.split(/\s+/);
-    
-    // Transportar notas según el ajuste actual
-    let notasTransportadas = notasArray.map(nota => {
-        try {
-            return Tonal.Note.transpose(nota, Tonal.Interval.fromSemitones(currentTranspose));
-        } catch (e) {
-            return nota; 
-        }
-    });
+    if (canto.acordesMelodia) {
+        contenido += `🎸 ACORDES:\n${canto.acordesMelodia}\n`;
+    }
 
-    // Inyectar datos en el modal con diseño
-    document.getElementById('notasTitulo').innerText = `MELODÍA (${currentTranspose > 0 ? '+' : ''}${currentTranspose})`;
-    document.getElementById('notasContenido').innerText = notasTransportadas.join("  ");
-    
-    // Mostrar el modal
+    if (!contenido) {
+        contenido = "Aún no hay notas ni acordes registrados para este canto.";
+    }
+
+    document.getElementById('notasTitulo').innerText = `MELODÍA (\( {currentTranspose >= 0 ? '+' : ''} \){currentTranspose})`;
+    document.getElementById('notasContenido').innerText = contenido;
     document.getElementById('notasModal').style.display = 'flex';
 }
 
@@ -2498,6 +2605,61 @@ async function guardarTextoComplementario() {
         renderTexto(); // refresca la vista
 
         mostrarNotificacion("¡Guardado!", "Texto complementario actualizado correctamente.", "success");
+    } catch (e) {
+        alert("Error al guardar: " + e.message);
+    }
+}
+// ====================== NUEVO EDITOR MELODÍA + ACORDES ======================
+
+let currentEditingCantoId = null;
+
+function abrirEditorMelodia() {
+    if (!isAdmin) {
+        alert("Solo el director puede editar la melodía y acordes.");
+        return;
+    }
+
+    const canto = cantos[currentCantoId];
+    if (!canto) return;
+
+    currentEditingCantoId = canto.id;
+
+    // Cargar datos existentes
+    document.getElementById('editorNotasMelodia').value = canto.notasMelodia || "";
+    document.getElementById('editorAcordesMelodia').value = canto.acordesMelodia || "";
+
+    document.getElementById('melodiaEditorModal').style.display = 'flex';
+}
+
+function cerrarMelodiaEditor() {
+    document.getElementById('melodiaEditorModal').style.display = 'none';
+    currentEditingCantoId = null;
+}
+
+async function guardarMelodiaEditor() {
+    if (!isAdmin || !currentEditingCantoId) return;
+
+    const notas = document.getElementById('editorNotasMelodia').value.trim();
+    const acordes = document.getElementById('editorAcordesMelodia').value.trim();
+
+    try {
+        await db.collection("cantos").doc(currentEditingCantoId).update({
+            notasMelodia: notas,
+            acordesMelodia: acordes   // ← Nuevo campo
+        });
+
+        // Actualizar en memoria local
+        const canto = cantos.find(c => c.id === currentEditingCantoId);
+        if (canto) {
+            canto.notasMelodia = notas;
+            canto.acordesMelodia = acordes;
+        }
+
+        cerrarMelodiaEditor();
+        renderTexto(); // refresca la vista del canto
+
+        mostrarNotificacion("¡Guardado!", "Melodía y acordes actualizados correctamente.", "success");
+
     } catch (e) {
         alert("Error al guardar: " + e.message);
     }
