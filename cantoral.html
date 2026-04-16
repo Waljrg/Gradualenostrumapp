@@ -1008,7 +1008,9 @@
     
     let currentProgId = null;
     let currentProgSongIndices = [];
-    
+    let currentProgTransposes = {};   // ←←← AÑADIR ESTA LÍNEA
+let currentCategoryKey = null;        // Ej: "tiempo_Ordinario" o "momento_Entrada"
+let currentCategoryTransposes = {};   // Transporte por canto en la lista actual
     // --- FUNCIONES SUPABASE (AUDIO) ---
     async function gestionarSubidaAudio(input) {
         const file = input.files[0];
@@ -2056,7 +2058,29 @@ function cerrarMiTonoModal() {
     }
 
     async function toggleFavorite() { const c = cantos[currentCantoId]; await db.collection("cantos").doc(c.id).update({ favorito: !c.favorito }); c.favorito = !c.favorito; renderTexto(); toggleTools(); }
-    function verDetalle(idx, fromSave = false) { currentCantoId = idx; const c = cantos[idx]; const storageKey = `tonoPers_${c.titulo.replace(/\s+/g, '_')}`; c.tonoPersonal = localStorage.getItem(storageKey) || ""; document.getElementById('viewTitulo').innerText = c.titulo; renderTexto(); showView('detailView', false, fromSave); }
+function verDetalle(idx, fromSave = false) {
+    currentCantoId = idx;
+    const c = cantos[idx];
+
+    // === TRANSPORTE INDEPENDIENTE PARA PROGRAMADOS ===
+    if (currentProgId !== null) {
+        const songId = c.id;
+        currentTranspose = currentProgTransposes[songId] || 0;
+    }
+    // === TRANSPORTE INDEPENDIENTE PARA TIEMPOS Y MOMENTOS ===
+    else if (currentCategoryKey !== null) {
+        const songId = c.id;
+        currentTranspose = currentCategoryTransposes[songId] || 0;
+    }
+    // =====================================================================
+
+    const storageKey = `tonoPers_${c.titulo.replace(/\s+/g, '_')}`;
+    c.tonoPersonal = localStorage.getItem(storageKey) || "";
+
+    document.getElementById('viewTitulo').innerText = c.titulo;
+    renderTexto();
+    showView('detailView', false, fromSave);
+}
     function previsualizarCanto() { currentCantoId = null; document.getElementById('previewBadge').style.display = 'block'; tempCanto = { titulo: document.getElementById('titulo').value || "Vista Previa", autor: document.getElementById('autor').value, letra: document.getElementById('letra').value, tonalidad: document.getElementById('tonalidad').value, tonalidadSec: document.getElementById('tonalidadSec').value, tiempoLiturgico: document.getElementById('tiempoLiturgico').value, momentoMisa: document.getElementById('momentoMisa').value, ritmo: document.getElementById('ritmo').value, tempo: document.getElementById('tempo').value, favorito: false, audioUrl: audioUrlSubido, tonoPersonal: document.getElementById('tonalidadPersonal').value,classificatio: document.getElementById('classificatioHidden').value}; renderTexto(); showView('detailView'); }
 
     async function guardarCanto() {
@@ -2108,7 +2132,23 @@ classificatio: document.getElementById('classificatioHidden').value
     }
 
     function toggleTheme() { const isDark = document.body.getAttribute('data-theme') === 'dark'; document.body.setAttribute('data-theme', isDark ? 'light' : 'dark'); document.getElementById('themeIcon').src = isDark ? 'Iconos/luna.png' : 'Iconos/sol.png'; }
-    function transpose(n) { currentTranspose += n; renderTexto(); }
+    
+function transpose(n) {
+    currentTranspose += n;
+
+    // Guardar transporte para Programados
+    if (currentProgId !== null && currentCantoId !== null) {
+        const c = cantos[currentCantoId];
+        currentProgTransposes[c.id] = currentTranspose;
+    }
+    // Guardar transporte para Tiempos / Momentos
+    else if (currentCategoryKey !== null && currentCantoId !== null) {
+        const c = cantos[currentCantoId];
+        currentCategoryTransposes[c.id] = currentTranspose;
+    }
+
+    renderTexto();
+}
     function toggleNotation() { isAmerican = !isAmerican; document.getElementById('notBtn').innerText = isAmerican ? "NOTACIÓN: Do" : "NOTACIÓN: C"; actualizarAcordesInteligentes(); renderTexto(); toggleTools(); }
     function abrirFormulario() { 
         if(!isAdmin) return; 
