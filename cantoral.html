@@ -863,7 +863,7 @@
 <div id="tcModal" class="notas-modal-overlay" onclick="cerrarTcModal()">
     <div class="notas-modal-card" onclick="event.stopPropagation()" style="max-width: 460px;">
         <h3 style="margin-top:0; font-family:'Cinzel',serif; color:var(--accent);">
-            <i class="fas fa-comment-dots"></i> TEXTO COMPLEMENTARIO
+            <i class="fas fa-comment-dots"></i> TONALIDAD A TOCAR
         </h3>
         <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:15px;">
             Información adicional visible para todos (solo director puede editar)
@@ -2018,7 +2018,8 @@ function renderTexto() {
     }
     
     if (tcText.trim()) {
-        tcDisplay.innerHTML = `<strong style="color:var(--accent);">📌 Nota del Director:</strong><br>${tcText}`;
+        tcDisplay.innerHTML = `<strong style="color:var(--accent);"> Este canto
+        sera tocado en:</strong><br>${tcText}`;
         tcDisplay.style.display = 'block';
     } else {
         tcDisplay.style.display = 'none';
@@ -2464,7 +2465,7 @@ if ('serviceWorker' in navigator) {
 
 function abrirTcModal() {
     if (!isAdmin) {
-        alert("Solo el director puede editar el Texto Complementario.");
+        alert("Solo el director puede determinar la tonalidad en que sera tocado este canto.");
         return;
     }
 
