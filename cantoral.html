@@ -2311,6 +2311,40 @@ function abrirClassificatioModal() {
 function cerrarClassificatioModal() {
     document.getElementById('classificatioModal').style.display = 'none';
 }
+// ==================== SOPORTE OFFLINE PARA LOS CANTOS ====================
+function cargarCantosOffline() {
+  if (navigator.onLine) return; // si hay internet, no usamos caché
+  const saved = localStorage.getItem('cantosOffline');
+  if (saved) {
+    cantos = JSON.parse(saved);
+    renderCantos(cantos);           // función que ya tienes
+    console.log('📴 Cantos cargados desde caché local (sin internet)');
+  }
+}
+
+// Guardar cantos cada vez que se cargan de la base
+const originalOnSnapshot = db.collection("cantos").onSnapshot;
+db.collection("cantos").onSnapshot = function(callback) {
+  return originalOnSnapshot.call(this, (snap) => {
+    cantos = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      d.id = doc.id;
+      d.notasMelodia = d.notasMelodia || "";
+      cantos.push(d);
+    });
+    localStorage.setItem('cantosOffline', JSON.stringify(cantos)); // ← guarda para offline
+    renderCantos(cantos);
+  });
+};
+// Registrar Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('✅ Service Worker del Cantoral activado (funciona sin internet)'))
+      .catch(err => console.log('SW error:', err));
+  });
+}
    db.collection("cantos").onSnapshot(snap => {
     cantos = [];
     snap.forEach(doc => {
@@ -2326,6 +2360,7 @@ function cerrarClassificatioModal() {
 });
     init();
    enableSwipeNavigation();
+   cargarCantosOffline();   // ← nueva línea
 </script>
 </body>
 </html>
