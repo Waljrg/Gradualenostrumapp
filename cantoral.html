@@ -773,9 +773,7 @@
                     <input type="range" id="scrollSpeed" min="0" max="100" value="0" style="width: 100%; accent-color: var(--accent);">
                     <span id="speedVal" style="font-size: 0.7rem;">Off</span>
                 </div>
-<button class="btn btn-gold btn-sm" onclick="abrirEditorMelodia()">
-    <i class="fas fa-clef"></i> <span style="font-size:0.75rem;">MELODÍA</span>
-</button>
+                <button class="btn btn-gold btn-sm" style="margin-left: auto;" onclick="abrirClaveSol()"><i class="fas fa-clef"></i></button>
                 <button class="btn btn-gold btn-sm" onclick="toggleShareMenu()"><i class="fas fa-share-alt"></i></button>
                 <button class="btn btn-gold btn-sm" onclick="toggleTools()"><i class="fas fa-cog"></i></button>
             </div>
@@ -948,39 +946,41 @@
         </div>
     </div>
 </div>
-<!-- ====================== MODAL EDITOR MELODÍA + ACORDES (SOLO DIRECTOR) ====================== -->
-<div id="melodiaEditorModal" class="notas-modal-overlay" onclick="cerrarMelodiaEditor()">
+<!-- ====================== MODAL EDICIÓN MELODÍA + ACORDES (CLAVE DE SOL) ====================== -->
+<div id="claveSolModal" class="notas-modal-overlay" onclick="cerrarClaveSolModal()">
     <div class="notas-modal-card" onclick="event.stopPropagation()" style="max-width: 520px; width: 92%;">
         <h3 style="margin-top:0; font-family:'Cinzel',serif; color:var(--accent); text-align:center;">
-            <i class="fas fa-clef"></i> EDITOR DE MELODÍA Y ACORDES
+            <i class="fas fa-music"></i> EDICIÓN MELODÍA + ACORDES
         </h3>
         <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:15px;">
-            Solo el director puede editar • Visible para todos
+            Solo el Director puede editar • Visible para todos
         </p>
 
         <div class="editor-group">
             <label style="font-size:0.75rem; font-weight:700; color:var(--accent);">NOTAS DE LA MELODÍA</label>
-            <textarea id="editorNotasMelodia" class="input-styled" rows="5" 
-                placeholder="Ej: Do Re Mi Fa Sol La Si Do&#10;Do4 Re4 Mi4 Fa4 Sol4..."></textarea>
+            <textarea id="melodiaEditor" class="input-styled" rows="4" 
+                placeholder="Ej: Do Re Mi Fa Sol La Si Do&#10;O en notación americana: C D E F G A B C"
+                style="font-family: 'JetBrains Mono', monospace; font-size: 1.05rem;"></textarea>
         </div>
 
-        <div class="editor-group" style="margin-top:18px;">
-            <label style="font-size:0.75rem; font-weight:700; color:var(--accent);">ACORDES PRINCIPALES (opcional)</label>
-            <textarea id="editorAcordesMelodia" class="input-styled" rows="4" 
-                placeholder="Ej: Do - Fa - Sol - Do&#10;C - F - G - C"></textarea>
+        <div class="editor-group" style="margin-top:15px;">
+            <label style="font-size:0.75rem; font-weight:700; color:var(--accent);">ACORDES ENCIMA DE LAS NOTAS</label>
+            <textarea id="acordesEditor" class="input-styled" rows="4" 
+                placeholder="Ej:   C     Am    F     G&#10;Do   La-   Fa    Sol"
+                style="font-family: 'JetBrains Mono', monospace; font-size: 1.05rem;"></textarea>
         </div>
 
-        <div style="margin-top:25px; display:flex; gap:12px;">
-            <button onclick="cerrarMelodiaEditor()" class="btn btn-dark btn-sm" style="flex:1;">
+        <div style="margin-top:20px; display:flex; gap:12px;">
+            <button onclick="cerrarClaveSolModal()" class="btn btn-dark btn-sm" style="flex:1;">
                 CANCELAR
             </button>
-            <button onclick="guardarMelodiaEditor()" class="btn btn-gold" style="flex:2;" id="btnGuardarMelodia">
-                <i class="fas fa-save"></i> GUARDAR CAMBIOS
+            <button onclick="guardarMelodiaYAcordes()" class="btn btn-gold" style="flex:2;" id="btnGuardarMelodia">
+                <i class="fas fa-save"></i> GUARDAR MELODÍA Y ACORDES
             </button>
         </div>
 
-        <small style="display:block; text-align:center; margin-top:15px; color:#888;">
-            Usa notación latina (Do Re Mi...) o americana (C D E...). Separa con espacios.
+        <small style="display:block; text-align:center; margin-top:12px; color:#888;">
+            Formato recomendado: una nota/acorde por sílaba o por tiempo
         </small>
     </div>
 </div>
@@ -2356,35 +2356,77 @@ document.getElementById('classificatioValue').textContent = c.classificatio || "
         actualizarAcordesInteligentes(); showView('formView'); toggleTools();
         document.getElementById('notasMelodia').value = c.notasMelodia || "";
     }
+// ====================== NUEVA FUNCIÓN CLAVE DE SOL (EDICIÓN AVANZADA) ======================
 function abrirClaveSol() {
     const canto = cantos[currentCantoId];
     if (!canto) return;
 
-    let contenido = "";
+    // Solo el director puede editar
+    if (!isAdmin) {
+        // Modo solo lectura para músicos
+        mostrarMelodiaSoloLectura(canto);
+        return;
+    }
+
+    // Modo edición para director
+    document.getElementById('melodiaEditor').value = canto.notasMelodia || "";
+    document.getElementById('acordesEditor').value = canto.acordesMelodia || "";
+
+    document.getElementById('claveSolModal').style.display = 'flex';
+}
+function cerrarClaveSolModal() {
+    document.getElementById('claveSolModal').style.display = 'none';
+}
+
+async function guardarMelodiaYAcordes() {
+    if (!isAdmin || currentCantoId === null) return;
+
+    const notasMelodia = document.getElementById('melodiaEditor').value.trim();
+    const acordesMelodia = document.getElementById('acordesEditor').value.trim();
+    const c = cantos[currentCantoId];
+
+    try {
+        await db.collection("cantos").doc(c.id).update({
+            notasMelodia: notasMelodia,
+            acordesMelodia: acordesMelodia
+        });
+
+        // Actualizar en memoria
+        c.notasMelodia = notasMelodia;
+        c.acordesMelodia = acordesMelodia;
+
+        cerrarClaveSolModal();
+        renderTexto(); // refresca la vista del canto
+
+        mostrarNotificacion("¡Guardado!", "Melodía y acordes actualizados correctamente.", "success");
+    } catch (e) {
+        alert("Error al guardar: " + e.message);
+    }
+}
+// Modo solo lectura para músicos/coristas
+function mostrarMelodiaSoloLectura(canto) {
+    let html = `<h3 style="text-align:center; color:var(--accent);"><i class="fas fa-music"></i> MELODÍA</h3>`;
 
     if (canto.notasMelodia) {
-        let notasTransportadas = canto.notasMelodia.split(/\s+/).map(nota => {
-            try {
-                return Tonal.Note.transpose(nota.replace(/Do|Re|Mi|Fa|Sol|La|Si/, n => americanas[n] || n), 
-                    Tonal.Interval.fromSemitones(currentTranspose));
-            } catch (e) {
-                return nota;
-            }
-        }).join("  ");
-
-        contenido += `🎵 MELODÍA:\n${notasTransportadas}\n\n`;
+        html += `<div style="background:#f8f1e3; padding:15px; border-radius:12px; margin:15px 0; font-family:'JetBrains Mono'; font-size:1.1rem; line-height:1.8;">
+            ${canto.notasMelodia.replace(/\n/g, '<br>')}
+        </div>`;
     }
 
     if (canto.acordesMelodia) {
-        contenido += `🎸 ACORDES:\n${canto.acordesMelodia}\n`;
+        html += `<div style="background:#fff; padding:15px; border-radius:12px; margin:15px 0; font-family:'JetBrains Mono'; font-size:1.05rem; border-left:5px solid var(--accent);">
+            <strong>Acordes:</strong><br>
+            ${canto.acordesMelodia.replace(/\n/g, '<br>')}
+        </div>`;
     }
 
-    if (!contenido) {
-        contenido = "Aún no hay notas ni acordes registrados para este canto.";
+    if (!canto.notasMelodia && !canto.acordesMelodia) {
+        html += `<p style="text-align:center; color:#888; padding:30px;">Aún no hay melodía registrada.</p>`;
     }
 
-    document.getElementById('notasTitulo').innerText = `MELODÍA (\( {currentTranspose >= 0 ? '+' : ''} \){currentTranspose})`;
-    document.getElementById('notasContenido').innerText = contenido;
+    // Mostrar en el modal de notas existente (reutilizamos)
+    document.getElementById('notasTitulo').innerHTML = `MELODÍA - ${canto.titulo}`;
+    document.getElementById('notasContenido').innerHTML = html;
     document.getElementById('notasModal').style.display = 'flex';
 }
 
@@ -2605,61 +2647,6 @@ async function guardarTextoComplementario() {
         renderTexto(); // refresca la vista
 
         mostrarNotificacion("¡Guardado!", "Texto complementario actualizado correctamente.", "success");
-    } catch (e) {
-        alert("Error al guardar: " + e.message);
-    }
-}
-// ====================== NUEVO EDITOR MELODÍA + ACORDES ======================
-
-let currentEditingCantoId = null;
-
-function abrirEditorMelodia() {
-    if (!isAdmin) {
-        alert("Solo el director puede editar la melodía y acordes.");
-        return;
-    }
-
-    const canto = cantos[currentCantoId];
-    if (!canto) return;
-
-    currentEditingCantoId = canto.id;
-
-    // Cargar datos existentes
-    document.getElementById('editorNotasMelodia').value = canto.notasMelodia || "";
-    document.getElementById('editorAcordesMelodia').value = canto.acordesMelodia || "";
-
-    document.getElementById('melodiaEditorModal').style.display = 'flex';
-}
-
-function cerrarMelodiaEditor() {
-    document.getElementById('melodiaEditorModal').style.display = 'none';
-    currentEditingCantoId = null;
-}
-
-async function guardarMelodiaEditor() {
-    if (!isAdmin || !currentEditingCantoId) return;
-
-    const notas = document.getElementById('editorNotasMelodia').value.trim();
-    const acordes = document.getElementById('editorAcordesMelodia').value.trim();
-
-    try {
-        await db.collection("cantos").doc(currentEditingCantoId).update({
-            notasMelodia: notas,
-            acordesMelodia: acordes   // ← Nuevo campo
-        });
-
-        // Actualizar en memoria local
-        const canto = cantos.find(c => c.id === currentEditingCantoId);
-        if (canto) {
-            canto.notasMelodia = notas;
-            canto.acordesMelodia = acordes;
-        }
-
-        cerrarMelodiaEditor();
-        renderTexto(); // refresca la vista del canto
-
-        mostrarNotificacion("¡Guardado!", "Melodía y acordes actualizados correctamente.", "success");
-
     } catch (e) {
         alert("Error al guardar: " + e.message);
     }
