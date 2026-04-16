@@ -682,9 +682,23 @@
                     <button class="tool-tag" onclick="insertTag('FINAL:\n')">FINAL</button>
                     <button class="tool-tag" onclick="insertTag('(BIS)')">(BIS)</button>
                 </div>
-                <div class="editor-group">
-    <label><i class="fas fa-music"></i> Melodía (Notas)</label>
-    <textarea id="notasMelodia" class="input-styled" rows="3" placeholder="Ej: Do Re Mi Fa... (Separadas por espacio)" style="font-family: 'JetBrains Mono', monospace;"></textarea>
+<div class="editor-group">
+    <label><i class="fas fa-music"></i> Melodía con Acordes</label>
+    <div style="position:relative;">
+        <textarea id="notasMelodia" class="input-styled" rows="5" 
+                  placeholder="Ejemplo:
+Do   Re   Mi   Fa   Sol
+C    Dm   Em   F    G
+
+O también línea por línea:
+Do (C) Re (Dm) Mi (Em) Fa (F) Sol (G)"
+                  style="font-family: 'JetBrains Mono', monospace; line-height: 1.8; resize: vertical;"></textarea>
+    </div>
+    <small style="color:#888; font-size:0.75rem; margin-top:4px; display:block;">
+        • Notas = sistema latino: <strong>Do Re Mi Fa Sol La Si</strong><br>
+        • Acordes = sistema americano: <strong>C Dm Em F G Am Bb</strong><br>
+        • Formato recomendado: <strong>Do (C) Re (Dm) Mi</strong>
+    </small>
 </div>
                 <div style="position: relative;">
                     <div id="smartChords" style="display: flex; gap: 5px; overflow-x: auto; padding: 5px 0 10px; scrollbar-width: none;"></div>
@@ -1008,7 +1022,30 @@
     
     let currentProgId = null;
     let currentProgSongIndices = [];
-    
+// =============================================
+// PERSISTENCIA DE TRANSPOSICIÓN EN PROGRAMADOS
+// =============================================
+function getSongTranspose(progId, songId) {
+    if (!progId || !songId) return 0;
+    const saved = localStorage.getItem('gn_prog_transposes');
+    if (!saved) return 0;
+    try {
+        const progs = JSON.parse(saved);
+        return progs[progId] ? (progs[progId][songId] || 0) : 0;
+    } catch(e) { return 0; }
+}
+
+function saveSongTranspose(progId, songId, transpose) {
+    if (!progId || !songId) return;
+    let progs = {};
+    const saved = localStorage.getItem('gn_prog_transposes');
+    if (saved) {
+        try { progs = JSON.parse(saved); } catch(e) {}
+    }
+    if (!progs[progId]) progs[progId] = {};
+    progs[progId][songId] = transpose;
+    localStorage.setItem('gn_prog_transposes', JSON.stringify(progs));
+}
     // --- FUNCIONES SUPABASE (AUDIO) ---
     async function gestionarSubidaAudio(input) {
         const file = input.files[0];
@@ -2056,7 +2093,31 @@ function cerrarMiTonoModal() {
     }
 
     async function toggleFavorite() { const c = cantos[currentCantoId]; await db.collection("cantos").doc(c.id).update({ favorito: !c.favorito }); c.favorito = !c.favorito; renderTexto(); toggleTools(); }
-    function verDetalle(idx, fromSave = false) { currentCantoId = idx; const c = cantos[idx]; const storageKey = `tonoPers_${c.titulo.replace(/\s+/g, '_')}`; c.tonoPersonal = localStorage.getItem(storageKey) || ""; document.getElementById('viewTitulo').innerText = c.titulo; renderTexto(); showView('detailView', false, fromSave); }
+function verDetalle(idx, fromSave = false) {
+    const c = cantos[idx];
+    if (!c) return;
+
+    const songId = c.id;
+
+    // === NUEVA LÓGICA DE TRANSPOSICIÓN POR PROGRAMA ===
+    if (currentProgId) {
+        // Si estamos dentro de una carpeta programada → cargamos el tono guardado
+        currentTranspose = getSongTranspose(currentProgId, songId) || 0;
+    } else if (currentCantoId !== idx) {
+        // Fuera de programados → comportamiento original
+        currentTranspose = 0;
+    }
+
+    currentCantoId = idx;
+
+    // Cargar tono personal guardado (MI TONO)
+    const storageKey = `tonoPers_${c.titulo.replace(/\s+/g, '_')}`;
+    c.tonoPersonal = localStorage.getItem(storageKey) || "";
+
+    document.getElementById('viewTitulo').innerText = c.titulo;
+    renderTexto();
+    showView('detailView', false, fromSave);
+}
     function previsualizarCanto() { currentCantoId = null; document.getElementById('previewBadge').style.display = 'block'; tempCanto = { titulo: document.getElementById('titulo').value || "Vista Previa", autor: document.getElementById('autor').value, letra: document.getElementById('letra').value, tonalidad: document.getElementById('tonalidad').value, tonalidadSec: document.getElementById('tonalidadSec').value, tiempoLiturgico: document.getElementById('tiempoLiturgico').value, momentoMisa: document.getElementById('momentoMisa').value, ritmo: document.getElementById('ritmo').value, tempo: document.getElementById('tempo').value, favorito: false, audioUrl: audioUrlSubido, tonoPersonal: document.getElementById('tonalidadPersonal').value,classificatio: document.getElementById('classificatioHidden').value}; renderTexto(); showView('detailView'); }
 
     async function guardarCanto() {
@@ -2108,7 +2169,16 @@ classificatio: document.getElementById('classificatioHidden').value
     }
 
     function toggleTheme() { const isDark = document.body.getAttribute('data-theme') === 'dark'; document.body.setAttribute('data-theme', isDark ? 'light' : 'dark'); document.getElementById('themeIcon').src = isDark ? 'Iconos/luna.png' : 'Iconos/sol.png'; }
-    function transpose(n) { currentTranspose += n; renderTexto(); }
+function transpose(n) {
+    currentTranspose += n;
+    renderTexto();
+
+    // Guardar automáticamente si estamos dentro de una carpeta programada
+    if (currentProgId && currentCantoId !== null) {
+        const songId = cantos[currentCantoId].id;
+        saveSongTranspose(currentProgId, songId, currentTranspose);
+    }
+}
     function toggleNotation() { isAmerican = !isAmerican; document.getElementById('notBtn').innerText = isAmerican ? "NOTACIÓN: Do" : "NOTACIÓN: C"; actualizarAcordesInteligentes(); renderTexto(); toggleTools(); }
     function abrirFormulario() { 
         if(!isAdmin) return; 
@@ -2138,30 +2208,48 @@ document.getElementById('classificatioValue').textContent = c.classificatio || "
         actualizarAcordesInteligentes(); showView('formView'); toggleTools();
         document.getElementById('notasMelodia').value = c.notasMelodia || "";
     }
-    function abrirClaveSol() {
-    const canto = cantos[currentCantoId]; 
+let currentNotasMelodia = "";
+
+function abrirClaveSol() {
+    const canto = cantos[currentCantoId] || tempCanto; 
     
     if (!canto || !canto.notasMelodia) {
-        alert("No hay notas registradas para este canto.");
+        alert("No hay melodía registrada para este canto.");
         return;
     }
 
-    let notasArray = canto.notasMelodia.split(/\s+/);
-    
-    // Transportar notas según el ajuste actual
-    let notasTransportadas = notasArray.map(nota => {
-        try {
-            return Tonal.Note.transpose(nota, Tonal.Interval.fromSemitones(currentTranspose));
-        } catch (e) {
-            return nota; 
+    currentNotasMelodia = canto.notasMelodia;
+
+    // Procesar la melodía con acordes
+    const lineas = currentNotasMelodia.trim().split('\n');
+    let htmlNotas = '';
+
+    lineas.forEach(linea => {
+        if (!linea.trim()) {
+            htmlNotas += '<br>';
+            return;
         }
+
+        // Detectar si hay acordes entre paréntesis: Do (C) Re (Dm)
+        const procesada = linea.replace(/(\b(?:Do|Re|Mi|Fa|Sol|La|Si)(?:#|b)?\b)\s*\(?([A-G][#b]?m?[\w\d\/]*)\)?/gi, 
+            (match, notaLatina, acorde) => {
+                const notaTranspuesta = transposeNote(notaLatina.trim(), currentTranspose);
+                return `<span style="color:#1B5E20; font-weight:800;">${notaTranspuesta}</span> 
+                        <span style="color:#8B4513; font-size:0.95em; vertical-align: super; margin-left:-2px;">(${acorde})</span>`;
+            });
+
+        htmlNotas += `<div style="margin:8px 0; font-family:'JetBrains Mono',monospace; font-size:1.35rem; letter-spacing: 3px;">${procesada}</div>`;
     });
 
-    // Inyectar datos en el modal con diseño
-    document.getElementById('notasTitulo').innerText = `MELODÍA (${currentTranspose > 0 ? '+' : ''}${currentTranspose})`;
-    document.getElementById('notasContenido').innerText = notasTransportadas.join("  ");
-    
-    // Mostrar el modal
+    // Título con transporte actual
+    document.getElementById('notasTitulo').innerHTML = `
+        MELODÍA CON ACORDES 
+        <small style="font-size:0.75rem; opacity:0.7;">(\( {currentTranspose > 0 ? '+' : ''} \){currentTranspose} semitonos)</small>
+    `;
+
+    document.getElementById('notasContenido').innerHTML = htmlNotas || 
+        '<span style="color:#888; font-style:italic;">No se pudo procesar la melodía</span>';
+
     document.getElementById('notasModal').style.display = 'flex';
 }
 
