@@ -946,44 +946,6 @@
         </div>
     </div>
 </div>
-<!-- ====================== MODAL EDICIÓN MELODÍA + ACORDES (CLAVE DE SOL) ====================== -->
-<div id="claveSolModal" class="notas-modal-overlay" onclick="cerrarClaveSolModal()">
-    <div class="notas-modal-card" onclick="event.stopPropagation()" style="max-width: 520px; width: 92%;">
-        <h3 style="margin-top:0; font-family:'Cinzel',serif; color:var(--accent); text-align:center;">
-            <i class="fas fa-music"></i> EDICIÓN MELODÍA + ACORDES
-        </h3>
-        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:15px;">
-            Solo el Director puede editar • Visible para todos
-        </p>
-
-        <div class="editor-group">
-            <label style="font-size:0.75rem; font-weight:700; color:var(--accent);">NOTAS DE LA MELODÍA</label>
-            <textarea id="melodiaEditor" class="input-styled" rows="4" 
-                placeholder="Ej: Do Re Mi Fa Sol La Si Do&#10;O en notación americana: C D E F G A B C"
-                style="font-family: 'JetBrains Mono', monospace; font-size: 1.05rem;"></textarea>
-        </div>
-
-        <div class="editor-group" style="margin-top:15px;">
-            <label style="font-size:0.75rem; font-weight:700; color:var(--accent);">ACORDES ENCIMA DE LAS NOTAS</label>
-            <textarea id="acordesEditor" class="input-styled" rows="4" 
-                placeholder="Ej:   C     Am    F     G&#10;Do   La-   Fa    Sol"
-                style="font-family: 'JetBrains Mono', monospace; font-size: 1.05rem;"></textarea>
-        </div>
-
-        <div style="margin-top:20px; display:flex; gap:12px;">
-            <button onclick="cerrarClaveSolModal()" class="btn btn-dark btn-sm" style="flex:1;">
-                CANCELAR
-            </button>
-            <button onclick="guardarMelodiaYAcordes()" class="btn btn-gold" style="flex:2;" id="btnGuardarMelodia">
-                <i class="fas fa-save"></i> GUARDAR MELODÍA Y ACORDES
-            </button>
-        </div>
-
-        <small style="display:block; text-align:center; margin-top:12px; color:#888;">
-            Formato recomendado: una nota/acorde por sílaba o por tiempo
-        </small>
-    </div>
-</div>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -1116,8 +1078,8 @@
 
     const defTiempos = ["Ordinario", "Adviento", "Navidad", "Cuaresma", "Pascua", "Triduo Pascual", "Pentecostés", "Santos", "Purísima", "Virgen María", "San Francisco", "Sagrado Corazón", "Ordinario de la Misa", "Ad Libitum"];
     const defMomentos = ["Entrada", "Kyrie", "Gloria", "Salmos", "Aleluya", "Honor y Gloria", "Ofertorio", "Sanctus", "Doxología", "Padre Nuestro", "Cordero", "Comunión", "Adoración A Jesús Sacramentado", "Salida", "Alabanzas", "Difuntos", "Varios"];
-    const opcionesTonos = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B", "Cm", "C#m", "Dm", "Ebm", "Em", "Fm", "F#m", "Gm", "Abm", "Am", "Bbm", "Bm"];
-    const opcionesModos = ["Jónico", "Dórico", "Frigio", "Lidio", "Mixolidio", "Eólico", "Locrio"];
+    const opcionesTonos = ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+    const opcionesModos = ["Mayor", "Menor", "Jónico", "Dórico", "Frigio", "Lidio", "Mixolidio", "Eólico", "Locrio"];
     
     let cantos = [];
     const escala = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
@@ -2356,79 +2318,78 @@ document.getElementById('classificatioValue').textContent = c.classificatio || "
         actualizarAcordesInteligentes(); showView('formView'); toggleTools();
         document.getElementById('notasMelodia').value = c.notasMelodia || "";
     }
-// ====================== NUEVA FUNCIÓN CLAVE DE SOL (EDICIÓN AVANZADA) ======================
 function abrirClaveSol() {
-    const canto = cantos[currentCantoId];
+    const canto = cantos[currentCantoId]; 
     if (!canto) return;
 
-    // Solo el director puede editar
-    if (!isAdmin) {
-        // Modo solo lectura para músicos
-        mostrarMelodiaSoloLectura(canto);
-        return;
+    // 1. OBTENER DATOS (Ahora cada uno de su propio campo independiente)
+    // Usamos notasMelodia y acordesMelodia (o el nombre que prefieras para los acordes independientes)
+    const notasRaw = canto.notasMelodia || "";
+    const acordesRaw = canto.acordesMelodia || ""; // CAMBIO CLAVE: Ya no usa canto.letra
+
+    const notasArray = notasRaw.split(/\s+/).filter(n => n.length > 0);
+    const acordesArray = acordesRaw.split(/\s+/).filter(a => a.length > 0);
+
+    // 2. TRANSPOSICIÓN (Compartida pero aplicada a cada lista)
+    const notasTransportadas = notasArray.map(nota => {
+        try { return transposeNote(nota, currentTranspose); } 
+        catch (e) { return nota; }
+    });
+
+    const chordsTransportadas = acordesArray.map(chord => {
+        // Reutilizamos tu lógica de procesamiento de extensiones y bajos (/)
+        const partes = chord.split('/');
+        const procesarNotaConExtension = (textoAcorde) => {
+            const notaMatch = textoAcorde.match(/^(Do|Re|Mi|Fa|Sol|La|Si|[A-G])(#|b|&)?/);
+            if (notaMatch) {
+                let notaBase = notaMatch[0];
+                let extension = textoAcorde.substring(notaBase.length);
+                try { return transposeNote(notaBase, currentTranspose) + extension; }
+                catch(e) { return textoAcorde; }
+            }
+            return textoAcorde;
+        };
+        let resultado = procesarNotaConExtension(partes[0]);
+        if (partes[1]) resultado += "/" + procesarNotaConExtension(partes[1]);
+        return resultado;
+    });
+
+    // 3. GENERAR VISUALIZACIÓN (Sincronizada por posición)
+    let htmlGrid = '';
+    const totalColumnas = Math.max(notasTransportadas.length, chordsTransportadas.length);
+
+    for (let i = 0; i < totalColumnas; i++) {
+        const acorde = chordsTransportadas[i] || ""; 
+        const nota = notasTransportadas[i] || "";
+
+        htmlGrid += `
+            <div style="display: inline-flex; flex-direction: column; align-items: flex-start; margin: 10px 12px; min-width: 35px;">
+                <span style="font-family:'Courier New', monospace; font-size: 1rem; color: #b08d57; font-weight: bold; min-height: 1.2rem;">
+                    ${acorde}
+                </span>
+                <span style="font-family: inherit; font-size: 1.5rem; color: #333; font-weight: 600; border-top: 1px solid #eee; width: 100%;">
+                    ${nota}
+                </span>
+            </div>
+        `;
     }
 
-    // Modo edición para director
-    document.getElementById('melodiaEditor').value = canto.notasMelodia || "";
-    document.getElementById('acordesEditor').value = canto.acordesMelodia || "";
+    // 4. RENDERIZADO LIMPIO
+    const signo = currentTranspose >= 0 ? '+' : '';
+    document.getElementById('notasTitulo').innerText = `MELODÍA (${signo}${currentTranspose})`;
 
-    document.getElementById('claveSolModal').style.display = 'flex';
-}
-function cerrarClaveSolModal() {
-    document.getElementById('claveSolModal').style.display = 'none';
-}
+    const contenido = document.getElementById('notasContenido');
+    contenido.innerHTML = `
+        <div style="display: flex; flex-wrap: wrap; padding: 15px; background: #fff; min-height: 200px;">
+            ${htmlGrid}
+        </div>
+    `;
 
-async function guardarMelodiaYAcordes() {
-    if (!isAdmin || currentCantoId === null) return;
-
-    const notasMelodia = document.getElementById('melodiaEditor').value.trim();
-    const acordesMelodia = document.getElementById('acordesEditor').value.trim();
-    const c = cantos[currentCantoId];
-
-    try {
-        await db.collection("cantos").doc(c.id).update({
-            notasMelodia: notasMelodia,
-            acordesMelodia: acordesMelodia
-        });
-
-        // Actualizar en memoria
-        c.notasMelodia = notasMelodia;
-        c.acordesMelodia = acordesMelodia;
-
-        cerrarClaveSolModal();
-        renderTexto(); // refresca la vista del canto
-
-        mostrarNotificacion("¡Guardado!", "Melodía y acordes actualizados correctamente.", "success");
-    } catch (e) {
-        alert("Error al guardar: " + e.message);
-    }
-}
-// Modo solo lectura para músicos/coristas
-function mostrarMelodiaSoloLectura(canto) {
-    let html = `<h3 style="text-align:center; color:var(--accent);"><i class="fas fa-music"></i> MELODÍA</h3>`;
-
-    if (canto.notasMelodia) {
-        html += `<div style="background:#f8f1e3; padding:15px; border-radius:12px; margin:15px 0; font-family:'JetBrains Mono'; font-size:1.1rem; line-height:1.8;">
-            ${canto.notasMelodia.replace(/\n/g, '<br>')}
-        </div>`;
-    }
-
-    if (canto.acordesMelodia) {
-        html += `<div style="background:#fff; padding:15px; border-radius:12px; margin:15px 0; font-family:'JetBrains Mono'; font-size:1.05rem; border-left:5px solid var(--accent);">
-            <strong>Acordes:</strong><br>
-            ${canto.acordesMelodia.replace(/\n/g, '<br>')}
-        </div>`;
-    }
-
-    if (!canto.notasMelodia && !canto.acordesMelodia) {
-        html += `<p style="text-align:center; color:#888; padding:30px;">Aún no hay melodía registrada.</p>`;
-    }
-
-    // Mostrar en el modal de notas existente (reutilizamos)
-    document.getElementById('notasTitulo').innerHTML = `MELODÍA - ${canto.titulo}`;
-    document.getElementById('notasContenido').innerHTML = html;
     document.getElementById('notasModal').style.display = 'flex';
+    if (typeof addLongPressToModal === 'function') addLongPressToModal();
 }
+
+
 
     function cerrarNotas() {
     document.getElementById('notasModal').style.display = 'none';
@@ -2651,6 +2612,100 @@ async function guardarTextoComplementario() {
         alert("Error al guardar: " + e.message);
     }
 }
+function addLongPressToModal() {
+    const modalCard = document.querySelector('.notas-modal-card');
+    if (!modalCard) return;
+
+    let pressTimer = null;
+
+    const start = (e) => {
+        if (!isAdmin) return;
+        // Evitamos que se dispare si es un click derecho
+        if (e.type === 'mousedown' && e.button !== 0) return;
+        
+        pressTimer = setTimeout(() => {
+            entrarModoEdicionMelodia();
+        }, 750); // Un poco más de tiempo para evitar accidentes
+    };
+
+    const cancel = () => {
+        if (pressTimer) clearTimeout(pressTimer);
+        pressTimer = null;
+    };
+
+    modalCard.addEventListener('mousedown', start);
+    modalCard.addEventListener('mouseup', cancel);
+    modalCard.addEventListener('mouseleave', cancel);
+    modalCard.addEventListener('touchstart', start, { passive: true });
+    modalCard.addEventListener('touchend', cancel, { passive: true });
+    modalCard.addEventListener('touchmove', cancel, { passive: true }); // Cancelar si el usuario desliza
+}
+
+function entrarModoEdicionMelodia() {
+    const canto = cantos[currentCantoId];
+    if (!canto || !isAdmin) return;
+
+    const contenido = document.getElementById('notasContenido');
+    contenido.innerHTML = `
+        <h4 style="margin-bottom:15px; color:var(--accent); text-align:center;">📝 Edición de Melodía y Acordes</h4>
+        
+        <div style="margin-bottom:15px;">
+            <label style="display:block; font-size:0.75rem; color:#666; margin-bottom:5px;">ACORDES (Separa por espacios)</label>
+            <textarea id="editAcordesMelodiaTemp" rows="3" class="input-styled" 
+                style="font-family:'Courier New', monospace; width:100%; box-sizing:border-box; border:1px solid #ddd; padding:8px;"
+                placeholder="Ej: G Em C D">${canto.acordesMelodia || ''}</textarea>
+        </div>
+
+        <div style="margin-bottom:15px;">
+            <label style="display:block; font-size:0.75rem; color:#666; margin-bottom:5px;">NOTAS DE LA MELODÍA</label>
+            <textarea id="editNotasMelodiaTemp" rows="3" class="input-styled" 
+                style="font-family:'JetBrains Mono', monospace; width:100%; box-sizing:border-box; border:1px solid #ddd; padding:8px;"
+                placeholder="Ej: Sol Mi Do Re">${canto.notasMelodia || ''}</textarea>
+        </div>
+
+        <p style="font-size:0.65rem; color:#888; margin-bottom:15px;">
+            * El primer acorde se alineará con la primera nota, y así sucesivamente.
+        </p>
+
+        <div style="display: flex; gap: 10px;">
+            <button onclick="cerrarNotas()" class="btn btn-dark btn-sm" style="flex:1;">CANCELAR</button>
+            <button onclick="guardarEdicionMelodia()" class="btn btn-gold" style="flex:2;">💾 GUARDAR CAMBIOS</button>
+        </div>
+    `;
+}
+
+function guardarEdicionMelodia() {
+    const canto = cantos[currentCantoId];
+    if (!canto || !isAdmin) return;
+
+    const newNotas = document.getElementById('editNotasMelodiaTemp').value.trim();
+    const newAcordes = document.getElementById('editAcordesMelodiaTemp').value.trim();
+
+    // Verificamos si hubo cambios en cualquiera de los dos campos
+    if (newNotas !== canto.notasMelodia || newAcordes !== (canto.acordesMelodia || "")) {
+        
+        db.collection("cantos").doc(canto.id).update({
+            notasMelodia: newNotas,
+            acordesMelodia: newAcordes // Guardamos el nuevo campo independiente
+        }).then(() => {
+            // Actualizamos el objeto local para que se vea el cambio de inmediato
+            canto.notasMelodia = newNotas;
+            canto.acordesMelodia = newAcordes;
+            
+            mostrarNotificacion("¡Actualizado!", "Melodía y acordes guardados correctamente.", "success");
+            cerrarNotas();
+            
+            // Reabrimos el visualizador para ver cómo quedó
+            setTimeout(() => abrirClaveSol(), 400);
+        }).catch(err => {
+            console.error("Error al guardar:", err);
+            alert("Error al guardar: " + err.message);
+        });
+    } else {
+        cerrarNotas(); // Si no hay cambios, solo cerramos
+    }
+}
+
    db.collection("cantos").onSnapshot(snap => {
     cantos = [];
     snap.forEach(doc => {
