@@ -2319,75 +2319,39 @@ document.getElementById('classificatioValue').textContent = c.classificatio || "
         document.getElementById('notasMelodia').value = c.notasMelodia || "";
     }
 function abrirClaveSol() {
-    const canto = cantos[currentCantoId]; 
+    const canto = cantos[currentCantoId];
     if (!canto) return;
 
-    // 1. OBTENER DATOS (Ahora cada uno de su propio campo independiente)
-    // Usamos notasMelodia y acordesMelodia (o el nombre que prefieras para los acordes independientes)
-    const notasRaw = canto.notasMelodia || "";
-    const acordesRaw = canto.acordesMelodia || ""; // CAMBIO CLAVE: Ya no usa canto.letra
+    // Función para transportar las notas manteniendo los espacios exactos
+    const transportarLinea = (linea) => {
+        if (!linea) return "";
+        return linea.replace(/(Do|Re|Mi|Fa|Sol|La|Si|[A-G])(#|b|&)?/g, (match) => {
+            try { return transposeNote(match, currentTranspose); } 
+            catch(e) { return match; }
+        });
+    };
 
-    const notasArray = notasRaw.split(/\s+/).filter(n => n.length > 0);
-    const acordesArray = acordesRaw.split(/\s+/).filter(a => a.length > 0);
-
-    // 2. TRANSPOSICIÓN (Compartida pero aplicada a cada lista)
-    const notasTransportadas = notasArray.map(nota => {
-        try { return transposeNote(nota, currentTranspose); } 
-        catch (e) { return nota; }
-    });
-
-    const chordsTransportadas = acordesArray.map(chord => {
-        // Reutilizamos tu lógica de procesamiento de extensiones y bajos (/)
-        const partes = chord.split('/');
-        const procesarNotaConExtension = (textoAcorde) => {
-            const notaMatch = textoAcorde.match(/^(Do|Re|Mi|Fa|Sol|La|Si|[A-G])(#|b|&)?/);
-            if (notaMatch) {
-                let notaBase = notaMatch[0];
-                let extension = textoAcorde.substring(notaBase.length);
-                try { return transposeNote(notaBase, currentTranspose) + extension; }
-                catch(e) { return textoAcorde; }
-            }
-            return textoAcorde;
-        };
-        let resultado = procesarNotaConExtension(partes[0]);
-        if (partes[1]) resultado += "/" + procesarNotaConExtension(partes[1]);
-        return resultado;
-    });
-
-    // 3. GENERAR VISUALIZACIÓN (Sincronizada por posición)
-    let htmlGrid = '';
-    const totalColumnas = Math.max(notasTransportadas.length, chordsTransportadas.length);
-
-    for (let i = 0; i < totalColumnas; i++) {
-        const acorde = chordsTransportadas[i] || ""; 
-        const nota = notasTransportadas[i] || "";
-
-        htmlGrid += `
-            <div style="display: inline-flex; flex-direction: column; align-items: flex-start; margin: 10px 12px; min-width: 35px;">
-                <span style="font-family:'Courier New', monospace; font-size: 1rem; color: #b08d57; font-weight: bold; min-height: 1.2rem;">
-                    ${acorde}
-                </span>
-                <span style="font-family: inherit; font-size: 1.5rem; color: #333; font-weight: 600; border-top: 1px solid #eee; width: 100%;">
-                    ${nota}
-                </span>
-            </div>
-        `;
-    }
-
-    // 4. RENDERIZADO LIMPIO
-    const signo = currentTranspose >= 0 ? '+' : '';
-    document.getElementById('notasTitulo').innerText = `MELODÍA (${signo}${currentTranspose})`;
+    const acordesTranspuestos = transportarLinea(canto.acordesMelodia || "");
+    const notasTranspuestas = transportarLinea(canto.notasMelodia || "");
 
     const contenido = document.getElementById('notasContenido');
+    
+    // Aplicamos estilos de interlineado muy bajo (1.0 o 1.1) para que estén cerca
     contenido.innerHTML = `
-        <div style="display: flex; flex-wrap: wrap; padding: 15px; background: #fff; min-height: 200px;">
-            ${htmlGrid}
+        <div style="background:#fff; padding:15px; border-radius:8px; overflow-x:auto; white-space:pre; font-family:'Courier New', monospace; font-size: 1.2rem;">
+            <div style="color:#b08d57; font-weight:bold; line-height: 1.0; margin-bottom: 2px;">${acordesTranspuestos}</div>
+            <div style="color:#333; font-weight:bold; line-height: 1.0;">${notasTranspuestas}</div>
         </div>
     `;
 
+    const signo = currentTranspose >= 0 ? '+' : '';
+    document.getElementById('notasTitulo').innerText = `MELODÍA (${signo}${currentTranspose})`;
     document.getElementById('notasModal').style.display = 'flex';
+    
     if (typeof addLongPressToModal === 'function') addLongPressToModal();
 }
+
+
 
 
 
@@ -2645,66 +2609,47 @@ function entrarModoEdicionMelodia() {
     const canto = cantos[currentCantoId];
     if (!canto || !isAdmin) return;
 
+    // Preparamos el contenido: Línea 1 Acordes, Línea 2 Notas
+    const textoEditor = `${canto.acordesMelodia || ''}\n${canto.notasMelodia || ''}`;
+
     const contenido = document.getElementById('notasContenido');
     contenido.innerHTML = `
-        <h4 style="margin-bottom:15px; color:var(--accent); text-align:center;">📝 Edición de Melodía y Acordes</h4>
+        <h4 style="margin-bottom:10px; color:var(--accent); text-align:center;">🎹 Editor Directo</h4>
+        <p style="font-size:0.7rem; color:#888; margin-bottom:10px;">Escribe los acordes en la primera línea y las notas en la segunda. Usa espacios para alinear.</p>
         
-        <div style="margin-bottom:15px;">
-            <label style="display:block; font-size:0.75rem; color:#666; margin-bottom:5px;">ACORDES (Separa por espacios)</label>
-            <textarea id="editAcordesMelodiaTemp" rows="3" class="input-styled" 
-                style="font-family:'Courier New', monospace; width:100%; box-sizing:border-box; border:1px solid #ddd; padding:8px;"
-                placeholder="Ej: G Em C D">${canto.acordesMelodia || ''}</textarea>
-        </div>
+        <textarea id="editDirectoTemp" 
+            style="font-family:'Courier New', monospace; width:100%; height:150px; border:2px solid #e0e0e0; border-radius:8px; padding:15px; font-size:1.1rem; line-height:1.5; white-space:pre; overflow-x:auto; background:#f9f9f9; color:#333;"
+            placeholder="G        C\nDo Re Mi Fa"
+            spellcheck="false">${textoEditor}</textarea>
 
-        <div style="margin-bottom:15px;">
-            <label style="display:block; font-size:0.75rem; color:#666; margin-bottom:5px;">NOTAS DE LA MELODÍA</label>
-            <textarea id="editNotasMelodiaTemp" rows="3" class="input-styled" 
-                style="font-family:'JetBrains Mono', monospace; width:100%; box-sizing:border-box; border:1px solid #ddd; padding:8px;"
-                placeholder="Ej: Sol Mi Do Re">${canto.notasMelodia || ''}</textarea>
-        </div>
-
-        <p style="font-size:0.65rem; color:#888; margin-bottom:15px;">
-            * El primer acorde se alineará con la primera nota, y así sucesivamente.
-        </p>
-
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; margin-top:15px;">
             <button onclick="cerrarNotas()" class="btn btn-dark btn-sm" style="flex:1;">CANCELAR</button>
-            <button onclick="guardarEdicionMelodia()" class="btn btn-gold" style="flex:2;">💾 GUARDAR CAMBIOS</button>
+            <button onclick="guardarEdicionMelodia()" class="btn btn-gold" style="flex:2;">💾 GUARDAR</button>
         </div>
     `;
 }
 
+
 function guardarEdicionMelodia() {
     const canto = cantos[currentCantoId];
-    if (!canto || !isAdmin) return;
+    const texto = document.getElementById('editDirectoTemp').value;
+    
+    // Separamos por líneas
+    const lineas = texto.split('\n');
+    const nuevosAcordes = lineas[0] || ""; // Primera línea
+    const nuevasNotas = lineas[1] || "";   // Segunda línea
 
-    const newNotas = document.getElementById('editNotasMelodiaTemp').value.trim();
-    const newAcordes = document.getElementById('editAcordesMelodiaTemp').value.trim();
-
-    // Verificamos si hubo cambios en cualquiera de los dos campos
-    if (newNotas !== canto.notasMelodia || newAcordes !== (canto.acordesMelodia || "")) {
-        
-        db.collection("cantos").doc(canto.id).update({
-            notasMelodia: newNotas,
-            acordesMelodia: newAcordes // Guardamos el nuevo campo independiente
-        }).then(() => {
-            // Actualizamos el objeto local para que se vea el cambio de inmediato
-            canto.notasMelodia = newNotas;
-            canto.acordesMelodia = newAcordes;
-            
-            mostrarNotificacion("¡Actualizado!", "Melodía y acordes guardados correctamente.", "success");
-            cerrarNotas();
-            
-            // Reabrimos el visualizador para ver cómo quedó
-            setTimeout(() => abrirClaveSol(), 400);
-        }).catch(err => {
-            console.error("Error al guardar:", err);
-            alert("Error al guardar: " + err.message);
-        });
-    } else {
-        cerrarNotas(); // Si no hay cambios, solo cerramos
-    }
+    db.collection("cantos").doc(canto.id).update({
+        acordesMelodia: nuevosAcordes,
+        notasMelodia: nuevasNotas
+    }).then(() => {
+        canto.acordesMelodia = nuevosAcordes;
+        canto.notasMelodia = nuevasNotas;
+        cerrarNotas();
+        setTimeout(() => abrirClaveSol(), 400);
+    });
 }
+
 
    db.collection("cantos").onSnapshot(snap => {
     cantos = [];
