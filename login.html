@@ -219,6 +219,19 @@
     const googleProvider = new firebase.auth.GoogleAuthProvider();
     const facebookProvider = new firebase.auth.FacebookAuthProvider();
 
+    // 3. Manejo de Redirección (Solución para apps instaladas/PWAs)
+    auth.getRedirectResult().then((result) => {
+        if (result.user) {
+            console.log("Sesión iniciada tras redirección:", result.user.displayName);
+            window.location.href = 'index.html';
+        }
+    }).catch((error) => {
+        console.error("Error al volver de la redirección:", error);
+        if(error.code !== 'auth/web-storage-unsupported') {
+            alert("Error en autenticación: " + error.message);
+        }
+    });
+
     // Optimización de persistencia (Modo Offline)
     db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
     db.enablePersistence().catch(err => console.error("Error de persistencia:", err));
@@ -307,27 +320,26 @@
     }
 
     // Función de Google actualizada al Plugin Nativo
-async function loginGoogle() {
-    try {
-        const result = await auth.signInWithPopup(googleProvider);
-        alert("¡Bienvenido con Google!");
-        window.location.href = 'index.html';
-    } catch (err) {
-        console.error("Error Google:", err);
-        alert("Error Google: " + (err.message || "No se pudo iniciar sesión"));
+    async function loginGoogle() {
+        try {
+            await auth.signInWithRedirect(googleProvider);
+        } catch (err) {
+            console.error("Error Google:", err);
+            alert("Error Google: " + (err.message || "No se pudo iniciar sesión"));
+        }
     }
-}
 
-async function loginFacebook() {
-    try {
-        await auth.signInWithPopup(facebookProvider);
-        // El onAuthStateChanged se encargará de redirigir a index.html
-    } catch (err) { 
-        console.error("Error Facebook:", err);
-        alert("Error al conectar con Facebook: " + err.message); 
+    async function loginFacebook() {
+        facebookProvider.addScope('email');
+        facebookProvider.addScope('public_profile');
+        try {
+            // Usamos Redirect para evitar fallos en apps descargadas/instaladas
+            await auth.signInWithRedirect(facebookProvider);
+        } catch (err) { 
+            console.error("Error Facebook:", err);
+            alert("Error Facebook: " + err.message); 
+        }
     }
-}
-
 
     // Lógica de Teléfono
     let confirmationResult = null;
@@ -335,12 +347,9 @@ async function loginFacebook() {
     function showPhoneInput() {
         document.getElementById('phone-section').style.display = 'block';
         if (!window.recaptchaVerifier) {
-            // Se define como 'invisible' para que no estorbe en la UI
             window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', { 
                 'size': 'invisible',
-                'callback': (response) => {
-                    // El reCAPTCHA se resolvió solo
-                }
+                'callback': (response) => {}
             });
         }
     }
@@ -357,7 +366,6 @@ async function loginFacebook() {
             document.getElementById('send-code').style.display = 'none';
         } catch (err) { 
             alert("Error SMS: " + err.message);
-            // Resetear reCAPTCHA si falla
             window.recaptchaVerifier.render().then(function(widgetId) {
                 grecaptcha.reset(widgetId);
             });
