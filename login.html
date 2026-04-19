@@ -318,11 +318,16 @@ async function loginGoogle() {
     }
 }
 
-    async function loginFacebook() {
-        try {
-            await auth.signInWithPopup(facebookProvider);
-        } catch (err) { alert("Error Facebook: " + err.message); }
+async function loginFacebook() {
+    try {
+        await auth.signInWithPopup(facebookProvider);
+        // El onAuthStateChanged se encargará de redirigir a index.html
+    } catch (err) { 
+        console.error("Error Facebook:", err);
+        alert("Error al conectar con Facebook: " + err.message); 
     }
+}
+
 
     // Lógica de Teléfono
     let confirmationResult = null;
