@@ -34,7 +34,7 @@
             flex-direction: column;
             min-height: 100vh;
             overflow-x: hidden;
-            background-color: #261C1B; /* Cambiado para evitar flash blanco */
+            background-color: #261C1B; 
         }
 
         body::before {
@@ -56,7 +56,7 @@
         #intro-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #261C1B; /* Cambiado según tu preferencia */
+            background-color: #261C1B; 
             z-index: 1000;
             display: flex;
             align-items: center;
@@ -122,8 +122,6 @@
             to { transform: scale(0.3) translateY(-180%); opacity: 0; filter: blur(15px); }
         }
 
-        /* --- FIN INTRO --- */
-
         header {
             background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%);
             color: white;
@@ -138,7 +136,6 @@
             animation: fadeIn 1.5s ease 8.5s forwards;
         }
 
-        /* Clase para saltar animación */
         .no-animation {
             animation: none !important;
             opacity: 1 !important;
@@ -366,7 +363,7 @@
             transition: all 0.3s ease;
         }
 
-        .footer-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 8px; }
+        .footer-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 8px; flex-wrap: wrap; }
         .footer-links a { text-decoration: none; color: var(--text-dark); font-size: 0.6rem; font-weight: 600; text-transform: uppercase; opacity: 0.8; }
         .copyright { font-size: 0.55rem; color: #666; margin: 0; line-height: 1.2; }
     </style>
@@ -415,10 +412,10 @@
             <i class="fas fa-music"></i>
             <span>Piano</span>
         </a>
-<a onclick="accesoProtegido('afinador.html', this); return false;" class="app-card">
-    <i class="fas fa-microphone"></i>
-    <span>Afinador</span>
-</a>
+        <a onclick="accesoProtegido('afinador.html', this); return false;" class="app-card">
+            <i class="fas fa-microphone"></i>
+            <span>Afinador</span>
+        </a>
 
         <a onclick="accesoProtegido('Formación/Formación.html', this)" class="app-card">
             <i class="fas fa-graduation-cap"></i>
@@ -450,6 +447,7 @@
     <div class="footer-links">
         <a href="acercade.html">Acerca de</a>
         <a href="pdp.html">Política de Privacidad</a>
+        <a href="terminos.html">Términos de Uso</a>
     </div>
     <p class="copyright">
         &copy; 2026 Walter Reyes y Coro Parroquial San Francisco de Asís - Camoapa
@@ -457,7 +455,6 @@
 </footer>
 
 <script>
-    // Registro del Service Worker Profesional
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('./sw.js')
@@ -474,15 +471,12 @@
         const introPax = document.getElementById('intro-pax');
         const text = "Pax et Bonum";
 
-        // Comprobar si ya se mostró la intro en esta sesión
         if (sessionStorage.getItem('introMostrada')) {
-            // Quitar overlay y animaciones
             introOverlay.style.display = 'none';
             header.classList.add('no-animation');
             hub.classList.add('no-animation');
             footer.classList.add('no-animation');
         } else {
-            // Ejecutar secuencia normal de animación
             setTimeout(() => {
                 let i = 0;
                 const timer = setInterval(() => {
@@ -502,8 +496,6 @@
         const introBox = document.getElementById('intro-box');
         const overlay = document.getElementById('intro-overlay');
         introBox.classList.add('shrink-all');
-        
-        // Guardar que la intro ya se mostró
         sessionStorage.setItem('introMostrada', 'true');
 
         setTimeout(() => {
@@ -527,6 +519,15 @@
     const DIRECTOR_EMAIL = "waljrg@gmail.com";
     let usuarioLogueado = false;
 
+    // --- CORRECCIÓN: Configurar persistencia LOCAL para evitar pérdida de sesión ---
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .then(() => {
+        console.log("Persistencia de sesión configurada: LOCAL");
+    })
+    .catch((error) => {
+        console.error("Error configurando persistencia:", error);
+    });
+
     auth.onAuthStateChanged((user) => {
         const authText = document.getElementById('authText');
         const authIcon = document.getElementById('authIcon');
@@ -536,11 +537,13 @@
             authText.innerText = "CERRAR SESIÓN";
             authIcon.className = "fas fa-sign-out-alt";
             if (user.email === DIRECTOR_EMAIL) btnDirector.style.display = "flex";
+            console.log("Sesión detectada para:", user.email);
         } else {
             usuarioLogueado = false;
             authText.innerText = "INICIAR SESIÓN";
             authIcon.className = "fas fa-sign-in-alt";
             btnDirector.style.display = "none";
+            console.log("No hay sesión activa.");
         }
     });
 
@@ -553,6 +556,7 @@
     }
 
     function accesoProtegido(url, element) {
+        // Pequeña espera para dar tiempo a Firebase de verificar el estado
         if (usuarioLogueado) {
             window.location.href = url;
         } else {
@@ -564,5 +568,4 @@
 
 </body>
 </html>
-
 

@@ -189,7 +189,7 @@
 
     <div class="policy-group">
         <input type="checkbox" id="policy-check">
-        <label for="policy-check">He leído y acepto las <a href="pdp.html">políticas de privacidad</a></label>
+        <label for="policy-check">He leído y acepto las <a href="pdp.html">políticas de privacidad</a> y los <a href="terminos.html">términos de uso</a></label>
     </div>
     
     <button class="btn btn-primary" id="btn-login" onclick="loginEmail()">
@@ -321,7 +321,7 @@
         const btn = document.getElementById('btn-register');
 
         if (!policyAccepted) {
-            alert("Debes aceptar las políticas de privacidad para registrarte.");
+            alert("Debes aceptar las políticas de privacidad y términos de uso para registrarte.");
             return;
         }
 
@@ -381,7 +381,7 @@
         const policyAccepted = document.getElementById('policy-check').checked;
 
         if (!policyAccepted) {
-            alert("Debes aceptar las políticas de privacidad.");
+            alert("Debes aceptar las políticas de privacidad y términos de uso.");
             return;
         }
 

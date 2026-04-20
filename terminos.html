@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Política de Privacidad - Graduale Nostrum</title>
+    <title>Términos de Uso - Graduale Nostrum</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         body {
@@ -106,31 +106,31 @@
             display: block;
             margin-top: 5px;
         }
-/* Fuerza a que los párrafos que empiezan con números (tus títulos) sean negrita */
-.content p strong, 
-.content h3 {
-    font-weight: bold;
-    color: #5d4037;
-}
 
-/* Mejora la legibilidad del cuerpo de texto */
-.content {
-    padding: 20px;
-    font-size: 0.95em;
-    white-space: pre-line; /* Clave para respetar los saltos de línea del JSON */
-    text-align: justify;
-}
+        /* Fuerza a que los párrafos que empiezan con números sean negrita */
+        .content p strong, 
+        .content h3 {
+            font-weight: bold;
+            color: #5d4037;
+        }
 
-/* Estilo para las listas de datos recolectados */
-.content li {
-    margin-bottom: 8px;
-    background-color: #fffde7;
-    border-left: 3px solid #d4af37;
-    padding: 8px 12px;
-    border-radius: 0 5px 5px 0;
-    list-style: none;
-}
+        /* Mejora la legibilidad del cuerpo de texto */
+        .content {
+            padding: 20px;
+            font-size: 0.95em;
+            white-space: pre-line; /* Respetar saltos de línea */
+            text-align: justify;
+        }
 
+        /* Estilo para las listas */
+        .content li {
+            margin-bottom: 8px;
+            background-color: #fffde7;
+            border-left: 3px solid #d4af37;
+            padding: 8px 12px;
+            border-radius: 0 5px 5px 0;
+            list-style: none;
+        }
     </style>
 </head>
 <body>
@@ -138,13 +138,13 @@
 <div class="container">
     <div class="header">
         <img src="iconos/logo.png" alt="Logo Graduale Nostrum">
-        <h1>Política de Privacidad</h1>
+        <h1>Términos de Uso</h1>
         <span class="subtitle">Graduale Nostrum</span>
-        <span class="update-date">Última actualización: 13 de marzo de 2026</span>
+        <span class="update-date">Última actualización: 20 de abril de 2026</span>
     </div>
 
-    <div id="pdp-content" class="content">
-        Cargando política de privacidad...
+    <div id="terms-content" class="content">
+        Cargando términos de uso...
     </div>
 </div>
 
@@ -164,33 +164,30 @@
     });
 </script>
 
-
 <script>
-async function loadPrivacyPolicy() {
+async function loadTermsOfUse() {
     try {
-        const response = await fetch('Json/pdp.json');
-        if (!response.ok) throw new Error('No se pudo encontrar el archivo pdp.json');
+        const response = await fetch('Json/terminos.json');
+        if (!response.ok) throw new Error('No se pudo encontrar el archivo terminos.json');
         
         const data = await response.json();
         
-        // Accedemos al primer elemento y buscamos la propiedad de texto
-        // Ajusta 'pdp' si el nombre de la propiedad en tu JSON es distinto
-        const rawContent = data[0].pdp || data[0].contenido || data[0].text;
+        // Accedemos al primer elemento y buscamos la propiedad terminos
+        const rawContent = data[0].terminos || data[0].contenido || data[0].text;
         
         if (!rawContent) throw new Error('Estructura de JSON no reconocida');
         
         // Renderizado limpio
-        document.getElementById('pdp-content').innerHTML = marked.parse(rawContent);
+        document.getElementById('terms-content').innerHTML = marked.parse(rawContent);
     } catch (error) {
-        document.getElementById('pdp-content').innerHTML = 
-            '<p style="color:red; text-align:center;">Error al cargar el contenido de privacidad.</p>';
+        document.getElementById('terms-content').innerHTML = 
+            '<p style="color:red; text-align:center;">Error al cargar el contenido de los términos.</p>';
         console.error(error);
     }
 }
 
-
     // Iniciar carga al abrir el documento
-    window.addEventListener('load', loadPrivacyPolicy);
+    window.addEventListener('load', loadTermsOfUse);
 </script>
 
 </body>

@@ -19,39 +19,53 @@
         .container {
             max-width: 600px;
             margin: 0 auto;
-            border: 2px solid #d4af37;
-            border-radius: 15px;
+            border: 1px solid #d4af37;
+            border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .header {
             background-color: #5d4037;
             color: #ffffff;
-            padding: 25px 15px;
+            padding: 20px;
             text-align: center;
+        }
+
+        .header img {
+            width: 80px;
+            height: auto;
+            margin-bottom: 10px;
         }
 
         .header h1 {
             margin: 0;
-            font-size: 26px;
+            font-size: 20px;
             color: #ffcc00;
             text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
 
-        /* Estilos para el contenido inyectado desde el MD */
+        .subtitle {
+            display: block;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #ffffff;
+            margin-top: 5px;
+        }
+
+        /* Estilos para el contenido inyectado */
         .content {
-            padding: 20px 25px;
+            padding: 20px;
+            font-size: 0.95em;
         }
 
         .content h3 {
-            color: #3e2723;
-            border-bottom: 2px solid #d4af37;
-            padding-bottom: 8px;
+            color: #5d4037;
+            border-left: 4px solid #d4af37;
+            padding-left: 10px;
             margin-top: 25px;
-            text-align: center;
+            font-size: 1.1em;
+            text-transform: uppercase;
         }
 
         .content blockquote {
@@ -68,7 +82,7 @@
             text-align: center;
             padding: 25px 15px;
             background-color: #f9f9f9;
-            border-top: 1px solid #d4af37;
+            border-top: 1px solid #eeeeee;
         }
 
         .social-title {
@@ -122,40 +136,39 @@
             opacity: 0.9;
         }
 
-        .logo-container {
-            text-align: center;
-            padding-top: 20px;
+        /* Fuerza a que los párrafos en negrita mantengan el estilo */
+        .content p strong, 
+        .content h3 {
+            font-weight: bold;
+            color: #5d4037;
         }
 
-        .logo-container img {
-            max-width: 120px;
-            height: auto;
+        /* Mejora la legibilidad del cuerpo de texto */
+        .content {
+            padding: 20px;
+            font-size: 0.95em;
+            white-space: pre-line;
+            text-align: justify;
         }
 
-        /* Estilo para que las listas del MD parezcan los cuadros anteriores */
-        .content ul {
-            list-style: none;
-            padding: 0;
-        }
-
+        /* Estilo para las listas */
         .content li {
+            margin-bottom: 8px;
             background-color: #fffde7;
-            border-left: 4px solid #d4af37;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 0 10px 10px 0;
+            border-left: 3px solid #d4af37;
+            padding: 8px 12px;
+            border-radius: 0 5px 5px 0;
+            list-style: none;
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="logo-container">
-        <img src="iconos/logo.png" alt="Logo Graduale Nostrum">
-    </div>
-
     <div class="header">
-        <h1>Graduale Nostrum</h1>
+        <img src="iconos/logo.png" alt="Logo Graduale Nostrum">
+        <h1>Acerca de</h1>
+        <span class="subtitle">Graduale Nostrum</span>
     </div>
 
     <div id="markdown-content" class="content">
@@ -183,7 +196,7 @@
 <script type="module">
     import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
 
-    window.onload = function() {
+    window.addEventListener('load', () => {
         App.addListener('backButton', () => {
             const pagina = window.location.pathname.split("/").pop();
 
@@ -193,19 +206,23 @@
                 window.location.assign('index.html');
             }
         });
-    };
+    });
 </script>
 
 <script>
-    // Función para cargar el archivo MD
     async function loadMarkdown() {
         try {
-            const response = await fetch('md/acercade.md');
+            const response = await fetch('Json/acercade.json');
             if (!response.ok) throw new Error('No se pudo cargar el archivo');
-            const text = await response.text();
             
-            // Convertir MD a HTML e insertar en el div
-            document.getElementById('markdown-content').innerHTML = marked.parse(text);
+            const data = await response.json();
+            
+            // Accedemos al primer elemento y buscamos la propiedad acercade
+            const rawContent = data[0].acercade || data[0].contenido || data[0].text;
+            
+            if (!rawContent) throw new Error('Estructura de JSON no reconocida');
+            
+            document.getElementById('markdown-content').innerHTML = marked.parse(rawContent);
         } catch (error) {
             document.getElementById('markdown-content').innerHTML = 
                 '<p style="color:red; text-align:center;">Error al cargar la información.</p>';
@@ -213,20 +230,9 @@
         }
     }
 
-    // Manejar el botón de atrás del dispositivo usando Capacitor
-    function handleBackButton() {
-        App.addListener('backButton', () => {
-            // Cuando se presiona el botón físico, regresamos a la pantalla principal
-            window.location.assign('index.html');
-        });
-    }
-
-    // Ejecutar al cargar la página
-    window.onload = function() {
-        loadMarkdown();
-        handleBackButton();
-    };
+    window.addEventListener('load', loadMarkdown);
 </script>
 
 </body>
 </html>
+
