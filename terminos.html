@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Términos de Uso - Graduale Nostrum</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+            color: #3e2723;
+            margin: 0;
+            padding: 15px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            border: 1px solid #d4af37;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background-color: #5d4037;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header img {
+            width: 80px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+            color: #ffcc00;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            display: block;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #ffffff;
+            margin-top: 5px;
+        }
+
+        .update-date {
+            font-size: 0.8em;
+            display: block;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        /* Estilos para el contenido inyectado */
+        .content {
+            padding: 20px;
+            font-size: 0.95em;
+        }
+
+        .content h3 {
+            color: #5d4037;
+            border-left: 4px solid #d4af37;
+            padding-left: 10px;
+            margin-top: 25px;
+            font-size: 1.1em;
+            text-transform: uppercase;
+        }
+
+        .content ul {
+            padding-left: 20px;
+        }
+
+        .content li {
+            margin-bottom: 8px;
+        }
+
+        /* Clase especial para la caja de Copyright si decides usarla en el MD */
+        .copyright-box {
+            background-color: #fffde7;
+            border: 1px dashed #d4af37;
+            padding: 15px;
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .footer-contact {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            border-top: 1px solid #eeeeee;
+        }
+
+        .email-link {
+            color: #d4af37;
+            text-decoration: none;
+            font-weight: bold;
+            display: block;
+            margin-top: 5px;
+        }
+
+        /* Fuerza a que los párrafos que empiezan con números sean negrita */
+        .content p strong, 
+        .content h3 {
+            font-weight: bold;
+            color: #5d4037;
+        }
+
+        /* Mejora la legibilidad del cuerpo de texto */
+        .content {
+            padding: 20px;
+            font-size: 0.95em;
+            white-space: pre-line; /* Respetar saltos de línea */
+            text-align: justify;
+        }
+
+        /* Estilo para las listas */
+        .content li {
+            margin-bottom: 8px;
+            background-color: #fffde7;
+            border-left: 3px solid #d4af37;
+            padding: 8px 12px;
+            border-radius: 0 5px 5px 0;
+            list-style: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <img src="iconos/logo.png" alt="Logo Graduale Nostrum">
+        <h1>Términos de Uso</h1>
+        <span class="subtitle">Graduale Nostrum</span>
+        <span class="update-date">Última actualización: 20 de abril de 2026</span>
+    </div>
+
+    <div id="terms-content" class="content">
+        Cargando términos de uso...
+    </div>
+</div>
+
+<script type="module">
+    import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
+
+    window.addEventListener('load', () => {
+        App.addListener('backButton', () => {
+            const pagina = window.location.pathname.split("/").pop();
+
+            if (pagina === 'index.html' || pagina === '') {
+                App.exitApp();
+            } else {
+                window.location.assign('index.html');
+            }
+        });
+    });
+</script>
+
+<script>
+async function loadTermsOfUse() {
+    try {
+        const response = await fetch('Json/terminos.json');
+        if (!response.ok) throw new Error('No se pudo encontrar el archivo terminos.json');
+        
+        const data = await response.json();
+        
+        // Accedemos al primer elemento y buscamos la propiedad terminos
+        const rawContent = data[0].terminos || data[0].contenido || data[0].text;
+        
+        if (!rawContent) throw new Error('Estructura de JSON no reconocida');
+        
+        // Renderizado limpio
+        document.getElementById('terms-content').innerHTML = marked.parse(rawContent);
+    } catch (error) {
+        document.getElementById('terms-content').innerHTML = 
+            '<p style="color:red; text-align:center;">Error al cargar el contenido de los términos.</p>';
+        console.error(error);
+    }
+}
+
+    // Iniciar carga al abrir el documento
+    window.addEventListener('load', loadTermsOfUse);
+</script>
+
+</body>
+</html>
+
