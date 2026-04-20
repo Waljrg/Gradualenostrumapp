@@ -219,19 +219,6 @@
     const googleProvider = new firebase.auth.GoogleAuthProvider();
     const facebookProvider = new firebase.auth.FacebookAuthProvider();
 
-    // 3. Manejo de Redirección (Solución para apps instaladas/PWAs)
-    auth.getRedirectResult().then((result) => {
-        if (result.user) {
-            console.log("Sesión iniciada tras redirección:", result.user.displayName);
-            window.location.href = 'index.html';
-        }
-    }).catch((error) => {
-        console.error("Error al volver de la redirección:", error);
-        if(error.code !== 'auth/web-storage-unsupported') {
-            alert("Error en autenticación: " + error.message);
-        }
-    });
-
     // Optimización de persistencia (Modo Offline)
     db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
     db.enablePersistence().catch(err => console.error("Error de persistencia:", err));
@@ -319,22 +306,27 @@
         } catch (err) { alert("Error al registrar: " + err.message); }
     }
 
-    // Función de Google actualizada al Plugin Nativo
+    // Función de Google actualizada a POPUP para PWAs
     async function loginGoogle() {
         try {
-            await auth.signInWithRedirect(googleProvider);
+            await auth.signInWithPopup(googleProvider);
+            // El redireccionamiento ocurre en onAuthStateChanged
         } catch (err) {
             console.error("Error Google:", err);
-            alert("Error Google: " + (err.message || "No se pudo iniciar sesión"));
+            if(err.code === 'auth/popup-blocked') {
+                alert("Por favor permite las ventanas emergentes.");
+            } else {
+                alert("Error Google: " + err.message);
+            }
         }
     }
 
+    // Función de Facebook actualizada a POPUP
     async function loginFacebook() {
         facebookProvider.addScope('email');
         facebookProvider.addScope('public_profile');
         try {
-            // Usamos Redirect para evitar fallos en apps descargadas/instaladas
-            await auth.signInWithRedirect(facebookProvider);
+            await auth.signInWithPopup(facebookProvider);
         } catch (err) { 
             console.error("Error Facebook:", err);
             alert("Error Facebook: " + err.message); 
@@ -384,4 +376,3 @@
 
 </body>
 </html>
-
