@@ -2222,7 +2222,11 @@ function renderTexto() {
     let transpoText = currentTranspose !== 0 ? (currentTranspose >= 0 ? "+" : "") + currentTranspose : "";
     let originalBadge = `<div class="badge-original-track">${c.tonalidad} ${transpoText}</div>`;
 
-    let tcDisplayHtml = c.textoComplementario ? `<div style="margin:12px 0 8px; padding:12px 16px; background:#fff5e6; border-radius:12px; border-left:5px solid #B8860B; font-size:0.9rem; line-height:1.5;"><strong style="color:#B8860B;"><i class="fas fa-comment-dots"></i> INSTRUCCIONES DEL DIRECTOR:</strong><br>${c.textoComplementario}</div>` : '';
+    let tcDisplayHtml = c.textoComplementario ? `<div style="margin:12px 0 8px;
+    padding:12px 16px; background:#fff5e6; border-radius:12px; border-left:5px
+    solid #B8860B; font-size:0.9rem; line-height:1.5;"><strong
+    style="color:#B8860B;"><i class="fas fa-comment-dots"></i>
+    Este canto sera tocado en:</strong><br>${c.textoComplementario}</div>` : '';
     let btnPlayIntegrado = c.audioUrl ? `<button class="btn-reproducir-integrado" id="btnAudioIntegrado" style="display:flex;" onclick="togglePlayerModal()"><i class="fas fa-play-circle"></i> ESCUCHAR AUDIO</button>` : "";
     
     // Función toggle modificada para buscar elementos con la clase .linea-clave-sol
