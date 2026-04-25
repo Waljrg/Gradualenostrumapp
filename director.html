@@ -2,95 +2,458 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Director | Graduale Nostrum</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Panel Director | Graduale Nostrum (MODO PROFESIONAL)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #2C211F; 
-            --accent: #B8860B;  
+            --accent: linear-gradient(135deg, #B8860B 0%, #8A6508 100%);
+            --gold-solid: #B8860B;
             --accent-light: #E8D4A2;
             --bg: #FDFBF7;
             --surface: #FFFFFF;
             --text: #3E322E;
-            --radius-lg: 30px;
-            --shadow: 0 10px 30px rgba(78, 52, 46, 0.08);
-            --border: 1px solid rgba(184, 134, 11, 0.2);
+            --radius-lg: 24px;
+            --shadow: 0 10px 30px rgba(78, 52, 46, 0.12);
+            --border: 1px solid rgba(184, 134, 11, 0.25);
         }
 
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
-        .header { background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%); color: white; padding: 2rem; text-align: center; border-radius: var(--radius-lg); margin-bottom: 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); }
-        .header h1 { font-family: 'Cinzel', serif; margin: 0; font-size: 1.5rem; }
-        .header img { width: 60px; height: auto; margin-bottom: 10px; }
-        .header .subtitle { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--accent-light); margin-top: 5px; display: block; }
-        .header .author { font-size: 0.8rem; opacity: 0.8; margin-top: 5px; display: block; letter-spacing: 1px; }
-        .card { background: var(--surface); padding: 25px; border-radius: var(--radius-lg); border: var(--border); box-shadow: var(--shadow); margin-bottom: 20px; display: none; }
-        .card h3 { font-family: 'Cinzel', serif; margin-top: 0; color: var(--accent); display: flex; align-items: center; gap: 10px; }
-        .input-styled { padding: 12px; border-radius: 12px; border: 1px solid rgba(184, 134, 11, 0.2); background: var(--bg); width: 100%; box-sizing: border-box; margin-bottom: 10px; }
-        .btn { border-radius: 14px; padding: 12px 20px; border: none; font-weight: 600; cursor: pointer; transition: 0.3s; text-transform: uppercase; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 15px;
+            overflow-x: hidden;
+        }
+
+        .header { 
+            background: linear-gradient(135deg, #1a1412 0%, #4E342E 100%); 
+            color: white; 
+            padding: 2.5rem 1.5rem; 
+            text-align: center; 
+            border-radius: var(--radius-lg); 
+            margin-bottom: 25px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            border: 1px solid rgba(184, 134, 11, 0.3);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .header h1 { font-family: 'Cinzel', serif; margin: 0; font-size: 1.6rem; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .header img { width: 70px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); margin-bottom: 15px; }
+        .header .subtitle { font-family: 'Cinzel', serif; font-size: 0.9rem; color: var(--accent-light); letter-spacing: 3px; margin-top: 8px; display: block; opacity: 0.9; }
+
+        .card { 
+            background: var(--surface); 
+            padding: 25px; 
+            border-radius: var(--radius-lg); 
+            border: var(--border); 
+            box-shadow: var(--shadow); 
+            margin-bottom: 20px;
+        }
+
+        .card h3 { 
+            font-family: 'Cinzel', serif; 
+            margin-top: 0; 
+            color: var(--gold-solid); 
+            border-bottom: 1px solid rgba(184, 134, 11, 0.1);
+            padding-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .btn { 
+            border-radius: 12px; 
+            padding: 14px 20px; 
+            border: none; 
+            font-weight: 700; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            font-size: 0.85rem; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 12px; 
+            width: 100%;
+            transition: 0.3s;
+        }
+
         .btn-gold { background: var(--accent); color: white; }
-        .btn-dark { background: var(--primary); color: white; }
-        .btn-danger { background: #b71c1c; color: white; }
-        .admin-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--accent-light); }
-        #loginView { display: block; text-align: center; padding: 50px 20px; }
+        .btn-dark { background: var(--primary); color: var(--accent-light); border: 1px solid var(--gold-solid); }
+
+        .input-styled { 
+            padding: 14px; 
+            border-radius: 12px; 
+            border: 1px solid rgba(184, 134, 11, 0.3); 
+            width: 100%; 
+            box-sizing: border-box; 
+            margin-bottom: 10px;
+        }
+        .input-styled:focus { border-color: var(--gold-solid); box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1); }
+
+        /* Lista de Administradores */
+        .admin-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 12px 5px; 
+            border-bottom: 1px solid #f0efeb; 
+        }
+
+        .admin-item span { font-size: 0.9rem; color: #555; }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-view { animation: fadeIn 0.5s ease forwards; }
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            min-width: 1300px;
+        }
+
+        th {
+            background: rgba(184, 134, 11, 0.05);
+            color: var(--gold-solid);
+            text-align: left;
+            padding: 12px 8px;
+            font-family: 'Cinzel', serif;
+            border-bottom: 2px solid var(--accent-light);
+        }
+
+        td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #f0efeb;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            background: #f0efeb;
+            color: var(--primary);
+        }
+
+        .badge-voice {
+            background: var(--primary);
+            color: var(--accent-light);
+            border: 1px solid var(--gold-solid);
+        }
+
+        .stat-box {
+            display: inline-block;
+            text-align: center;
+            padding: 2px 6px;
+            border-radius: 5px;
+            background: #FDFBF7;
+            border: 1px solid var(--accent-light);
+            margin-right: 4px;
+            min-width: 45px;
+        }
+
+        .stat-total {
+            background: var(--primary);
+            border: 1px solid var(--gold-solid);
+        }
+        .stat-total .stat-val { color: var(--accent-light); }
+
+        .stat-val { font-weight: bold; color: var(--gold-solid); display: block; font-size: 0.9rem; }
+        .stat-lab { font-size: 0.6rem; text-transform: uppercase; color: #888; }
+
+        .btn-delete {
+            background: #ffebee;
+            color: #c62828;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .check-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            border: 2px solid var(--gold-solid);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            margin: 0 auto;
+            background: white;
+            user-select: none;
+        }
+
+        .check-true { background: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
+        .check-false { background: #ffebee; color: #c62828; border-color: #c62828; }
+
+        .week-selector {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: var(--primary);
+            padding: 15px;
+            border-radius: 15px;
+            color: var(--accent-light);
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .day-card {
+            background: white;
+            border: 1px solid rgba(184, 134, 11, 0.2);
+            padding: 10px 5px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .day-card.active {
+            background: var(--accent);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 10px rgba(184, 134, 11, 0.3);
+        }
+
+        .day-card.ensayo-marcado {
+            border: 2px solid var(--gold-solid);
+            background: rgba(184, 134, 11, 0.1);
+        }
+
+        .day-name { font-size: 0.6rem; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .day-num { font-family: 'Cinzel', serif; font-weight: bold; font-size: 1rem; }
+
+        #formMiembros, #sectionMiembros, #sectionAsistencia, #sectionDiasEnsayo {
+            display: none;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: var(--accent-light);
+            padding: 12px 25px;
+            border-radius: 50px;
+            border: 1px solid var(--gold-solid);
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            display: none;
+            font-size: 0.8rem;
+            font-weight: bold;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp { from { bottom: -50px; opacity: 0; } to { bottom: 20px; opacity: 1; } }
+
+        .animate-view { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-
-    <div id="loginView">
-        <div class="header"><h1>ACCESO DIRECTOR</h1></div>
-        <button class="btn btn-gold" onclick="loginGoogle()"><i class="fab fa-google"></i> ENTRAR CON GOOGLE</button>
-        <p style="margin-top:20px; font-size: 0.8rem; color: #888;">Solo el Director General tiene acceso a este panel.</p>
+<div id="loginView" class="animate-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh;">
+        <div class="header" style="width: 80%;">
+            <h1 style="font-size: 1.2rem;">ACCESO RESTRINGIDO</h1>
+            <span class="subtitle">Solo Dirección</span>
+        </div>
+        <button class="btn btn-gold" onclick="loginGoogle()" style="max-width: 300px;">
+            <i class="fab fa-google"></i> ENTRAR CON GOOGLE
+        </button>
     </div>
-
-    <div id="mainPanel" style="display: none;">
-        <div class="header">
-            <img src="iconos/logo.png" alt="Logo">
-            <h1 id="welcomeTxt">DIRECCIÓN</h1>
-            <span class="subtitle">Graduale Nostrum</span>
-            <span class="author">Walter Reyes</span>
-            <button onclick="logout()" style="background:none; border:none; color:rgba(255,255,255,0.6); cursor:pointer; font-size:0.7rem; margin-top: 15px;">CERRAR SESIÓN</button>
+    <div id="mainPanel" class="animate-view">
+        <div class="header" onclick="toggleForm()">
+            <img src="https://cdn-icons-png.flaticon.com/512/2618/2618245.png" alt="Logo">
+            <h1>DIRECCIÓN</h1>
+            <span class="subtitle">MODO VISTA LIBRE</span>
         </div>
 
-        <div class="card" id="cardSincro" style="display: block;">
-            <h3><i class="fas fa-broadcast-tower"></i> Sincronización</h3>
-            <p style="font-size: 0.85rem;">Controla lo que ven los demás miembros en tiempo real.</p>
-            <button id="btnSync" class="btn btn-dark" onclick="activarSincronizacionTotal()">
-                SINCRONIZAR PANTALLAS AHORA
+        <div class="card">
+            <h3><i class="fas fa-broadcast-tower"></i> Panel de Control</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                <button class="btn btn-gold" onclick="toggleSection('sectionMiembros')">MIEMBROS</button>
+                <button class="btn btn-gold" onclick="toggleSection('sectionAsistencia')">ASISTENCIA</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn btn-dark" onclick="toggleSection('sectionDiasEnsayo')">DÍAS DE ENSAYO</button>
+                <button class="btn btn-dark" onclick="exportData()">RESPALDO LOCAL</button>
+            </div>
+        </div>
+        <div class="card">
+            <h3><i class="fas fa-user-shield"></i> Gestión de Equipo</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                <input type="email" id="newAdminEmail" class="input-styled" placeholder="Correo electrónico">
+                <button class="btn btn-gold" onclick="agregarAdmin()">AÑADIR ADMINISTRADOR</button>
+            </div>
+            <div id="adminList">
+                </div>
+        </div>
+    </div>
+        <div id="sectionDiasEnsayo" class="animate-view">
+            <div class="card">
+                <h3><i class="fas fa-calendar-check"></i> Programación de Ensayos</h3>
+                <div class="week-selector">
+                    <i class="fas fa-chevron-left" onclick="changeWeek(-7)" style="cursor:pointer"></i>
+                    <span id="monthYearEnsayo" style="font-family: 'Cinzel', serif;"></span>
+                    <i class="fas fa-chevron-right" onclick="changeWeek(7)" style="cursor:pointer"></i>
+                </div>
+                <div class="days-grid" id="weekGridEnsayo"></div>
+                <div id="infoEnsayo" style="background: rgba(184, 134, 11, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--gold-solid); text-align: center;">
+                    <span id="txtEstadoEnsayo" style="font-weight: bold; font-family: 'Cinzel', serif;">TOCA UN DÍA PARA MARCAR ENSAYO Y PASAR ASISTENCIA</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionAsistencia" class="animate-view">
+            <div class="card">
+                <h3><i class="fas fa-calendar-alt"></i> Registro por Día</h3>
+                <div class="week-selector">
+                    <i class="fas fa-chevron-left" onclick="changeWeek(-7)" style="cursor:pointer"></i>
+                    <span id="monthYearDisplay" style="font-family: 'Cinzel', serif;"></span>
+                    <i class="fas fa-chevron-right" onclick="changeWeek(7)" style="cursor:pointer"></i>
+                </div>
+                <div class="days-grid" id="weekGrid"></div>
+                <div class="table-container">
+                    <table style="min-width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Miembro</th>
+                                <th><center>Asistencia</center></th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="sectionMiembros" class="animate-view">
+            <div class="card">
+                <h3><i class="fas fa-users-cog"></i> Control de Miembros</h3>
+                <div id="formMiembros">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <input type="number" id="mOracionNum" class="input-styled" placeholder="Nº de Oración">
+                        <input type="text" id="mNombre" class="input-styled" placeholder="Nombre completo">
+                        <input type="number" id="mEdad" class="input-styled" placeholder="Edad">
+                        <input type="text" id="mRegistro" class="input-styled" placeholder="Rango Vocal">
+                        <input type="text" id="mClasific" class="input-styled" placeholder="Clasificación">
+                        <input type="text" id="mRolCoro" class="input-styled" placeholder="Rol de Voz">
+                        <input type="text" id="mRolAdm" class="input-styled" placeholder="Rol Adm.">
+                        <input type="tel" id="mTelefono" class="input-styled" placeholder="Teléfono">
+                        <input type="email" id="mCorreo" class="input-styled" placeholder="Correo">
+                        <input type="text" id="mDireccion" class="input-styled" placeholder="Dirección">
+                        <input type="date" id="mAdmision" class="input-styled">
+                    </div>
+                    <button class="btn btn-gold" onclick="agregarMiembro()">REGISTRAR MIEMBRO</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nº Oración</th>
+                                <th>Nombre y Estadísticas de Ensayos</th>
+                                <th>Edad</th>
+                                <th>Rol de Voz</th>
+                                <th>Rango Vocal</th>
+                                <th>Clasificación</th>
+                                <th>Teléfono</th>
+                                <th>Correo</th>
+                                <th>Dirección</th>
+                                <th>Rol Adm.</th>
+                                <th>Admisión</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="memberList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+<div id="modalCancelar" role="dialog" aria-modal="true" 
+     style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.75); z-index: 9999; align-items: center; justify-content: center;">
+    
+    <div style="background: white; border-radius: 20px; width: 90%; max-width: 400px; padding: 30px; 
+                text-align: center; box-shadow: var(--shadow); border: var(--border);">
+        <h3 style="color: #B8860B; font-family: 'Cinzel', serif; margin: 0 0 20px 0;">
+            ¿Cancelar Ensayo?
+        </h3>
+        <p style="color: #3E322E; margin-bottom: 30px; line-height: 1.5;">
+            ¿Estás seguro de que deseas cancelar el ensayo de este día?
+        </p>
+        
+        <div style="display: flex; gap: 15px;">
+            <button id="btnNoMantener" 
+                    style="flex: 1; padding: 16px; background: #f0efeb; color: #3E322E; border: none; 
+                           border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer;">
+                NO, Mantener
+            </button>
+            <button id="btnSiCancelar" 
+                    style="flex: 1; padding: 16px; background: linear-gradient(135deg, #B8860B, #8A6508); 
+                           color: white; border: none; border-radius: 12px; font-weight: 700; 
+                           font-size: 1rem; cursor: pointer;">
+                SÍ, Cancelar Ensayo
             </button>
         </div>
-
-        <div class="card" id="cardAdmins" style="display: block;">
-            <h3><i class="fas fa-user-shield"></i> Administradores</h3>
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <input type="email" id="newAdminEmail" class="input-styled" placeholder="Correo del nuevo admin" style="margin-bottom: 0;">
-                <button class="btn btn-gold" onclick="agregarAdmin()" style="width: auto;">AÑADIR</button>
-            </div>
-            <div id="adminList"></div>
+    </div>
+</div>
+<!-- MODAL JUSTIFICACIÓN -->
+<!-- MODAL JUSTIFICACIÓN MEJORADO -->
+<div id="modalJustificacion" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.75); z-index: 10000; align-items: center; justify-content: center;">
+    
+    <div style="background: white; border-radius: 20px; width: 90%; max-width: 420px; padding: 25px; 
+                box-shadow: var(--shadow); border: var(--border);">
+        
+        <h3 id="justModalTitle" style="color: #B8860B; font-family: 'Cinzel', serif; text-align: center; margin: 0 0 20px 0;">
+            Justificación de Ausencia
+        </h3>
+        
+        <textarea id="justificacionText" class="input-styled" 
+            style="width: 100%; height: 140px; resize: vertical; font-size: 1rem;" 
+            placeholder="Escribe el motivo de la ausencia..."></textarea>
+        
+        <div style="margin-top: 20px; display: flex; gap: 12px;">
+            <button id="btnCancelarJust" 
+                    style="flex: 1; padding: 14px; background: #f0efeb; color: #3E322E; border: none; 
+                           border-radius: 12px; font-weight: 600; cursor: pointer;">
+                CANCELAR
+            </button>
+            <button id="btnGuardarJust" 
+                    style="flex: 1; padding: 14px; background: linear-gradient(135deg, #B8860B, #8A6508); 
+                           color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer;">
+                GUARDAR
+            </button>
         </div>
     </div>
-
+</div>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script type="module">
-    import { App } from 'https://cdn.jsdelivr.net/npm/@capacitor/app@latest/dist/esm/index.js';
-
-    window.onload = function() {
-        App.addListener('backButton', () => {
-            const pagina = window.location.pathname.split("/").pop();
-
-            if (pagina === 'index.html' || pagina === '') {
-                App.exitApp();
-            } else {
-                window.location.assign('index.html');
-            }
-        });
-    };
-</script>
-
-
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCx_3nwwj3mKAEmtNVW0OaKamuaovhcM-w",
@@ -107,101 +470,659 @@
         const provider = new firebase.auth.GoogleAuthProvider();
 
         const DIRECTOR_EMAIL = "waljrg@gmail.com"; 
-        let isAdmin = false;
+        let unsubscribeAdmins = null;
 
-        auth.onAuthStateChanged(async (user) => {
+        // Observador de estado de autenticación
+        auth.onAuthStateChanged((user) => {
+            const loginView = document.getElementById('loginView');
+            const mainPanel = document.getElementById('mainPanel');
+
             if (user && user.email === DIRECTOR_EMAIL) {
-                isAdmin = true;
-                document.getElementById('loginView').style.display = 'none';
-                document.getElementById('mainPanel').style.display = 'block';
-                // welcomeTxt se mantiene como "DIRECCIÓN" definido en el HTML
-                cargarAdmins();
+                loginView.style.display = 'none';
+                mainPanel.style.display = 'block';
+                escucharAdmins();
             } else {
-                isAdmin = false;
                 if(user) {
-                    alert("Acceso denegado. Solo el Director Principal puede entrar.");
+                    alert("No tienes rango de Director.");
                     auth.signOut();
                 }
-                document.getElementById('loginView').style.display = 'block';
-                document.getElementById('mainPanel').style.display = 'none';
+                loginView.style.display = 'flex';
+                mainPanel.style.display = 'none';
+                if(unsubscribeAdmins) unsubscribeAdmins();
             }
         });
 
-        async function sincronizarSesion(cantoId, transpose) {
-            if(!isAdmin) return;
-            try {
-                await db.collection("sesion").doc("activa").set({
-                    cantoId: cantoId,
-                    transpose: transpose,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                alert("Señal de sincronización enviada a todos los dispositivos.");
-            } catch (error) {
-                console.error("Error al sincronizar:", error);
-                alert("Error de permisos en Firebase. Revisa las reglas de Firestore.");
-            }
-        }
-
+        // Funciones de Negocio
         async function activarSincronizacionTotal() {
             const btn = document.getElementById('btnSync');
-            btn.disabled = true;
-            btn.innerText = "ENVIANDO...";
+            const originalText = btn.innerHTML;
             
-            await sincronizarSesion("Sincronizado_Por_Director", 0);
-            
-            btn.disabled = false;
-            btn.innerText = "SINCRONIZAR PANTALLAS AHORA";
-        }
-
-        async function agregarAdmin() {
-            const email = document.getElementById('newAdminEmail').value.trim().toLowerCase();
-            if(!email) return;
             try {
-                await db.collection("usuarios").doc(email).set({ rol: "admin", fecha: Date.now() });
-                document.getElementById('newAdminEmail').value = "";
-            } catch (error) {
-                alert("Error al añadir admin: " + error.message);
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ENVIANDO...';
+                
+                await db.collection("sesion").doc("activa").set({
+                    cantoId: "SYNC_FORCE_" + Date.now(),
+                    transpose: 0,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    command: "REFRESH_ALL"
+                });
+                
+                alert("Sincronización enviada con éxito.");
+            } catch (e) {
+                alert("Error de conexión: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
             }
         }
 
-        async function eliminarAdmin(email) {
-            if(confirm(`¿Quitar permisos a ${email}?`)) {
-                try {
-                    await db.collection("usuarios").doc(email).delete();
-                } catch (error) {
-                    alert("Error al eliminar admin: " + error.message);
-                }
-            }
-        }
-
-        function cargarAdmins() {
-            db.collection("usuarios").onSnapshot(snap => {
+        function escucharAdmins() {
+            unsubscribeAdmins = db.collection("usuarios").onSnapshot(snap => {
                 const list = document.getElementById('adminList');
                 list.innerHTML = "";
                 snap.forEach(doc => {
-                    list.innerHTML += `
-                        <div class="admin-item">
-                            <span>${doc.id}</span>
-                            <button class="btn btn-danger" onclick="eliminarAdmin('${doc.id}')" style="width: auto; padding: 5px 10px;">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>`;
+                    const div = document.createElement('div');
+                    div.className = 'admin-item';
+                    div.innerHTML = `
+                        <span><i class="fas fa-user-check" style="color: #2e7d32; margin-right:8px;"></i> ${doc.id}</span>
+                        <button class="btn btn-danger" onclick="eliminarAdmin('${doc.id}')" style="width: auto; padding: 8px 12px; background: #ffebee; color: #c62828; border-radius: 8px;">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>`;
+                    list.appendChild(div);
                 });
-            }, error => {
-                console.error("Error al cargar admins:", error);
             });
         }
 
-        async function loginGoogle() { 
+        async function agregarAdmin() {
+            const input = document.getElementById('newAdminEmail');
+            const email = input.value.trim().toLowerCase();
+            if(!email || !email.includes('@')) return alert("Introduce un email válido");
+
             try {
-                await auth.signInWithPopup(provider);
-            } catch (error) {
-                alert("Error en login: " + error.message);
+                await db.collection("usuarios").doc(email).set({ 
+                    rol: "admin", 
+                    creadoPor: DIRECTOR_EMAIL,
+                    fecha: firebase.firestore.FieldValue.serverTimestamp() 
+                });
+                input.value = "";
+            } catch (e) { alert("Error: " + e.message); }
+        }
+
+        async function eliminarAdmin(email) {
+            if(confirm(`¿Revocar acceso a ${email}?`)) {
+                await db.collection("usuarios").doc(email).delete();
             }
         }
+
+        function loginGoogle() { auth.signInWithPopup(provider).catch(e => alert(e.message)); }
+        function logout() { auth.signOut(); }
+        // --- CONFIGURACIÓN DE ESTADO ---
+        let currentWeekStart = new Date();
+        const d = currentWeekStart.getDay(), diff = currentWeekStart.getDate() - d + (d == 0 ? -6:1);
+        currentWeekStart.setDate(diff);
+
+        let selectedDateId = new Date().toDateString();
         
-        async function logout() { return await auth.signOut(); }
+        // Carga de Datos persistentes
+// ==================== CARGA DE DATOS PERSISTENTES ====================
+const DIRECTOR_ID = 'director-walter';
+
+let members = JSON.parse(localStorage.getItem('gn_members')) || [];
+
+// Asegurar que el Director SIEMPRE exista (imborrable)
+let directorExiste = members.some(m => m.id === DIRECTOR_ID);
+
+if (!directorExiste) {
+    members.unshift({   // unshift = poner al principio
+        id: DIRECTOR_ID,
+        oracion: '03',
+        nombre: 'Walter Reyes',
+        edad: '26',
+        rolVoz: 'Pianista',
+        rango: 'F#2-G4',
+        clasif: 'Barítono',
+        tel: '57641820',
+        correo: 'Waljrg@gmail.com',
+        dir: 'Mercado Municipal 12½ C.S.',
+        rolAdm: 'Director',
+        admision: '2023-06-13'
+    });
+}
+
+// === Proteger al Director de eliminación ===
+const originalEliminarMiembro = eliminarMiembro || function(){};
+window.eliminarMiembro = function(id) {
+    if (id === DIRECTOR_ID) {
+        showToast("❌ El Director no puede ser eliminado");
+        return;
+    }
+    // Llamar a la función original solo si no es el director
+    if (typeof originalEliminarMiembro === 'function') {
+        originalEliminarMiembro(id);
+    }
+};
+        let attendanceData = JSON.parse(localStorage.getItem('gn_attendance')) || {};
+        let diasEnsayoProgramados = JSON.parse(localStorage.getItem('gn_ensayos')) || {};
+        let justificaciones = JSON.parse(localStorage.getItem('gn_justificaciones')) || {};
+
+        window.onload = function() {
+            renderMembersTable();
+            renderWeeks();
+            loadAttendanceForDate(selectedDateId);
+            showToast("Sistema Graduale Nostrum Listo");
+        };
+
+        // --- LÓGICA DE PERSISTENCIA ---
+        function saveData() {
+            localStorage.setItem('gn_members', JSON.stringify(members));
+            localStorage.setItem('gn_attendance', JSON.stringify(attendanceData));
+            localStorage.setItem('gn_ensayos', JSON.stringify(diasEnsayoProgramados));
+            localStorage.setItem('gn_justificaciones', JSON.stringify(justificaciones));
+        }
+
+        // --- GESTIÓN DE MIEMBROS ---
+        function renderMembersTable() {
+            const list = document.getElementById('memberList');
+            list.innerHTML = '';
+            members.forEach(m => {
+                const tr = document.createElement('tr');
+                tr.setAttribute('data-id', m.id);
+                tr.innerHTML = `
+                    <td><center><b>${m.oracion}</b></center></td>
+                    <td>
+                        <div class="member-name" style="font-weight: 700; margin-bottom: 8px;">${m.nombre}</div>
+                        <div class="stats-container">
+                            <div class="stat-box"><span class="stat-val" id="stat-w-${m.id}">0</span><span class="stat-lab">Sem</span></div>
+                            <div class="stat-box"><span class="stat-val" id="stat-m-${m.id}">0</span><span class="stat-lab">Mes</span></div>
+                            <div class="stat-box"><span class="stat-val" id="stat-y-${m.id}">0</span><span class="stat-lab">Año</span></div>
+                            <div class="stat-box stat-total"><span class="stat-val" id="stat-t-${m.id}">0</span><span class="stat-lab">Total</span></div>
+                        </div>
+                    </td>
+                    <td>${m.edad}</td>
+                    <td><span class="badge badge-voice">${m.rolVoz}</span></td>
+                    <td>${m.rango}</td>
+                    <td>${m.clasif}</td>
+                    <td><small class="contact-phone" data-phone="${m.tel}" onmousedown="startPhoneLongPress(event, this)" ontouchstart="startPhoneLongPress(event, this)" style="cursor: pointer;">${m.tel}</small></td>
+                    <td><small class="contact-email" data-email="${m.correo}" onmousedown="startEmailLongPress(event, this)" ontouchstart="startEmailLongPress(event, this)" style="cursor: pointer;">${m.correo}</small></td>
+                    <td>${m.dir}</td>
+                    <td><span class="badge">${m.rolAdm}</span></td>
+                    <td>${m.admision}</td>
+<td>
+    ${m.id === DIRECTOR_ID 
+        ? '<span style="color:#B8860B; font-weight:bold;">★ DIRECTOR</span>' 
+        : `<button class="btn-delete" onclick="eliminarMiembro('${m.id}')"><i class="fas fa-times"></i></button>`
+    }
+</td>
+                `;
+                list.appendChild(tr);
+                actualizarContadoresMiembro(m.id);
+            });
+        }
+
+function agregarMiembro() {
+    const nuevo = {
+        id: 'm-' + Date.now(),
+        oracion: document.getElementById('mOracionNum').value || '--',
+        nombre: document.getElementById('mNombre').value.trim(),
+        edad: document.getElementById('mEdad').value || '--',
+        rolVoz: document.getElementById('mRolCoro').value || 'Corista',
+        rango: document.getElementById('mRegistro').value || '--',
+        clasif: document.getElementById('mClasific').value || '--',
+        tel: document.getElementById('mTelefono').value || '--',
+        correo: document.getElementById('mCorreo').value || '--',
+        dir: document.getElementById('mDireccion').value || '--',
+        rolAdm: document.getElementById('mRolAdm').value || 'Miembro',
+        admision: document.getElementById('mAdmision').value || new Date().toISOString().split('T')[0]
+    };
+
+    if (!nuevo.nombre) {
+        showToast("¡Error! Nombre requerido");
+        return;
+    }
+
+    members.push(nuevo);
+    saveData();
+    renderMembersTable();
+    
+    // Limpiar formulario
+    document.querySelectorAll('#formMiembros input').forEach(i => i.value = "");
+    
+    toggleForm();           // cierra el formulario
+    showToast("Miembro registrado exitosamente");
+}
+
+        function eliminarMiembro(id) {
+            if(confirm("¿Seguro que desea eliminar a este miembro? Se perderán sus estadísticas.")) {
+                members = members.filter(m => m.id !== id);
+                saveData();
+                renderMembersTable();
+                showToast("Miembro eliminado");
+            }
+        }
+
+        // --- CALENDARIOS Y ASISTENCIA ---
+        function renderWeeks() {
+            renderWeekAsistencia();
+            renderWeekSoloEnsayo();
+        }
+
+        function renderWeekAsistencia() {
+            const grid = document.getElementById('weekGrid');
+            grid.innerHTML = '';
+            let tempDate = new Date(currentWeekStart);
+            document.getElementById('monthYearDisplay').innerText = tempDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase();
+
+            for (let i = 0; i < 7; i++) {
+                const dateId = tempDate.toDateString();
+                const dayCard = document.createElement('div');
+                dayCard.className = 'day-card' + (dateId === selectedDateId ? ' active' : '') + (diasEnsayoProgramados[dateId] ? ' ensayo-marcado' : '');
+                dayCard.innerHTML = `<span class="day-name">${['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'][i]}</span><span class="day-num">${tempDate.getDate()}</span>`;
+                dayCard.onclick = () => { selectedDateId = dateId; renderWeeks(); loadAttendanceForDate(dateId); };
+                grid.appendChild(dayCard);
+                tempDate.setDate(tempDate.getDate() + 1);
+            }
+        }
+function renderWeekSoloEnsayo() {
+    const grid = document.getElementById('weekGridEnsayo');
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    let tempDate = new Date(currentWeekStart);
+    
+    document.getElementById('monthYearEnsayo').innerText = tempDate
+        .toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
+        .toUpperCase();
+
+    const diasNombre = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+    for (let i = 0; i < 7; i++) {
+        const dateId = tempDate.toDateString();
+        const esEnsayo = !!diasEnsayoProgramados[dateId];
+        const numeroDia = tempDate.getDate();
+
+        const dayCard = document.createElement('div');
+        dayCard.className = `day-card ${esEnsayo ? 'ensayo-marcado' : ''}`;
+        
+        dayCard.innerHTML = `
+            <span class="day-name">${diasNombre[i]}</span>
+            <span class="day-num">${numeroDia}</span>
+        `;
+
+        // ==================== LÓGICA MEJORADA ====================
+        if (esEnsayo) {
+            // Día de ensayo: Click corto → Ver asistencia | Long press → Modal cancelar
+
+            let pressTimer = null;
+
+            const startPress = (e) => {
+                e.preventDefault(); // Importante en móviles
+                pressTimer = setTimeout(() => {
+                    abrirModalCancelar(dateId);
+                }, 650);
+            };
+
+            const cancelPress = () => {
+                if (pressTimer) {
+                    clearTimeout(pressTimer);
+                    pressTimer = null;
+                }
+            };
+
+            // Eventos para mouse (computadora)
+            dayCard.addEventListener('mousedown', startPress);
+            dayCard.addEventListener('mouseup', cancelPress);
+            dayCard.addEventListener('mouseleave', cancelPress);
+
+            // Eventos para touch (celular) - más confiables
+            dayCard.addEventListener('touchstart', startPress, { passive: false });
+            dayCard.addEventListener('touchend', cancelPress);
+            dayCard.addEventListener('touchcancel', cancelPress);
+
+            // Click corto → Abrir asistencia
+            dayCard.addEventListener('click', (e) => {
+                // Evitar que el long press también dispare el click
+                if (pressTimer) {
+                    clearTimeout(pressTimer);
+                    pressTimer = null;
+                }
+                selectedDateId = dateId;
+                renderWeeks();
+                loadAttendanceForDate(dateId);
+                toggleSection('sectionAsistencia');
+            });
+
+        } else {
+            // Día normal: solo click para marcar como ensayo
+            dayCard.addEventListener('click', () => {
+                marcarDiaEnsayo(dateId);
+            });
+        }
+
+        grid.appendChild(dayCard);
+        tempDate.setDate(tempDate.getDate() + 1);
+    }
+}
+/** * Funciones de apoyo para mantener el render limpio 
+ */
+function marcarDiaEnsayo(dateId) {
+    diasEnsayoProgramados[dateId] = true;
+    showToast("Día marcado como ensayo");
+    selectedDateId = dateId;
+    saveData();
+    renderWeeks(); // Refresca la vista general
+    loadAttendanceForDate(dateId);
+    toggleSection('sectionAsistencia');
+}
+
+function abrirModalCancelar() {
+    const modal = document.getElementById('modalCancelar');
+    if (modal) modal.style.display = 'flex';
+}
+
+
+        function changeWeek(days) {
+            currentWeekStart.setDate(currentWeekStart.getDate() + days);
+            renderWeeks();
+        }
+
+        function loadAttendanceForDate(dateId) {
+            const attendanceBody = document.getElementById('attendanceList');
+            attendanceBody.innerHTML = '';
+            
+            members.forEach(m => {
+                const state = (attendanceData[dateId] && attendanceData[dateId][m.id]) ? attendanceData[dateId][m.id] : '';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-weight: 600;">${m.nombre}</td>
+                    <td><div class="check-box ${getClassByState(state)}" 
+                             onmousedown="startLongPress(event, '${m.id}', '${dateId}')" 
+                             onmouseup="endLongPress()" 
+                             ontouchstart="startLongPress(event, '${m.id}', '${dateId}')" 
+                             ontouchend="endLongPress()" 
+                             onclick="toggleAttendance(this, '${m.id}')">${getSymbolByState(state)}</div></td>
+                    <td><div onclick="verJustificacion('${m.id}', '${dateId}')">${getLabelByState(state, m.id, dateId)}</div></td>
+                `;
+                attendanceBody.appendChild(row);
+            });
+        }
+
+        function toggleAttendance(el, mId) {
+            let currentState = (attendanceData[selectedDateId] && attendanceData[selectedDateId][mId]) ? attendanceData[selectedDateId][mId] : '';
+            let newState = currentState === '' ? 'present' : (currentState === 'present' ? 'absent' : '');
+            
+            if(!attendanceData[selectedDateId]) attendanceData[selectedDateId] = {};
+            attendanceData[selectedDateId][mId] = newState;
+            
+            if(newState !== 'absent' && justificaciones[selectedDateId]) {
+                delete justificaciones[selectedDateId][mId];
+            }
+
+            saveData();
+            loadAttendanceForDate(selectedDateId);
+            actualizarContadoresMiembro(mId);
+        }
+
+        // --- CONTADORES ---
+        function actualizarContadoresMiembro(mId) {
+            let sem = 0, mes = 0, ano = 0, tot = 0;
+            const hoy = new Date();
+            const inicioSemana = new Date(hoy);
+            inicioSemana.setDate(hoy.getDate() - hoy.getDay() + (hoy.getDay() == 0 ? -6:1));
+            inicioSemana.setHours(0,0,0,0);
+
+            Object.keys(attendanceData).forEach(dateStr => {
+                if(attendanceData[dateStr][mId] === 'present') {
+                    tot++;
+                    const d = new Date(dateStr);
+                    if(d >= inicioSemana) sem++;
+                    if(d.getMonth() === hoy.getMonth() && d.getFullYear() === hoy.getFullYear()) mes++;
+                    if(d.getFullYear() === hoy.getFullYear()) ano++;
+                }
+            });
+
+            const ids = [`stat-w-${mId}`, `stat-m-${mId}`, `stat-y-${mId}`, `stat-t-${mId}`];
+            const vals = [sem, mes, ano, tot];
+            ids.forEach((id, i) => {
+                const el = document.getElementById(id);
+                if(el) el.innerText = vals[i];
+            });
+        }
+
+        // --- UTILIDADES ---
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 2500);
+        }
+
+        function toggleSection(id) {
+            ['sectionMiembros', 'sectionAsistencia', 'sectionDiasEnsayo'].forEach(s => {
+                document.getElementById(s).style.display = 'none';
+            });
+            document.getElementById(id).style.display = 'block';
+        }
+
+        function toggleForm() {
+            const form = document.getElementById('formMiembros');
+            form.style.display = (form.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function getClassByState(s) { return s === 'present' ? 'check-true' : (s === 'absent' ? 'check-false' : ''); }
+        function getSymbolByState(s) { return s === 'present' ? '✓' : (s === 'absent' ? '✕' : ''); }
+        function getLabelByState(s, mId, dateId) {
+            if(s === 'present') return '<span class="badge" style="background:#e8f5e9; color:#2e7d32">ENSAYADO</span>';
+            if(s === 'absent') {
+                const tieneJ = (justificaciones[dateId] && justificaciones[dateId][mId]);
+                return `<span class="badge" style="background:#ffebee; color:#c62828; cursor:${tieneJ?'pointer':'default'}">AUSENTE ${tieneJ?'ⓘ':''}</span>`;
+            }
+            return '<span class="badge">Sin registro</span>';
+        }
+
+        // --- LONG PRESS LOGIC ---
+        let pressTimer;
+// Long press para justificar (en la tabla de asistencia)
+// Long press en la casilla de asistencia (✓ / ✕) → Poner Ausente + Justificar
+function startLongPress(e, mId, dateId) {
+    pressTimer = window.setTimeout(function() {
+        if (attendanceData[dateId] && attendanceData[dateId][mId] === 'absent') {
+            abrirModalJustificacion(mId, dateId, true);   // Modo edición
+        }
+    }, 800);
+}
+
+        function endLongPress() { clearTimeout(pressTimer); }
+function verJustificacion(mId, dateId) {
+    if (justificaciones[dateId] && justificaciones[dateId][mId]) {
+        // Aquí usaremos long press para editar, click corto para ver
+        // Pero como ya estamos en un click, abrimos en modo vista
+        abrirModalJustificacion(mId, dateId, false);   // Modo solo lectura
+    }
+}
+
+        function startPhoneLongPress(e, element) {
+            const phone = element.getAttribute('data-phone');
+            if (!phone || phone === '--') return;
+            pressTimer = setTimeout(() => {
+                let cleanPhone = phone.replace(/\D/g, '');
+                if (!cleanPhone.startsWith('505')) cleanPhone = '505' + cleanPhone;
+                window.open(`https://wa.me/${cleanPhone}`, '_blank');
+            }, 600);
+        }
+
+        function startEmailLongPress(e, element) {
+            const email = element.getAttribute('data-email');
+            if (!email || email === '--') return;
+            pressTimer = setTimeout(() => {
+                window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}`, '_blank');
+            }, 600);
+        }
+
+        function exportData() {
+            const data = { members, attendanceData, diasEnsayoProgramados, justificaciones };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_graduale_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            showToast("Respaldo descargado");
+        }
+// === FUNCIONES DEL MODAL PARA CANCELAR ENSAYO ===
+// === FUNCIONES DEL MODAL PARA CANCELAR ENSAYO ===
+// ====================== MODAL CANCELAR ENSAYO ======================
+let fechaAEliminar = null;
+
+function abrirModalCancelar(dateId) {
+    fechaAEliminar = dateId;
+    const modal = document.getElementById('modalCancelar');
+    if (modal) modal.style.display = 'flex';
+}
+
+function cerrarModalCancelar() {
+    const modal = document.getElementById('modalCancelar');
+    if (modal) modal.style.display = 'none';
+    fechaAEliminar = null;
+}
+
+// Función principal para cancelar
+function confirmarCancelacionEnsayo() {
+    if (!fechaAEliminar) {
+        cerrarModalCancelar();
+        return;
+    }
+
+    // Eliminar el día de ensayo
+    delete diasEnsayoProgramados[fechaAEliminar];
+
+    // Opcional: limpiar también la asistencia de ese día
+    if (attendanceData[fechaAEliminar]) {
+        delete attendanceData[fechaAEliminar];
+    }
+
+    saveData();
+
+    showToast("✅ Ensayo cancelado correctamente");
+
+    // Actualizar todo
+    renderWeeks();
+    if (typeof renderWeekSoloEnsayo === 'function') renderWeekSoloEnsayo();
+
+    // Si estábamos viendo esa fecha, recargar la tabla
+    if (selectedDateId === fechaAEliminar) {
+        loadAttendanceForDate(selectedDateId);
+    }
+
+    cerrarModalCancelar();
+}
+
+// ==================== Inicializar listeners del modal ====================
+function initModalListeners() {
+    const modal = document.getElementById('modalCancelar');
+    const btnNo = document.getElementById('btnNoMantener');
+    const btnSi = document.getElementById('btnSiCancelar');
+
+    if (btnNo) btnNo.addEventListener('click', cerrarModalCancelar);
+    if (btnSi) btnSi.addEventListener('click', confirmarCancelacionEnsayo);
+
+    // Cerrar al hacer clic fuera del contenido
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                cerrarModalCancelar();
+            }
+        });
+    }
+}
+// ====================== MODAL JUSTIFICACIONES ======================
+// ====================== MODAL JUSTIFICACIONES ======================
+let currentJustMemberId = null;
+let currentJustDateId = null;
+let isEditMode = false;
+
+function abrirModalJustificacion(mId, dateId, modoEdicion = false) {
+    currentJustMemberId = mId;
+    currentJustDateId = dateId;
+    isEditMode = modoEdicion;
+
+    const modal = document.getElementById('modalJustificacion');
+    const textarea = document.getElementById('justificacionText');
+    const btnGuardar = document.getElementById('btnGuardarJust');
+    const title = document.getElementById('justModalTitle');
+
+    const textoActual = (justificaciones[dateId] && justificaciones[dateId][mId]) || "";
+
+    textarea.value = textoActual;
+    textarea.readOnly = !modoEdicion;                    // ← Importante
+    textarea.style.backgroundColor = modoEdicion ? "#ffffff" : "#f9f6eb";
+
+    if (modoEdicion) {
+        title.textContent = "Editar Justificación";
+        btnGuardar.style.display = "block";
+        textarea.placeholder = "Escribe el motivo de la ausencia...";
+        textarea.focus();
+    } else {
+        title.textContent = "Justificación de Ausencia";
+        btnGuardar.style.display = "none";
+        textarea.placeholder = "";
+    }
+
+    modal.style.display = 'flex';
+}
+
+function cerrarModalJustificacion() {
+    const modal = document.getElementById('modalJustificacion');
+    if (modal) modal.style.display = 'none';
+    currentJustMemberId = null;
+    currentJustDateId = null;
+    isEditMode = false;
+}
+
+function guardarJustificacion() {
+    if (!currentJustMemberId || !currentJustDateId || !isEditMode) return;
+
+    const texto = document.getElementById('justificacionText').value.trim();
+
+    if (!justificaciones[currentJustDateId]) {
+        justificaciones[currentJustDateId] = {};
+    }
+
+    if (texto === "") {
+        delete justificaciones[currentJustDateId][currentJustMemberId];
+    } else {
+        justificaciones[currentJustDateId][currentJustMemberId] = texto;
+    }
+
+    saveData();
+    cerrarModalJustificacion();
+    
+    loadAttendanceForDate(currentJustDateId);
+    showToast(texto === "" ? "Justificación eliminada" : "✅ Justificación guardada");
+}
+
+// Inicializar listeners del modal
+function initJustificacionModal() {
+    const modal = document.getElementById('modalJustificacion');
+    const btnCancelar = document.getElementById('btnCancelarJust');
+    const btnGuardar = document.getElementById('btnGuardarJust');
+
+    if (btnCancelar) btnCancelar.addEventListener('click', cerrarModalJustificacion);
+    if (btnGuardar) btnGuardar.addEventListener('click', guardarJustificacion);
+
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) cerrarModalJustificacion();
+        });
+    }
+}
+// Llamar a la inicialización cuando cargue la página
+window.addEventListener('load', function() {
+    initModalListeners();
+initJustificacionModal();
+    // ... el resto de tu window.onload actual ...
+});
+
     </script>
 </body>
 </html>
-
