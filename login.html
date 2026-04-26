@@ -273,8 +273,7 @@
 
     auth.onAuthStateChanged(async (user) => {
         if (user) {
-            if (user.email && !user.emailVerified) return;
-
+            // Se elimina la restricción de user.emailVerified
             if(user.email === DIRECTOR_EMAIL) {
                 isAdmin = true;
             } else {
@@ -298,15 +297,8 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
             
-            const userCredential = await auth.signInWithEmailAndPassword(email, pass);
-            if (!userCredential.user.emailVerified) {
-                alert("Verifica tu correo electrónico.");
-                await auth.signOut();
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
-            } else {
-                window.location.href = 'index.html';
-            }
+            await auth.signInWithEmailAndPassword(email, pass);
+            // El onAuthStateChanged se encargará de la redirección inmediata
         } catch (err) { 
             alert("Error: " + err.message); 
             btn.disabled = false;
@@ -333,12 +325,9 @@
         try {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
-            const res = await auth.createUserWithEmailAndPassword(email, pass);
-            await res.user.sendEmailVerification();
-            alert("Código de confirmación enviado a tu correo.");
-            await auth.signOut();
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-user-plus"></i> Registrarse';
+            await auth.createUserWithEmailAndPassword(email, pass);
+            // Entra directamente después de registrarse
+            window.location.href = 'index.html';
         } catch (err) { 
             alert("Error al registrar: " + err.message); 
             btn.disabled = false;
@@ -407,4 +396,3 @@
 
 </body>
 </html>
-
