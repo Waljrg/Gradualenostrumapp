@@ -52,76 +52,6 @@
             will-change: transform;
         }
 
-        /* --- PANTALLA DE INTRO LENTA Y FLUIDA --- */
-        #intro-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #261C1B; 
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 2s cubic-bezier(0.4, 0, 0.2, 1), visibility 2s;
-            perspective: 1200px;
-        }
-
-        .intro-content {
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            will-change: transform, opacity;
-        }
-
-        #intro-logo {
-            width: 150px;
-            opacity: 0;
-            transform: translateZ(-1200px) rotateY(1080deg);
-            animation: zoomInSpin 5.0s cubic-bezier(0.2, 1, 0.3, 1) forwards, 
-                       floatUp 1.5s cubic-bezier(0.45, 0, 0.55, 1) 5.0s forwards;
-        }
-
-        #intro-title-container {
-            width: 0;
-            overflow: hidden;
-            margin-top: 30px;
-            opacity: 0;
-            animation: fadeInTitle 1s cubic-bezier(0.4, 0, 0.2, 1) 5s forwards;
-        }
-
-        #intro-title-img { width: 280px; max-width: 80vw; }
-
-        #intro-pax {
-            font-family: 'Cinzel', serif;
-            color: var(--accent);
-            letter-spacing: 6px;
-            margin-top: 20px;
-            min-height: 1.5em;
-            font-size: 1.1rem;
-            text-shadow: 0 4px 8px rgba(0,0,0,0.6);
-        }
-
-        @keyframes zoomInSpin {
-            to { opacity: 1; transform: translateZ(0) rotateY(0deg); }
-        }
-
-        @keyframes floatUp {
-            to { transform: translateY(-40px); }
-        }
-
-        @keyframes fadeInTitle { 
-            from { opacity: 0; width: 0; }
-            to { opacity: 1; width: 100%; }
-        }
-
-        .shrink-all {
-            animation: finalShrink 2s cubic-bezier(0.7, 0, 0.3, 1) forwards;
-        }
-
-        @keyframes finalShrink {
-            to { transform: scale(0.3) translateY(-180%); opacity: 0; filter: blur(15px); }
-        }
-
         header {
             background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%);
             color: white;
@@ -132,16 +62,7 @@
             box-shadow: var(--shadow);
             position: relative;
             z-index: 10;
-            opacity: 0;
-            animation: fadeIn 1.5s ease 8.5s forwards;
         }
-
-        .no-animation {
-            animation: none !important;
-            opacity: 1 !important;
-        }
-
-        @keyframes fadeIn { to { opacity: 1; } }
 
         .header-logo {
             width: 80px; 
@@ -228,8 +149,6 @@
             flex: 1;
             position: relative;
             z-index: 20;
-            opacity: 0;
-            animation: fadeIn 1.5s ease 8.8s forwards;
         }
 
         .grid-apps {
@@ -351,8 +270,6 @@
             background: rgba(253, 251, 247, 0.92); 
             border-top: 1px solid rgba(184, 134, 11, 0.2);
             margin-top: 20px;
-            opacity: 0;
-            animation: fadeIn 1.5s ease 9.2s forwards;
         }
 
         .btn-vatican {
@@ -370,16 +287,6 @@
 </head>
 <body>
 
-<div id="intro-overlay">
-    <div class="intro-content" id="intro-box">
-        <img src="Iconos/logo.png" id="intro-logo" alt="Logo">
-        <div id="intro-title-container">
-            <img src="Iconos/gn.png" id="intro-title-img" alt="Graduale Nostrum">
-        </div>
-        <div id="intro-pax"></div>
-    </div>
-</div>
-
 <header id="main-header">
     <div class="welcome-text">
         <img src="Iconos/logo.png" alt="Logo" class="header-logo">
@@ -392,40 +299,40 @@
 
 <div class="hub-container" id="main-hub">
     <div class="grid-apps">
-        <a onclick="accesoProtegido('cantoral.html', this)" class="app-card">
+        <a href="cantoral.html" class="app-card">
             <i class="fas fa-book-open"></i>
             <span>Cantoral</span>
         </a>
-        <a onclick="accesoProtegido('oraciones.html', this)" class="app-card">
+        <a href="oraciones.html" class="app-card">
             <i class="fas fa-hands-praying"></i>
             <span>Oraciones</span>
         </a>
-        <a onclick="accesoProtegido('agenda.html', this)" class="app-card">
+        <a href="agenda.html" class="app-card">
             <i class="fas fa-calendar-alt"></i>
             <span>Agenda</span>
         </a>
-        <a onclick="accesoProtegido('entrenamiento.html', this)" class="app-card">
+        <a href="entrenamiento.html" class="app-card">
             <i class="fas fa-dumbbell"></i>
             <span>Entrenamiento</span>
         </a>
-        <a onclick="accesoProtegido('piano.html', this)" class="app-card">
+        <a href="piano.html" class="app-card">
             <i class="fas fa-music"></i>
             <span>Piano</span>
         </a>
-        <a onclick="accesoProtegido('afinador.html', this); return false;" class="app-card">
+        <a href="afinador.html" class="app-card">
             <i class="fas fa-microphone"></i>
             <span>Afinador</span>
         </a>
 
-        <a onclick="accesoProtegido('Formación/Formación.html', this)" class="app-card">
+        <a href="Formación/Formación.html" class="app-card">
             <i class="fas fa-graduation-cap"></i>
             <span>Formación</span>
         </a>
-        <a onclick="accesoProtegido('social.html', this)" class="app-card">
+        <a href="social.html" class="app-card">
             <i class="fas fa-users"></i>
             <span>Perfiles</span>
         </a>
-        <a onclick="accesoProtegido('calendario.html', this)" class="app-card">
+        <a href="calendario.html" class="app-card">
             <i class="fas fa-calendar-check"></i>
             <span>Calendario</span>
         </a>
@@ -463,47 +370,6 @@
         });
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-        const introOverlay = document.getElementById('intro-overlay');
-        const header = document.getElementById('main-header');
-        const hub = document.getElementById('main-hub');
-        const footer = document.getElementById('main-footer');
-        const introPax = document.getElementById('intro-pax');
-        const text = "Pax et Bonum";
-
-        if (sessionStorage.getItem('introMostrada')) {
-            introOverlay.style.display = 'none';
-            header.classList.add('no-animation');
-            hub.classList.add('no-animation');
-            footer.classList.add('no-animation');
-        } else {
-            setTimeout(() => {
-                let i = 0;
-                const timer = setInterval(() => {
-                    if (i < text.length) {
-                        introPax.innerHTML += text.charAt(i);
-                        i++;
-                    } else {
-                        clearInterval(timer);
-                        setTimeout(finalizarIntro, 1200);
-                    }
-                }, 180); 
-            }, 5500); 
-        }
-    });
-
-    function finalizarIntro() {
-        const introBox = document.getElementById('intro-box');
-        const overlay = document.getElementById('intro-overlay');
-        introBox.classList.add('shrink-all');
-        sessionStorage.setItem('introMostrada', 'true');
-
-        setTimeout(() => {
-            overlay.style.opacity = '0';
-            setTimeout(() => { overlay.style.visibility = 'hidden'; }, 2000);
-        }, 1500);
-    }
-
     const firebaseConfig = {
         apiKey: "AIzaSyCx_3nwwj3mKAEmtNVW0OaKamuaovhcM-w",
         authDomain: "graduale-nostrum.firebaseapp.com",
@@ -519,7 +385,6 @@
     const DIRECTOR_EMAIL = "waljrg@gmail.com";
     let usuarioLogueado = false;
 
-    // --- CORRECCIÓN: Configurar persistencia LOCAL para evitar pérdida de sesión ---
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
     .then(() => {
         console.log("Persistencia de sesión configurada: LOCAL");
@@ -536,7 +401,11 @@
             usuarioLogueado = true;
             authText.innerText = "CERRAR SESIÓN";
             authIcon.className = "fas fa-sign-out-alt";
-            if (user.email === DIRECTOR_EMAIL) btnDirector.style.display = "flex";
+            if (user.email === DIRECTOR_EMAIL) {
+                btnDirector.style.display = "flex";
+            } else {
+                btnDirector.style.display = "none";
+            }
             console.log("Sesión detectada para:", user.email);
         } else {
             usuarioLogueado = false;
@@ -554,18 +423,7 @@
             window.location.href = "login.html";
         }
     }
-
-    function accesoProtegido(url, element) {
-        // Pequeña espera para dar tiempo a Firebase de verificar el estado
-        if (usuarioLogueado) {
-            window.location.href = url;
-        } else {
-            alert("Debes iniciar sesión para usar esta herramienta.");
-            window.location.href = "login.html";
-        }
-    }
 </script>
 
 </body>
 </html>
-
