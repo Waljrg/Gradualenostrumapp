@@ -1,0 +1,3445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Graduale Nostrum | Edición Galería</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2C211F">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="Iconos/logo.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tonaljs/tonal/browser/tonal.min.js"></script>
+<script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+<script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2C211F; 
+            --accent: #B8860B;  
+            --accent-light: #E8D4A2;
+            --bg: #FDFBF7;
+            --surface: #FFFFFF;
+            --text: #3E322E;
+            --chord: #8B4513;
+            --radius-lg: 30px;
+            --radius-md: 16px;
+            --shadow: 0 10px 30px rgba(78, 52, 46, 0.08);
+            --border: 1px solid rgba(184, 134, 11, 0.2);
+            /* Colores de secciones */
+            --c-inicio: #800000;
+            --c-coro: #D4AF37;
+            --c-estrofa: #A9A9A9;
+            --c-puente: #FF69B4;
+            --c-final: #696969;
+            --c-enfasis: #1B5E20; /* Verde oscuro para énfasis */
+            --c-enfasis-azul: #00008B; /* Azul oscuro solicitado */
+/* === NUEVOS COLORES PARA ETIQUETAS === */
+        --c-enfasis-rojo: #B71C1C;
+        --c-enfasis-naranja: #FF8C00;
+        --c-enfasis-morado: #6A1B9A;
+        --c-enfasis-azul-fuerte: #1565C0;
+        --c-enfasis-lima: #2E7D32;
+        }
+
+        [data-theme="dark"] {
+            --bg: #1A1614;
+            --surface: #251F1D;
+            --text: #E5DED0;
+            --primary: #D4AF37;
+            --accent: #F1E5AC;
+            --chord: #FF8C00;
+            --border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; transition: background 0.5s ease; line-height: 1.6; overflow-x: hidden; }
+
+        header { background: var(--primary); background-image: url('base.png'); 
+    background-size: cover; 
+    background-position: center;
+    color: white; 
+    padding: 3.5rem 1rem 4rem; 
+    text-align: center; 
+    border-bottom-left-radius: 40px; 
+    border-bottom-right-radius: 40px; 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+    position: relative; 
+    overflow: hidden; 
+}
+        
+        .header-logo { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 55px; height: 55px; object-fit: contain; opacity: 0.9; cursor: pointer; z-index: 100; transition: all 0.3s; border-radius: 50%; }
+        .header-logo:active { transform: translateX(-50%) scale(0.9); }
+        .header-logo.sync-active { box-shadow: 0 0 20px #D4AF37; border: 2px solid #D4AF37; animation: pulse-sync 2s infinite; }
+        
+        @keyframes pulse-sync {
+            0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 10px #D4AF37; }
+            50% { transform: translateX(-50%) scale(1.1); box-shadow: 0 0 25px #D4AF37; }
+            100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 10px #D4AF37; }
+        }
+
+        /* Reemplazo de la imagen por texto */
+        .header-title-container {
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        .header-title-main {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 2.2rem;
+            color: #E8D4A2;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin: 0;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.4));
+        }
+
+        .header-title-sub {
+            font-family: 'Cinzel', serif;
+            font-weight: 400;
+            font-size: 1rem;
+            color: #FFFFFF;
+            letter-spacing: 3px;
+            margin: -5px 0 0 0;
+            opacity: 0.9;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+        }
+
+        .theme-toggle { position: absolute; left: 25px; top: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; }
+        .theme-toggle img { width: 25px; height: 25px; }
+/* === ESTILO MEJORADO PARA PESTAÑAS (igual que las cards) === */
+.nav-tabs { 
+    display: flex; 
+    background: url('Iconos/serafin.png'); 
+    background-size: cover; 
+    margin: -38px 20px 30px; 
+    border-radius: var(--radius-md); 
+    padding: 12px 10px;           
+    box-shadow: var(--shadow); 
+    position: relative; 
+    z-index: 10; 
+    border: var(--border); 
+    overflow-x: auto; 
+    scrollbar-width: none; 
+    gap: 8px;
+}
+
+.tab-btn { 
+    flex: 1; 
+    min-width: 70px;
+    padding: 0;                /* Eliminado para que la imagen llegue al borde */
+    border: none; 
+    background: rgba(255,255,255,0.85); 
+    cursor: pointer; 
+    border-radius: 12px; 
+    transition: all 0.3s ease; 
+    display: flex; 
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    overflow: hidden;          /* Asegura que la imagen respete el border-radius del botón */
+}
+
+.tab-btn img { 
+    width: 100%; 
+    height: 100%;              /* Obliga a la imagen a llenar el alto disponible */
+    flex-grow: 1; 
+    object-fit: cover; 
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); 
+    transition: transform 0.3s ease; 
+    display: block;
+}
+
+.tab-title {
+    background-color: #FFFFFF;
+    color: #333333;
+    font-family: 'Cinzel', serif; 
+    font-size: 0.65rem; 
+    font-weight: bold;
+    padding: 5px;
+    width: 100%;
+    box-sizing: border-box;
+    text-transform: uppercase;
+    text-align: center;        /* Centra el texto horizontalmente */
+}
+
+
+
+.tab-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(184, 134, 11, 0.3);
+}
+
+.tab-btn:hover img {
+    transform: scale(1.12);
+}
+
+/* Scroll horizontal más suave */
+.nav-tabs::-webkit-scrollbar {
+    display: none;
+}
+
+.tab-btn.active { 
+    background: rgba(184, 134, 11, 0.20); 
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
+}
+
+.tab-btn.active img { 
+    transform: scale(1.10); 
+}
+
+.tab-btn:hover img {
+    transform: scale(1.07);
+}
+        .container { padding: 0 15px 120px; max-width: 100%; box-sizing: border-box; margin: auto; }
+        .search-container { position: relative; margin-bottom: 30px; }
+        .search-box { background: var(--surface); border-radius: 50px; padding: 8px 15px 8px 25px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow); border: var(--border); }
+        .search-box input { border:none; outline:none; width:100%; background:transparent; color: var(--text); padding: 10px 0; }
+        .search-icon, .filter-icon { width: 20px; height: 20px; object-fit: contain; }
+        
+        .filter-dropdown { position: absolute; right: 0; top: 110%; background: var(--surface); border: var(--border); border-radius: 20px; width: 280px; padding: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); z-index: 2000; display: none; }
+        .filter-dropdown.active { display: block; animation: fadeIn 0.3s ease; }
+        .filter-group { margin-bottom: 12px; }
+        .filter-group label { display: block; font-size: 0.65rem; font-weight: 700; color: var(--accent); text-transform: uppercase; margin-bottom: 5px; }
+        .filter-group select, .filter-group input { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd; font-size: 0.8rem; background: var(--bg); color: var(--text); }
+
+        .grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; }
+
+/* Contenedor principal: tarjetas más grandes */
+.grid-cards { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); 
+    gap: 15px; 
+}
+
+/* Tarjeta individual */
+.card { 
+    background: var(--surface); 
+    padding: 0; 
+    border-radius: var(--radius-md); 
+    text-align: center; 
+    cursor: pointer; 
+    transition: all 0.3s ease; 
+    border: 2px solid #D4AF37 !important; 
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); 
+    display: flex; 
+    flex-direction: column; 
+    aspect-ratio: 1/1; 
+    overflow: hidden; 
+}
+
+/* Imagen que cubre casi todo el alto */
+.card img { 
+    width: 100%; 
+    flex-grow: 1; 
+    object-fit: cover; 
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); 
+    transition: transform 0.3s ease; 
+    display: block;
+}
+
+/* Título con fondo blanco y fuente Cinzel */
+.card-title {
+    background-color: #FFFFFF;
+    color: #333333;
+    font-family: 'Cinzel', serif; /* Aplicamos la fuente Cinzel */
+    font-size: 1rem; 
+    font-weight: bold;
+    padding: 2px 5px;
+    width: 100%;
+    box-sizing: border-box;
+    text-transform: uppercase; /* Opcional: Cinzel luce muy bien en mayúsculas */
+}
+
+.card:hover img {
+    transform: scale(1.05);
+}
+
+.card:hover img {
+    transform: scale(1.05);
+}
+
+
+        .card:active img { transform: scale(1.1); }
+        
+        .song-row { background: var(--surface); padding: 20px; border-radius: var(--radius-md); margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; border: 1px solid transparent; box-shadow: 0 4px 15px rgba(0,0,0,0.02); transition: 0.3s; }
+        .song-row strong { font-family: 'Cinzel', serif; color: var(--text); font-size: 1.1rem; }
+        .song-row small { display: block; font-weight: 600; text-transform: uppercase; font-size: 0.7rem; margin-top: 4px; }
+
+        .btn { border-radius: 14px; padding: 12px 20px; border: none; font-weight: 600; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.4s; text-transform: uppercase; font-size: 0.8rem; }
+        .btn-sm { padding: 8px 12px; font-size: 0.7rem; border-radius: 10px; }
+        .btn-gold { background: var(--accent); color: white; }
+        .btn-dark { background: var(--primary); color: white; }
+        
+        .lyrics-area { 
+            background: var(--surface); 
+            padding: 40px 25px; 
+            border-radius: var(--radius-lg); 
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 14px;
+            line-height: 1.6; 
+            box-shadow: var(--shadow); 
+            margin-top: 25px; 
+            border-top: 5px solid var(--accent); 
+            white-space: pre-wrap; 
+            word-wrap: break-word;
+            overflow-x: hidden; 
+        }
+
+        .form-container { display: grid; gap: 18px; background: var(--surface); padding: 22px; border-radius: var(--radius-lg); box-shadow: var(--shadow); border: var(--border); }
+        .editor-group { display: flex; flex-direction: column; gap: 6px; }
+        .editor-group label { font-size: 0.65rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-left: 2px; }
+        .input-styled { padding: 12px; border-radius: 12px; border: 1px solid rgba(184, 134, 11, 0.2); background: var(--bg); color: var(--text); font-size: 0.85rem; width: 100%; box-sizing: border-box; transition: 0.3s; font-family: 'Inter', sans-serif; }
+        .input-styled:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1); }
+        .editor-toolbar { display: flex; gap: 5px; overflow-x: auto; padding: 5px 0 10px; scrollbar-width: none; flex-wrap: nowrap; }
+        .editor-toolbar::-webkit-scrollbar { display: none; }
+        .tool-tag { background: var(--accent-light); color: var(--primary); padding: 5px 10px; border-radius: 15px; font-size: 0.6rem; font-weight: 700; white-space: nowrap; cursor: pointer; border: none; }
+        
+        .chord-tag-sm { 
+            background: var(--primary); 
+            color: var(--accent-light); 
+            padding: 4px 6px; 
+            border-radius: 6px; 
+            font-size: 0.55rem; 
+            font-weight: 800; 
+            white-space: nowrap; 
+            cursor: pointer; 
+            border: none;
+            min-width: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .chord-tag-sm small { font-size: 0.4rem; margin-top: 1px; opacity: 0.8; }
+
+        .tensions-menu {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: var(--surface);
+            border: var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            box-shadow: var(--shadow);
+            z-index: 3000;
+            display: none;
+        }
+        .tensions-menu.active { display: grid; }
+
+        #letra { 
+            font-family: 'JetBrains Mono', monospace; 
+            font-size: 14px; 
+            line-height: 1.6; 
+            white-space: pre-wrap; 
+            word-wrap: break-word;
+            overflow-x: hidden; 
+            background: #fff;
+            color: var(--text);
+            border: var(--border);
+            border-radius: 12px;
+            border-top: 4px solid var(--accent);
+            padding: 15px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .chord { color: var(--chord); font-weight: 800; display: inline-block; vertical-align: baseline; margin-top: -0.2em; line-height: 1; }
+        .hide-chords .chord { display: none; } /* ESTILO PARA MODO CORISTA */
+        
+        .section-marker { 
+            display: block; 
+            font-weight: 800; 
+            margin-top: 1.2em; 
+            margin-bottom: 0.3em; 
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase; 
+            font-size: 0.85em;
+            width: fit-content;
+        }
+        .m-inicio { background: var(--c-inicio); color: white; }
+        .m-coro { background: var(--c-coro); color: white; }
+        .m-estrofa { background: var(--c-estrofa); color: white; }
+        .m-puente { background: var(--c-puente); color: white; }
+        .m-final { background: var(--c-final); color: white; }
+        .m-enfasis { background: var(--c-enfasis); color: white; }
+        .m-enfasis-azul { background: var(--c-enfasis-azul); color: white; }
+.m-enfasis-rojo      { background: var(--c-enfasis-rojo); color: white; }
+        .m-enfasis-naranja   { background: var(--c-enfasis-naranja); color: white; }
+        .m-enfasis-morado    { background: var(--c-enfasis-morado); color: white; }
+        .m-enfasis-azul-fuerte { background: var(--c-enfasis-azul-fuerte); color: white; }
+        .m-enfasis-lima      { background: var(--c-enfasis-lima); color: white; }
+        .chorus-content {
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .chorus-content .chord { text-transform: none !important; }
+        .metronome-visual {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            width: 15px;
+            height: 15px;
+            background: #FF4500;
+            border-radius: 50%;
+            z-index: 5000;
+            display: none;
+            box-shadow: 0 0 15px rgba(255, 69, 0, 0.6);
+            pointer-events: none;
+        }
+        .metronome-flash {
+            animation: flash 0.1s ease-out forwards;
+        }
+        @keyframes flash {
+            0% { opacity: 1; transform: scale(1.8); background: #FFD700; }
+            100% { opacity: 0.2; transform: scale(1); background: #FF4500; }
+        }
+
+        .fab { position: fixed; bottom: 40px; right: 30px; width: 65px; height: 65px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 1000; border: 2px solid var(--accent); overflow: hidden; }
+        .fab img { width: 100%; height: 100%; object-fit: cover; }
+
+        .view { display: none; width: 100%; box-sizing: border-box; }
+        .view.active { display: block; animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        #detailView:fullscreen { background: var(--bg); overflow-y: auto; padding: 20px; }
+        #detailView:-webkit-full-screen { background: var(--bg); overflow-y: auto; padding: 20px; }
+
+        .tools-menu { position: fixed; right: 20px; bottom: 100px; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; z-index: 2001; pointer-events: none; opacity: 0; transform: translateY(20px); transition: 0.3s; }
+        .tools-menu.active { opacity: 1; transform: translateY(0); pointer-events: all; }
+        .tool-btn-group { background: var(--surface); padding: 10px; border-radius: 20px; box-shadow: var(--shadow); border: var(--border); display: flex; flex-direction: column; gap: 8px; }
+        
+        #previewBadge { display: none; position: fixed; top: 10px; right: 10px; background: #e74c3c; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; z-index: 2000; box-shadow: 0 4px 10px rgba(0,0,0,0.2); text-transform: uppercase; letter-spacing: 1px; }
+
+        .prog-item { background: var(--surface); border: var(--border); border-radius: var(--radius-md); padding: 20px; margin-bottom: 15px; }
+        .prog-header { display: flex; justify-content: space-between; align-items: center; }
+        .prog-header h3 { margin: 0; font-family: 'Cinzel'; color: var(--accent); font-size: 1rem; }
+
+        /* ESTILOS NUEVOS PARA AJUSTES */
+        .settings-container { display: flex; flex-direction: column; gap: 20px; margin-top: 20px; }
+        .setting-card { background: var(--surface); padding: 25px; border-radius: var(--radius-lg); border: var(--border); box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; gap: 15px; text-align: center; }
+        .setting-card i { font-size: 2.5rem; color: var(--accent); }
+        .setting-card h3 { margin: 0; font-family: 'Cinzel'; font-size: 1.2rem; }
+        
+        /* PODER DE DIRECTOR */
+        .director-panel { width: 100%; background: #fdf2f2; border: 1px solid #ffcfcf; padding: 15px; border-radius: 15px; margin-top: 10px; display: none; }
+        .director-panel h4 { margin: 0 0 10px 0; color: #b71c1c; font-size: 0.8rem; text-transform: uppercase; }
+        .admin-list-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #ffcfcf; font-size: 0.8rem; }
+
+        /* Estilo para el reproductor de audio en detalle */
+        #audioContainer { margin: 15px 0; width: 100%; }
+        #audioPlayer { width: 100%; height: 40px; border-radius: 20px; outline: none; }
+
+        /* BOTON MI TONO */
+        .btn-my-key {
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            font-size: 0.65rem;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+            cursor: pointer;
+        }
+        .btn-my-key.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* BADGE TRANSPORTE */
+        .badge-original-track {
+            background: #f0f0f0;
+            color: #666;
+            font-size: 0.6rem;
+            padding: 4px 8px;
+            border-radius: 8px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            margin-right: 5px;
+        }
+
+        /* ESTILOS DE COMPARTIR */
+        .share-dropdown {
+            position: fixed;
+            right: 20px;
+            bottom: 100px;
+            background: var(--surface);
+            border: var(--border);
+            border-radius: 20px;
+            width: 200px;
+            box-shadow: var(--shadow);
+            z-index: 2005;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: fadeIn 0.3s ease;
+        }
+        .share-dropdown.active { display: flex; }
+        .share-option {
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(184,134,11,0.1);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+            transition: 0.2s;
+        }
+        .share-option:hover { background: rgba(184,134,11,0.05); }
+        .share-option i { color: var(--accent); width: 16px; text-align: center; }
+
+        @media print {
+            header, .nav-tabs, .controls-wrapper, .tools-menu, .share-dropdown, .fab { display: none !important; }
+            body { background: white; }
+            .lyrics-area { box-shadow: none; border: none; padding: 0; }
+            .container { padding: 0; }
+        }
+/* Estilo para el contenedor flotante de notas (Diseño Cantoral) */
+.notas-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(44, 33, 31, 0.8); /* --primary con transparencia */
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(5px);
+}
+
+.notas-modal-card {
+    background: var(--surface);
+    width: 85%;
+    max-width: 400px;
+    padding: 25px;
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--accent);
+    box-shadow: var(--shadow);
+    text-align: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.notas-modal-card h3 {
+    font-family: 'Cinzel', serif;
+    color: var(--accent);
+    margin-top: 0;
+    font-size: 1.2rem;
+    border-bottom: 1px solid var(--accent-light);
+    padding-bottom: 10px;
+}
+
+.notas-body {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.2rem;
+    color: var(--text);
+    padding: 20px 0;
+    line-height: 2;
+    letter-spacing: 2px;
+}
+/* Mejorar un poco el modal (opcional pero queda más bonito) */
+.notas-modal-card {
+    animation: fadeInModal 0.3s ease;
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Botones de tonos en el modal */
+.tono-btn {
+    background: var(--surface);
+    border: 2px solid var(--accent-light);
+    color: var(--primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 800;
+    padding: 12px 8px;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tono-btn:hover {
+    background: var(--accent);
+    color: white;
+    transform: scale(1.05);
+}
+
+.tono-btn.selected {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+/* Estilo para cada carpeta en el modal */
+.prog-modal-item {
+    background: var(--surface);
+    border: 2px solid var(--accent-light);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.prog-modal-item:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+    transform: translateY(-2px);
+}
+
+.prog-modal-item .nombre {
+    font-weight: 700;
+    font-family: 'Cinzel', serif;
+}
+
+.prog-modal-item .fecha {
+    font-size: 0.7rem;
+    opacity: 0.75;
+}
+/* Ventana emergente del reproductor */
+.player-modal {
+    position: fixed; bottom: -100%; left: 0; width: 100%; background: #ffffff;
+    border-top: 4px solid #B8860B; border-radius: 25px 25px 0 0;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.4); z-index: 10001;
+    transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1); padding: 20px; box-sizing: border-box;
+}
+.player-modal.active { bottom: 0; }
+.waveform-container { width: 100%; height: 70px; margin: 10px 0; background: #f4f4f4; border-radius: 10px; }
+.player-controls { display: flex; justify-content: space-around; align-items: center; gap: 8px; flex-wrap: wrap; }
+.control-group { display: flex; align-items: center; gap: 10px; background: #f0f0f0; padding: 8px 15px; border-radius: 15px; }
+.player-btn { background: none; border: none; color: #2C211F; font-size: 1.2rem; cursor: pointer; transition: 0.2s; }
+.player-btn.active { color: #B8860B; transform: scale(1.1); }
+.player-label { font-size: 0.6rem; font-weight: 800; color: #B8860B; display: block; text-align: center; margin-bottom: 2px; }
+
+/* Botón integrado que aparece en la vista del canto */
+.btn-reproducir-integrado {
+    width: 100%; margin-bottom: 12px; padding: 10px; background: #B8860B;
+    border: none; border-radius: 10px; color: white; font-weight: bold;
+    display: none; align-items: center; justify-content: center; gap: 8px;
+    cursor: pointer; box-shadow: 0 4px 10px rgba(184, 134, 11, 0.2);
+    font-family: 'Inter', sans-serif;
+}
+/* === DESHABILITAR SELECCIÓN DE TEXTO EN MÓVIL === */
+body, 
+#viewLetra, 
+.lyrics-area, 
+.song-row, 
+.card, 
+.card-title,
+.notas-body,
+#letra {
+    -webkit-user-select: none;     /* Safari, Chrome, Opera en iOS/Android */
+    -moz-user-select: none;        /* Firefox */
+    -ms-user-select: none;         /* Internet Explorer / Edge */
+    user-select: none;             /* Estándar */
+    
+    -webkit-touch-callout: none;   /* Evita menú "Copiar" en iOS */
+    -khtml-user-select: none;
+}
+
+/* Permitir selección solo en campos de entrada y textarea (editor) */
+input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+/* Versión fuerte para cantoral - evita selección al tocar */
+#viewLetra * {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+}
+
+/* Solo permitir selección en el editor */
+#formView textarea#letra,
+#formView input {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+}
+/* Evitar selección en la vista de detalle (letra principal) */
+#detailView {
+    -webkit-user-select: none;
+    user-select: none;
+}
+/* === PROTECCIÓN DE IMÁGENES === 
+   Las imágenes no se pueden descargar ni arrastrar, 
+   pero los contenedores (cards y tabs) sí responden al clic */
+img {
+    -webkit-user-drag: none;
+    user-drag: none;
+    -webkit-touch-callout: none;     /* Evita menú "Guardar imagen" en iOS */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;            /* Desactiva interacción directa con la imagen */
+}
+
+/* Reactivamos los clics en los contenedores que sí deben ser clickeables */
+.card,
+.tab-btn,
+.card img,
+.tab-btn img {
+    pointer-events: auto;            /* Permite que el clic llegue al contenedor padre */
+}
+
+.card:hover img,
+.tab-btn:hover img {
+    transform: scale(1.07);          /* Mantiene el efecto hover */
+}
+    </style>
+</head>
+<body data-theme="light">
+
+<div id="previewBadge">Vista Previa</div>
+<div id="metronome" class="metronome-visual"></div>
+
+<header>
+    <button class="theme-toggle" id="themeBtn" onclick="toggleTheme()"><img src="Iconos/luna.png" id="themeIcon" alt="Modo"></button>
+    <img src="Iconos/logo.png" id="headerLogo" class="header-logo" alt="Logo">
+    
+    <div class="header-title-container">
+        <h1 class="header-title-main">Cantoral</h1>
+        <h2 class="header-title-sub">GRADUALE NOSTRUM</h2>
+    </div>
+</header>
+
+<div class="nav-tabs" id="mainTabs">
+    <button class="tab-btn active" id="tabTiempos" onclick="switchTab('tiempos')">
+        <img src="Iconos/tiempos1.png" alt="Tiempos">
+        <div class="tab-title">TIEMPOS</div>
+    </button>
+    <button class="tab-btn" id="tabMomentos" onclick="switchTab('momentos')">
+        <img src="Iconos/momentos.png" alt="Momentos">
+        <div class="tab-title">MOMENTOS</div>
+    </button>
+    <button class="tab-btn" id="tabProgramados" onclick="switchTab('programados')">
+        <img src="Iconos/programados.png" alt="Programados">
+        <div class="tab-title">PROGRAMA</div>
+    </button>
+    <button class="tab-btn" id="tabFavoritos" onclick="switchTab('favoritos')">
+        <img src="Iconos/favoritos.png" alt="Favoritos">
+        <div class="tab-title">FAVORITOS</div>
+    </button>
+</div>
+
+<div class="container">
+    <div id="settingsView" class="view">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+            <button class="btn btn-dark btn-sm" onclick="goBack()"><i class="fas fa-chevron-left"></i></button>
+            <h2 style="margin:0; font-family:'Cinzel'; font-size: 1.2rem;">Ajustes</h2>
+        </div>
+        <div class="settings-container">
+            <div class="setting-card">
+                <i class="fas fa-user-shield"></i>
+                <h3>Perfil de Usuario</h3>
+                <p id="userNameLabel" style="font-size: 0.8rem; color: #888;">Gestiona tu información personal y preferencias.</p>
+                
+                <div id="directorPanel" class="director-panel">
+                    <h4><i class="fas fa-crown"></i> Panel de Director</h4>
+                    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                        <input type="email" id="newAdminEmail" class="input-styled" placeholder="Correo del nuevo admin" style="font-size: 0.7rem; padding: 8px;">
+                        <button class="btn btn-dark btn-sm" onclick="hacerAdmin()">AÑADIR</button>
+                    </div>
+                    <div id="adminList"></div>
+                </div>
+
+                <button id="logoutBtn" class="btn btn-gold" style="width: 100%; justify-content: center; display: none;" onclick="cerrarSesion()">CERRAR SESIÓN</button>
+            </div>
+            <div class="setting-card" id="dirigirCard" style="border: 2px solid var(--accent);">
+                <i class="fas fa-broadcast-tower"></i>
+                <h3>Seguimiento Síncrono</h3>
+                <p style="font-size: 0.75rem; color: #666;">Permite que tu pantalla cambie automáticamente cuando el director abre un canto.</p>
+                <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                    <button id="btnSeguirDirector" class="btn btn-gold" style="width: 100%; justify-content: center;" onclick="toggleSeguirDirector()">
+                        SEGUIR DIRECTOR
+                    </button>
+                </div>
+            </div>
+            <div class="setting-card" id="loginCard">
+                <i class="fas fa-sign-in-alt"></i>
+                <h3>Cuenta</h3>
+                <div style="width: 100%; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                    <input type="email" id="emailInput" class="input-styled" placeholder="Correo electrónico">
+                    <input type="password" id="passInput" class="input-styled" placeholder="Contraseña">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%;">
+                    <button class="btn btn-dark btn-sm" style="justify-content: center;" onclick="iniciarSesionEmail()">ACCEDER</button>
+                    <button class="btn btn-gold btn-sm" style="justify-content: center;" onclick="registroEmail()">CREAR</button>
+                </div>
+                <hr style="width: 100%; border: 0; border-top: 1px solid rgba(184,134,11,0.2); margin: 15px 0;">
+                <button class="btn btn-dark" style="width: 100%; justify-content: center;" onclick="iniciarSesionGoogle()">
+                    <i class="fab fa-google"></i> GOOGLE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="homeView" class="view active">
+        <div class="search-container">
+            <div class="search-box">
+                <img src="Iconos/lupa.png" class="search-icon" alt="Buscar">
+                <input type="text" id="searchInput" placeholder="Buscar por título o letra..." onkeyup="ejecutarFiltros()">
+                <button class="btn btn-gold btn-sm" onclick="toggleFilterMenu()" style="border-radius: 50px; padding: 8px;">
+                    <img src="Iconos/filtro.png" class="filter-icon" alt="Filtro">
+                </button>
+            </div>
+            
+            <div id="filterMenu" class="filter-dropdown">
+                <div class="filter-group"><label>Tono Principal</label><select id="fTono" onchange="ejecutarFiltros()"><option value="">Todos</option></select></div>
+                <div class="filter-group"><label>Momento de Misa</label><select id="fMomento" onchange="ejecutarFiltros()"><option value="">Todos</option></select></div>
+<div class="filter-group">
+    <label for="fTiempoLiturgico">Tiempo Litúrgico</label>
+    <select id="fTiempoLiturgico" name="fTiempoLiturgico" onchange="ejecutarFiltros()">
+        <option value="">Todos</option>
+    </select>
+</div>
+                <div class="filter-group"><label>Ritmo / Estilo</label><input type="text" id="fRitmo" placeholder="Ej: Vals" onkeyup="ejecutarFiltros()"></div>
+                <div class="filter-group"><label>Tempo (BPM)</label><input type="number" id="fTempo" placeholder="Ej: 120" onkeyup="ejecutarFiltros()"></div>
+                <button class="btn btn-dark btn-sm" style="width:100%; justify-content:center;" onclick="limpiarFiltros()">LIMPIAR</button>
+            </div>
+        </div>
+        <div id="searchResults" style="display:none; margin-bottom: 30px;">
+            <h3 style="font-family:'Cinzel'; font-size: 1rem; color: var(--accent);">Resultados:</h3>
+            <div id="resultsContainer"></div>
+        </div>
+        <div id="tiemposGrid" class="grid-cards"></div>
+        <div id="momentosGrid" class="grid-cards" style="display: none;"></div>
+        <div id="favoritosGrid" class="grid-cards" style="display: none;"></div>
+        <div id="programadosView" style="display: none;">
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+                <input type="text" id="newProgName" placeholder="Nombre de la carpeta" style="padding:12px; border-radius:12px; border:var(--border); background:var(--surface); color:var(--text);">
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <label style="font-size:0.7rem; color:var(--accent); font-weight:bold;">VENCE:</label>
+                    <input type="datetime-local" id="newProgExpire" style="flex-grow:1; padding:10px; border-radius:10px; border:var(--border); background:var(--surface); color:var(--text);">
+                    <button class="btn btn-gold btn-sm" onclick="crearProgramacion()"><img src="Iconos/mas.png" style="width:15px;" alt="+"></button>
+                </div>
+            </div>
+            <div id="progContainer"></div>
+        </div>
+    </div>
+
+    <div id="listView" class="view">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px;">
+            <button class="btn btn-dark btn-sm" onclick="goBack()"><i class="fas fa-chevron-left"></i></button>
+            <h2 id="categoryTitle" style="margin:0; font-family:'Cinzel'; font-size: 1.2rem;"></h2>
+        </div>
+        <div id="songsContainer"></div>
+    </div>
+
+    <div id="formView" class="view">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <button class="btn btn-dark btn-sm" onclick="goBack()"><i class="fas fa-chevron-left"></i></button>
+            <h2 style="margin:0; font-family:'Cinzel'; font-size: 1.2rem;">Editor de Canto</h2>
+        </div>
+        <div class="form-container">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn btn-dark" style="justify-content:center; font-size: 0.7rem;" onclick="document.getElementById('pdfInput').click()"><i class="fas fa-file-pdf"></i> PDF</button>
+                <button class="btn btn-gold" id="audioBtn" style="justify-content:center; font-size: 0.7rem;" onclick="document.getElementById('audioInput').click()"><i class="fas fa-microphone"></i> AUDIO</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button class="btn btn-dark" style="justify-content:center; font-size: 0.7rem;" onclick="document.getElementById('cameraInput').click()"><i class="fas fa-camera"></i> CÁMARA</button>
+                <button class="btn btn-gold" style="justify-content:center; font-size: 0.7rem;" onclick="document.getElementById('galleryInput').click()"><i class="fas fa-image"></i> GALERÍA</button>
+            </div>
+
+            <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="importarImagen(this)">
+            <input type="file" id="galleryInput" accept="image/*" style="display:none" onchange="importarImagen(this)">
+            <input type="file" id="pdfInput" accept="application/pdf" style="display:none" onchange="importarPDF(this)">
+            <input type="file" id="audioInput" accept="audio/*" style="display:none" onchange="gestionarSubidaAudio(this)">
+            
+            <div class="editor-group"><label>Título</label><input type="text" id="titulo" class="input-styled" placeholder="Título del canto"></div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; background: rgba(184, 134, 11, 0.05); padding: 10px; border-radius: 12px; border: 1px dashed var(--accent);">
+<div class="editor-group">
+    <label><i class="fas fa-tags"></i> Classificatio</label>
+    <div id="classificatioDisplay" onclick="abrirClassificatioModal()" 
+         style="padding: 12px 15px; border-radius: 12px; border: 1px solid rgba(184, 134, 11, 0.2); 
+                background: var(--bg); color: var(--text); font-size: 0.85rem; width: 100%; 
+                box-sizing: border-box; cursor: pointer; display: flex; align-items: center; 
+                justify-content: space-between; font-weight: 600;">
+        <span id="classificatioValue">Liturgicum</span>
+        <i class="fas fa-chevron-down" style="font-size: 1rem; opacity: 0.6;"></i>
+    </div>
+    <input type="hidden" id="classificatioHidden" value="Liturgicum">
+</div>
+                <div class="editor-group">
+                    <label><i class="fas fa-user-edit"></i> Autor</label>
+                    <input type="text" id="autor" class="input-styled" placeholder="Nombre del autor" style="padding: 8px;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="editor-group"><label>T. Litúrgico</label><select id="tiempoLiturgico" class="input-styled"></select></div>
+                <div class="editor-group"><label>Momento</label><select id="momentoMisa" class="input-styled"></select></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <div class="editor-group"><label>Original</label><select id="tonalidad" class="input-styled" onchange="actualizarAcordesInteligentes()"></select></div>
+                <div class="editor-group"><label>Secundario</label><select id="tonalidadSec" class="input-styled"></select></div>
+                <div class="editor-group"><label>MG (Modo)</label><select id="tonalidadPersonal" class="input-styled" style="background: #fff5e6;"></select></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="editor-group"><label>Ritmo</label><input type="text" id="ritmo" class="input-styled" placeholder="Ritmo"></div>
+                <div class="editor-group"><label>BPM</label><input type="number" id="tempo" class="input-styled" placeholder="Tempo"></div>
+            </div>
+            <div class="editor-group">
+                <label>Letra y Acordes</label>
+                <div class="editor-toolbar">
+                    <button class="tool-tag" onclick="insertTag('INICIO:\n')">INICIO</button>
+                    <button class="tool-tag" onclick="insertTag('CORO:\n')">CORO</button>
+                    <button class="tool-tag" onclick="insertTag('ESTROFA')">ESTROFA</button>
+                    <button class="tool-tag" onclick="insertTag('PUENTE:\n')">PUENTE</button>
+                    <button class="tool-tag" onclick="insertTag('FINAL:\n')">FINAL</button>
+                    <button class="tool-tag" onclick="insertTag('(BIS)')">(BIS)</button>
+                </div>
+                <div class="editor-group">
+    <label><i class="fas fa-music"></i> Melodía (Notas)</label>
+    <textarea id="notasMelodia" class="input-styled" rows="3" placeholder="Ej: Do Re Mi Fa... (Separadas por espacio)" style="font-family: 'JetBrains Mono', monospace;"></textarea>
+</div>
+                <div style="position: relative;">
+                    <div id="smartChords" style="display: flex; gap: 5px; overflow-x: auto; padding: 5px 0 10px; scrollbar-width: none;"></div>
+                    <div id="tensionsMenu" class="tensions-menu"></div>
+                </div>
+                <textarea id="letra" rows="12" placeholder="Letra y acordes..." spellcheck="false"></textarea>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 10px; margin-top: 5px;">
+                <button class="btn btn-gold" style="justify-content:center;" onclick="previsualizarCanto()"><i class="fas fa-eye"></i></button>
+                <button class="btn btn-dark" style="justify-content:center;" onclick="guardarCanto()"><i class="fas fa-save"></i> GUARDAR</button>
+            </div>
+            <button class="btn" style="justify-content:center; background: #eee; color: #666;" onclick="goBack()">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="detailView" class="view">
+        <div class="controls-wrapper" style="position:sticky; top:0; z-index:100; background:var(--bg); padding-bottom:10px;">
+            <div style="display: flex; gap: 10px; align-items: center; padding: 10px 0;">
+                <button class="btn btn-dark btn-sm" onclick="goBack()"><i class="fas fa-chevron-left"></i></button>
+<div id="scrollIndicator" style="background: var(--primary); padding: 6px 15px; border-radius: 50px; display: none; align-items: center; gap: 10px; color: white; flex-grow: 1;">
+    <i class="fa-solid fa-angle-up"></i>
+    <input type="range" id="scrollSpeed" min="0" max="100" value="0" style="width: 100%; accent-color: var(--accent);">
+    <span id="speedVal" style="font-size: 0.7rem;">Off</span>
+</div>
+
+                
+                <button class="btn btn-gold btn-sm" onclick="toggleShareMenu()"><i class="fas fa-share-alt"></i></button>
+                <button class="btn btn-gold btn-sm" onclick="toggleTools()"><i class="fas fa-cog"></i></button>
+            </div>
+        </div>
+
+        <div id="shareMenu" class="share-dropdown">
+            <div class="share-option" onclick="copiarLink()"><i class="fas fa-link"></i> Copiar Link</div>
+            <div class="share-option" onclick="compartirNativo()"><i class="fas fa-paper-plane"></i> Compartir...</div>
+            <div class="share-option" onclick="exportarPDFReal()"><i class="fas fa-file-pdf"></i> Guardar PDF</div>
+            <div class="share-option" onclick="capturaPantalla()"><i class="fas fa-camera"></i> Captura</div>
+            <div class="share-option" onclick="window.print()"><i class="fas fa-print"></i> Imprimir</div>
+        </div>
+
+        <div id="toolsMenu" class="tools-menu">
+            <div class="tool-btn-group">
+                <div style="display:flex; gap:5px; justify-content:center; border-bottom:1px solid #ddd; padding-bottom:8px; margin-bottom:5px;">
+                    <button class="btn btn-dark btn-sm" onclick="transpose(-1)">-1</button>
+                    <button class="btn btn-dark btn-sm" onclick="transpose(1)">+1</button>
+                    <button class="btn btn-gold btn-sm" id="btnModoVista" onclick="toggleModoVista()" style="min-width: 45px; font-weight: 800;">MA</button>
+                </div>
+                <div style="display:flex; gap:5px; justify-content:center; border-bottom:1px solid #ddd; padding-bottom:8px; margin-bottom:5px;">
+                    <button class="btn btn-gold btn-sm" onclick="changeZoom(-2)"><i class="fas fa-search-minus"></i></button>
+                    <button class="btn btn-gold btn-sm" onclick="changeZoom(2)"><i class="fas fa-search-plus"></i></button>
+                </div>
+                <button class="btn btn-gold btn-sm" onclick="toggleFavorite()" id="favBtn"><i class="far fa-star"></i> FAVORITO</button>
+                <button class="btn btn-gold btn-sm" onclick="toggleNotation()" id="notBtn">NOTACIÓN: Do</button>
+<button class="btn btn-gold btn-sm" onclick="toggleSustitucionAcordes()" id="btnSustitucion">
+    <i class="fas fa-magic"></i> SIMPLE
+</button>
+                <button id="editBtn" class="btn btn-dark btn-sm" onclick="editarActual()" style="display:none;"><i class="fas fa-pen-nib"></i> EDITAR</button>
+                <button id="deleteBtn" class="btn btn-dark btn-sm" onclick="borrarCantoActual()" style="display:none; background:#b71c1c;"><i class="fas fa-trash-alt"></i> ELIMINAR</button>
+                <button class="btn btn-gold btn-sm" onclick="toggleFullScreen()"><i class="fas fa-expand"></i> PANTALLA</button>
+<button class="btn btn-dark btn-sm" onclick="toggleScrollPanel()">
+    <i class="fa-solid fa-angle-up" style="font-size: 15px; margin-right: 5px;"></i> 
+    AUTO SCROLL
+</button>
+<button class="btn btn-gold btn-sm" onclick="toggleMetronome()" id="metBtn">
+    <i class="fas fa-drum"></i> METRÓNOMO
+</button>
+            </div>
+        </div>
+        <div id="infoCanto" style="margin: 10px 0; text-align:center;">
+            <h1 id="viewTitulo" style="margin:0; font-family:'Cinzel'; font-size: 1.4rem;"></h1>
+            <div id="viewAutor" style="font-size: 0.75rem; color: #888; font-style: italic; margin-top: -2px; margin-bottom: 5px;"></div>
+            
+            <div id="audioContainer" style="display:none;">
+                <audio id="audioPlayer" controls></audio>
+            </div>
+
+<div id="viewTonoBadge" style="font-weight:bold; color:var(--accent); margin-top: 5px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;">
+    <!-- Aquí irá el botón TC + MI TONO -->
+</div>
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:5px; flex-wrap:wrap; font-size: 0.85rem;">
+                <span id="viewRitmoTempo" style="color: #888;"></span>
+                <span id="viewMomentoBadge" style="color: #888; display: flex; align-items: center; gap: 5px;"></span>
+            </div>
+        </div>
+        <div id="viewLetra" class="lyrics-area"></div>
+    </div>
+</div>
+
+<div class="fab" id="mainFab" onclick="abrirFormulario()" style="display:none;"><img src="Iconos/mas.png" alt="Añadir"></div>
+<div id="notasModal" class="notas-modal-overlay" onclick="cerrarNotas()">
+    <div class="notas-modal-card" onclick="event.stopPropagation()">
+        <h3 id="notasTitulo">Melodía</h3>
+        <div id="notasContenido" class="notas-body"></div>
+        <button class="btn btn-gold" style="width: 100%; justify-content: center;" onclick="cerrarNotas()">CERRAR</button>
+    </div>
+</div>
+<!-- ====================== MODAL MI TONO ====================== -->
+<div id="miTonoModal" class="notas-modal-overlay" onclick="cerrarMiTonoModal()">
+    <div class="notas-modal-card" onclick="event.stopPropagation()" style="max-width: 420px;">
+        <h3 id="miTonoTitulo" style="margin-top:0; font-family:'Cinzel',serif; color:var(--accent);">
+            <i class="fas fa-music"></i> MI TONO PERSONAL
+        </h3>
+        
+        <div style="text-align:center; margin:15px 0 20px;">
+            <small style="color:#888; font-weight:600;">Tono actual guardado:</small><br>
+            <span id="miTonoActual" style="font-size:1.8rem; font-weight:800; color:var(--accent); font-family:'JetBrains Mono',monospace;"></span>
+        </div>
+
+        <div class="editor-group">
+            <label style="font-size:0.75rem; font-weight:700; color:var(--accent);">ELIGE O ESCRIBE TU TONO</label>
+            <div id="tonosGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(52px,1fr)); gap:8px; margin-top:10px;"></div>
+        </div>
+
+        <div style="margin:20px 0 10px;">
+            <input type="text" id="inputMiTonoCustom" class="input-styled" placeholder="O escribe otro (ej: G#m, Bb, etc)" style="text-align:center; font-size:1.1rem;">
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:25px;">
+            <button onclick="borrarMiTono()" class="btn btn-dark btn-sm" style="flex:1; background:#b71c1c;">
+                <i class="fas fa-trash"></i> BORRAR
+            </button>
+            <button onclick="guardarMiTono()" class="btn btn-gold" style="flex:2;">
+                <i class="fas fa-save"></i> GUARDAR TONO
+            </button>
+        </div>
+
+        <button onclick="cerrarMiTonoModal()" class="btn" style="width:100%; margin-top:12px; background:#eee; color:#666;">
+            CANCELAR
+        </button>
+    </div>
+</div>
+<!-- ====================== MODAL AGREGAR A CARPETA ====================== -->
+<div id="agregarProgModal" class="notas-modal-overlay" onclick="cerrarAgregarProgModal()">
+    <div class="notas-modal-card" onclick="event.stopPropagation()" style="max-width: 440px;">
+        
+        <h3 style="margin-top:0; font-family:'Cinzel',serif; color:var(--accent);">
+            <i class="fas fa-folder-plus"></i> AGREGAR A CARPETA
+        </h3>
+
+        <p id="modalProgMensaje" style="text-align:center; color:#666; font-size:0.85rem; margin:10px 0 15px;"></p>
+
+        <!-- Lista de carpetas -->
+        <div id="progListModal" style="max-height: 340px; overflow-y:auto; padding:8px 0; border-radius:12px;"></div>
+
+        <!-- Botón crear nueva -->
+        <button onclick="mostrarFormNuevaCarpeta()" class="btn btn-gold" style="width:100%; margin:20px 0 10px; gap:8px;">
+            <i class="fas fa-plus"></i> CREAR NUEVA CARPETA
+        </button>
+
+        <button onclick="cerrarAgregarProgModal()" class="btn" style="width:100%; background:#eee; color:#666;">
+            CANCELAR
+        </button>
+    </div>
+</div>
+<!-- MODAL DE NOTIFICACIÓN BONITO -->
+<div id="notificationModal" class="notas-modal-overlay" style="display: none;">
+    <div class="notas-modal-card" style="max-width: 340px; padding: 30px 25px;" onclick="event.stopPropagation()">
+        <div id="notificationIcon" style="font-size: 2.8rem; margin-bottom: 15px;"></div>
+        <h3 id="notificationTitle" style="font-family:'Cinzel', serif; color: var(--accent); margin: 0 0 10px 0; text-align:center;"></h3>
+        <p id="notificationMessage" style="text-align:center; color: var(--text); font-size: 1rem; line-height: 1.5; margin: 0 0 25px 0;"></p>
+        
+        <button onclick="cerrarNotificationModal()" 
+                class="btn btn-gold" 
+                style="width: 100%; justify-content: center;">
+            ACEPTAR
+        </button>
+    </div>
+</div>
+<!-- ====================== MODAL CLASSIFICATIO (estilo Mi Tono) ====================== -->
+<div id="classificatioModal" class="notas-modal-overlay" onclick="cerrarClassificatioModal()">
+    <div class="notas-modal-card" onclick="event.stopPropagation()" style="max-width: 420px;">
+        <h3 style="margin-top:0; font-family:'Cinzel',serif; color:var(--accent);">
+            <i class="fas fa-tags"></i> CLASSIFICATIO
+        </h3>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:20px;">
+            Selecciona la clasificación del canto
+        </p>
+        <div id="classificatioOptionsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 20px 0;">
+        </div>
+        <button onclick="cerrarClassificatioModal()" class="btn" style="width:100%; background:#eee; color:#666;">
+            CANCELAR
+        </button>
+    </div>
+</div>
+<!-- ====================== MODAL TEXTO COMPLEMENTARIO (TC) ====================== -->
+<div id="tcModal" class="notas-modal-overlay" onclick="cerrarTcModal()">
+    <div class="notas-modal-card" onclick="event.stopPropagation()" style="max-width: 460px;">
+        <h3 style="margin-top:0; font-family:'Cinzel',serif; color:var(--accent);">
+            <i class="fas fa-comment-dots"></i> TONALIDAD A TOCAR
+        </h3>
+        <p style="text-align:center; color:#666; font-size:0.8rem; margin-bottom:15px;">
+            Información adicional visible para todos (solo director puede editar)
+        </p>
+        
+        <textarea id="tcTextarea" class="input-styled" rows="6" 
+                  placeholder="Escribe aquí instrucciones, anuncios, recordatorios, etc..."></textarea>
+        
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button onclick="cerrarTcModal()" class="btn btn-dark btn-sm" style="flex:1;">
+                CANCELAR
+            </button>
+            <button onclick="guardarTextoComplementario()" class="btn btn-gold" style="flex:2;" id="btnGuardarTC">
+                <i class="fas fa-save"></i> GUARDAR TEXTO
+            </button>
+        </div>
+    </div>
+</div>
+<div id="playerModal" class="player-modal">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+        <span id="songTitle" style="font-family:'Cinzel'; font-weight:bold;
+        color:#B8860B;">REPRODUCIENDO</span>
+        <button onclick="togglePlayerModal()" style="border:none; background:none; font-size:1.8rem; color:#888;">&times;</button>
+    </div>
+    
+    <div id="waveform" class="waveform-container"></div>
+    
+    <div class="player-controls">
+        <div class="control-group">
+            <button class="player-btn" onclick="ws.skip(-5)"><i class="fas fa-undo"></i></button>
+            <button class="player-btn" id="playBtn" onclick="ws.playPause()" style="font-size:2.2rem;"><i class="fas fa-play"></i></button>
+            <button class="player-btn" onclick="ws.skip(5)"><i class="fas fa-redo"></i></button>
+        </div>
+
+        <div class="control-group">
+            <div onclick="setPointAB()">
+                <small class="player-label">REPETIR A-B</small>
+                <button class="player-btn" id="abBtn"><i class="fas fa-retweet"></i></button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <div>
+                <small class="player-label">TONO (SEM)</small>
+                <select id="pitchSelect" onchange="changePitch(this.value)" style="border:none; background:transparent; font-weight:bold; font-size:0.9rem;">
+                </select>
+            </div>
+            <div>
+                <small class="player-label">VELOCIDAD</small>
+                <select id="speedSelect" onchange="ws.setPlaybackRate(parseFloat(this.value))" style="border:none; background:transparent; font-weight:bold; font-size:0.9rem;">
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+<script>
+let screenWakeLock = null;   // Para controlar el Wake Lock
+let sustitucionActiva = false;
+    // REGISTRO DEL SERVICE WORKER PARA PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registrado'))
+          .catch(err => console.log('Error al registrar SW', err));
+      });
+    }
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCx_3nwwj3mKAEmtNVW0OaKamuaovhcM-w",
+        authDomain: "graduale-nostrum.firebaseapp.com",
+        projectId: "graduale-nostrum",
+        storageBucket: "graduale-nostrum.firebasestorage.app",
+        messagingSenderId: "534378937675",
+        appId: "1:534378937675:web:677bbc4eb55ef3e6ed7cce",
+        measurementId: "G-LJJLQXQXY1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
+
+    // INICIALIZACIÓN SUPABASE
+    const supabaseUrl = 'https://xcyrbmgvwsnfmemyssdl.supabase.co';
+    const supabaseKey = 'sb_publishable_LB0MKK71aRe-QXt3WN_qjw_6pteJqtq';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+    db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED });
+    db.enablePersistence().catch(err => console.log("Persistence failed"));
+
+    const DIRECTOR_EMAIL = "waljrg@gmail.com"; 
+    let isAdmin = false;
+
+    // --- IMPLEMENTACIÓN WEBRTC ---
+    const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+    const defTiempos = ["Ordinario", "Adviento", "Navidad", "Cuaresma", "Pascua", "Triduo Pascual", "Pentecostés", "Santos", "Purísima", "Virgen María", "San Francisco", "Sagrado Corazón", "Ordinario de la Misa", "Ad Libitum"];
+    const defMomentos = ["Entrada", "Kyrie", "Gloria", "Salmos", "Aleluya",
+    "Tracto", "Ofertorio", "Sanctus", "Doxología", "Padre Nuestro", "Agnus Dei",
+    "Comunión", "Adoración", "Salida", "Alabanzas", "Exequias", "Varios"];
+    const opcionesTonos = ["C", "Cm","Db","Dbm", "D", "Dm", "Eb", "Ebm",
+    "E","Em", "F", "Fm", "F#", "F#m", "G", "Gm", "Ab", "Abm", "A", "Am", "Bb","Bbm", "B", "Bm"];
+// === MODOS GRIEGOS COMPLETOS ===
+const opcionesModos = [
+    "Mayor (Jónico)",
+    "Menor (Eólico)",
+    "Jónico",
+    "Dórico",
+    "Frigio",
+    "Lidio",
+    "Mixolidio",
+    "Eólico",
+    "Locrio"
+];
+    let cantos = [];
+    const escala = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+    const latinas = {"C":"Do", "C#":"Do#", "D":"Re", "Eb":"Re#", "E":"Mi", "F":"Fa", "F#":"Fa#", "G":"Sol", "Ab":"Sol#", "A":"La", "Bb":"La#", "B":"Si"};
+    const americanas = {"Do":"C", "Do#":"C#", "Re":"D", "Re#":"Eb", "Mi":"E", "Fa":"F", "Fa#":"Fa#", "Sol":"G", "Sol#":"Ab", "La":"A", "La#":"Bb", "Si":"B"};
+
+    let currentFirebaseId = null, currentCantoId = null, currentTranspose = 0, isAmerican = true, fontSize = 14;
+    let tempCanto = null, viewStack = ['homeView'];
+    let programaciones = []; // Se cargará desde Firestore
+    let estrofaCounter = 1; 
+    let audioUrlSubido = null; // Variable temporal para el audio
+
+    // NUEVA VARIABLE MODO VISTA
+    let modoVistaCorista = false;
+    
+    let currentProgId = null;
+    let currentProgSongIndices = [];
+    let currentProgTransposes = {};   // ←←← AÑADIR ESTA LÍNEA
+let currentCategoryKey = null;        // Ej: "tiempo_Ordinario" o "momento_Entrada"
+let currentCategoryTransposes = {};   // Transporte por canto en la lista actual
+    // --- FUNCIONES SUPABASE (AUDIO) ---
+    async function gestionarSubidaAudio(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        const btn = document.getElementById('audioBtn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SUBIENDO...';
+        btn.disabled = true;
+
+        try {
+            const fileName = `${Date.now()}_${file.name}`;
+            const { data, error } = await supabaseClient.storage
+                .from('Audios')
+                .upload(fileName, file);
+
+            if (error) throw error;
+
+            const { data: { publicUrl } } = supabaseClient.storage
+                .from('Audios')
+                .getPublicUrl(fileName);
+
+            audioUrlSubido = publicUrl;
+            alert("Audio subido correctamente a Supabase.");
+            btn.innerHTML = '<i class="fas fa-check"></i> AUDIO LISTO';
+            btn.style.background = "#2e7d32";
+        } catch (e) {
+            console.error(e);
+            alert("Error al subir audio: " + e.message);
+            btn.innerHTML = originalText;
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    // --- FUNCIONES DE COMPARTIR ---
+    function toggleShareMenu() {
+        const menu = document.getElementById('shareMenu');
+        menu.classList.toggle('active');
+        if (menu.classList.contains('active')) {
+            document.getElementById('toolsMenu').classList.remove('active');
+        }
+    }
+
+    function copiarLink() {
+        const c = cantos[currentCantoId];
+        const dummy = document.createElement('input');
+        const text = `${window.location.href}\n\n*${c.titulo}*\nTono: ${c.tonalidad}\nEscucha: ${c.audioUrl || 'N/A'}`;
+        document.body.appendChild(dummy);
+        dummy.value = text;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        alert("¡Enlace y detalles copiados!");
+        toggleShareMenu();
+    }
+
+    async function compartirNativo() {
+        const c = cantos[currentCantoId];
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `Graduale Nostrum - ${c.titulo}`,
+                    text: `Mira este canto: ${c.titulo} (${c.tonalidad})\n`,
+                    url: window.location.href
+                });
+            } catch (err) { console.log(err); }
+        } else { alert("Tu navegador no soporta compartir nativo."); }
+        toggleShareMenu();
+    }
+
+    // EXPORTACIÓN A PDF REAL USANDO JSPDF (Mejorado para solo letra e info)
+    async function exportarPDFReal() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const canto = cantos[currentCantoId];
+        const area = document.getElementById('detailView');
+        
+        // Elementos a ocultar para la exportación limpia
+        const controls = area.querySelector('.controls-wrapper');
+        const audio = document.getElementById('audioContainer');
+        const tools = document.getElementById('toolsMenu');
+        const share = document.getElementById('shareMenu');
+
+        // Ocultar temporalmente
+        if(controls) controls.style.display = 'none';
+        if(audio) audio.style.display = 'none';
+        if(tools) tools.classList.remove('active');
+        if(share) share.classList.remove('active');
+
+        try {
+            const canvas = await html2canvas(area, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                ignoreElements: (el) => {
+                    // Ignorar elementos específicos que no queremos en el PDF
+                    return el.classList.contains('controls-wrapper') || el.id === 'audioContainer' || el.id === 'toolsMenu' || el.id === 'shareMenu';
+                }
+            });
+            
+            const imgData = canvas.toDataURL('image/png');
+            const imgProps = doc.getImageProperties(imgData);
+            const pdfWidth = doc.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            doc.save(`Graduale_Nostrum_${canto.titulo}.pdf`);
+        } catch (e) {
+            alert("Error al generar PDF");
+            console.error(e);
+        } finally {
+            // Restaurar visibilidad
+            if(controls) controls.style.display = 'block';
+            if(audio && canto.audioUrl) audio.style.display = 'block';
+            toggleShareMenu();
+        }
+    }
+
+    // CAPTURA DE PANTALLA (Mejorado para solo letra e info)
+    function capturaPantalla() {
+        const area = document.getElementById('detailView');
+        const c = cantos[currentCantoId];
+        
+        // Elementos a ocultar
+        const controls = area.querySelector('.controls-wrapper');
+        const audio = document.getElementById('audioContainer');
+
+        if(controls) controls.style.display = 'none';
+        if(audio) audio.style.display = 'none';
+
+        html2canvas(area, { 
+            backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg'),
+            ignoreElements: (el) => {
+                return el.classList.contains('controls-wrapper') || el.id === 'audioContainer' || el.id === 'toolsMenu' || el.id === 'shareMenu';
+            }
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Graduale_${c.titulo}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            
+            // Restaurar
+            if(controls) controls.style.display = 'block';
+            if(audio && c.audioUrl) audio.style.display = 'block';
+            toggleShareMenu();
+        });
+    }
+
+    // --- FUNCIONES DE DIRECTOR ---
+    async function hacerAdmin() {
+        const email = document.getElementById('newAdminEmail').value.trim();
+        if(!email) return;
+        try {
+            await db.collection("usuarios").doc(email).set({ rol: "admin" });
+            document.getElementById('newAdminEmail').value = "";
+            alert("Nuevo Administrador nombrado.");
+        } catch (e) { alert("Error al nombrar."); }
+    }
+
+    async function quitarAdmin(email) {
+        if(confirm(`¿Quitar privilegios a ${email}?`)) {
+            await db.collection("usuarios").doc(email).delete();
+            alert("Privilegios eliminados.");
+        }
+    }
+
+    function renderAdminList() {
+        db.collection("usuarios").where("rol", "==", "admin").onSnapshot(snap => {
+            const list = document.getElementById('adminList');
+            list.innerHTML = "";
+            snap.forEach(doc => {
+                list.innerHTML += `<div class="admin-list-item"><span>${doc.id}</span> <i class="fas fa-user-minus" onclick="quitarAdmin('${doc.id}')" style="color:#b71c1c; cursor:pointer;"></i></div>`;
+            });
+        });
+    }
+
+    // --- AUTENTICACIÓN Y ROLES ---
+auth.onAuthStateChanged(async (user) => {
+    const userLabel = document.getElementById('userNameLabel');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const loginCard = document.getElementById('loginCard');
+    const fab = document.getElementById('mainFab');
+    const editBtn = document.getElementById('editBtn');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const dPanel = document.getElementById('directorPanel');
+    const dirigirCard = document.getElementById('dirigirCard');
+
+    if (user) {
+        userLabel.innerText = "Conectado: " + (user.displayName || user.email);
+        logoutBtn.style.display = "block";
+        loginCard.style.display = "none";
+        dirigirCard.style.display = "none";        // ← Ocultamos el card de seguir director
+
+        if(user.email === DIRECTOR_EMAIL) {
+            isAdmin = true;
+            dPanel.style.display = "block";
+            renderAdminList();
+        } else {
+            const doc = await db.collection("usuarios").doc(user.email).get();
+            isAdmin = doc.exists && doc.data().rol === "admin";
+            dPanel.style.display = "none";
+        }
+        
+        fab.style.display = isAdmin ? "flex" : "none";
+        if(editBtn) editBtn.style.display = isAdmin ? "flex" : "none";
+        if(deleteBtn) deleteBtn.style.display = isAdmin ? "flex" : "none";
+
+    } else {
+        isAdmin = false;
+        userLabel.innerText = "Gestiona tu información personal y preferencias.";
+        logoutBtn.style.display = "none";
+        loginCard.style.display = "flex";
+        fab.style.display = "none";
+        dirigirCard.style.display = "none";
+        if(editBtn) editBtn.style.display = "none";
+        if(deleteBtn) deleteBtn.style.display = "none";
+        dPanel.style.display = "none";
+    }
+});
+    function insertTag(tag) {
+        const area = document.getElementById('letra');
+        const start = area.selectionStart;
+        const end = area.selectionEnd;
+        const text = area.value;
+        let tagToInsert = tag;
+        if(tag === 'ESTROFA') { tagToInsert = `ESTROFA ${estrofaCounter}:\n`; estrofaCounter++; }
+        area.value = text.substring(0, start) + tagToInsert + text.substring(end);
+        area.focus();
+        area.setSelectionRange(start + tagToInsert.length, start + tagToInsert.length);
+    }
+
+    // MAPAS DE MODOS GRIEGOS
+    const MODOS_CONFIG = {
+        "Mayor": { grados: [0, 2, 4, 5, 7, 9], sufijos: ["", "m", "m", "", "", "m"] },
+        "Menor": { grados: [0, 2, 3, 5, 7, 8], sufijos: ["m", "dim", "", "m", "m", ""] },
+        "Jónico": { grados: [0, 2, 4, 5, 7, 9, 11], sufijos: ["maj7", "m7", "m7", "maj7", "7", "m7", "m7b5"] },
+        "Dórico": { grados: [0, 2, 3, 5, 7, 9, 10], sufijos: ["m7", "m7", "maj7", "7", "m7", "m7b5", "maj7"] },
+        "Frigio": { grados: [0, 1, 3, 5, 7, 8, 10], sufijos: ["m7", "maj7", "7", "m7", "m7b5", "maj7", "m7"] },
+        "Lidio": { grados: [0, 2, 4, 6, 7, 9, 11], sufijos: ["maj7", "7", "m7", "m7b5", "maj7", "m7", "m7"] },
+        "Mixolidio": { grados: [0, 2, 4, 5, 7, 9, 10], sufijos: ["7", "m7", "m7b5", "maj7", "m7", "m7", "maj7"] },
+        "Eólico": { grados: [0, 2, 3, 5, 7, 8, 10], sufijos: ["m7", "m7b5", "maj7", "m7", "m7", "maj7", "7"] },
+        "Locrio": { grados: [0, 1, 3, 5, 6, 8, 10], sufijos: ["m7b5", "maj7", "m7", "m7", "maj7", "7", "m7"] }
+    };
+
+function actualizarAcordesInteligentes() {
+    const tonoPrincipal = document.getElementById('tonalidad').value;
+    const container = document.getElementById('smartChords');
+    container.innerHTML = "";
+    if (!tonoPrincipal) return;
+
+    let modoActual = "Mayor";
+    
+    // Determinar modo base por el sufijo 'm'
+    if (tonoPrincipal.endsWith('m')) modoActual = "Menor";
+
+    // Prioridad 1: Modo seleccionado en MG (con limpieza de strings)
+    const mgSeleccionado = document.getElementById('tonalidadPersonal').value;
+    if (mgSeleccionado) {
+        const modoLimpio = mgSeleccionado.split(' ')[0]
+                                           .replace('(Jónico)', 'Jónico')
+                                           .replace('(Eólico)', 'Eólico');
+        if (MODOS_CONFIG[modoLimpio]) {
+            modoActual = modoLimpio;
+        }
+    }
+
+    let notaBase = tonoPrincipal.replace('m', '');
+    let indexBase = escala.indexOf(americanas[notaBase] || notaBase);
+    
+    const config = MODOS_CONFIG[modoActual];
+    if (!config) return;
+
+    const gradosRomanos = ["I", "II", "III", "IV", "V", "VI", "VII"];
+    
+    config.grados.forEach((semitonos, i) => {
+        let indexNota = (indexBase + semitonos) % 12;
+        let nota = escala[indexNota];
+        let acordeFinal = nota + config.sufijos[i];
+
+        let btn = document.createElement('button');
+        btn.className = "chord-tag-sm";
+        // Uso de template literals corregido
+        btn.innerHTML = `<span>${acordeFinal}</span><small>${gradosRomanos[i]}</small>`;
+        btn.onclick = () => insertTag(acordeFinal + " ");
+        container.appendChild(btn);
+    });
+
+    // Botón de tensiones
+    let btnPlus = document.createElement('button');
+    btnPlus.className = "chord-tag-sm";
+    btnPlus.style.background = "var(--accent)";
+    btnPlus.innerHTML = `<i class="fas fa-plus"></i>`;
+    btnPlus.onclick = toggleTensions;
+    container.appendChild(btnPlus);
+
+    renderTensionsMenu();
+}
+
+
+    function renderTensionsMenu() {
+        const menu = document.getElementById('tensionsMenu');
+        const tensions = ["M7", "Sus2", "Sus4", "6", "add9", "add11", "add13", "Aug", "b5", "dim"];
+        menu.innerHTML = "";
+        tensions.forEach(t => {
+            let btn = document.createElement('button');
+            btn.className = "chord-tag-sm";
+            btn.style.width = "auto";
+            btn.innerText = t;
+            btn.onclick = () => { insertTag(t); toggleTensions(); };
+            menu.appendChild(btn);
+        });
+    }
+
+    function toggleTensions() { document.getElementById('tensionsMenu').classList.toggle('active'); }
+
+async function crearProgramacion() {
+    // 1. Verificación de permisos
+    if (!isAdmin) {
+        alert("Solo el Director puede crear carpetas.");
+        return;
+    }
+
+    const nameInput = document.getElementById('newProgName');
+    const expireInput = document.getElementById('newProgExpire');
+
+    const name = nameInput.value.trim();
+    const expireVal = expireInput.value;
+
+    if (!name) {
+        alert("Debes poner un nombre a la carpeta");
+        return;
+    }
+
+    // Convertir fecha de expiración a milisegundos (Epoch)
+    const expireDate = expireVal ? new Date(expireVal).getTime() : null;
+
+    const nuevaProg = {
+        nombre: name,
+        cantos: [],
+        expira: expireDate
+        // No agregamos createdAt aquí porque guardarProgramacion 
+        // usará el FieldValue.serverTimestamp() de Firebase.
+    };
+
+    // 2. Intentar guardar en Firestore
+    const exito = await guardarProgramacion(nuevaProg);
+    
+    // 3. Flujo de respuesta
+    if (exito) {
+        // Solo limpiamos si se guardó correctamente
+        nameInput.value = "";
+        expireInput.value = "";
+
+        if (typeof mostrarNotificacion === "function") {
+            mostrarNotificacion("¡Éxito!", `La carpeta "${name}" se creó correctamente.`, "success");
+        } else {
+            alert(`Carpeta "${name}" creada.`);
+        }
+    } else {
+        // Opcional: Notificación de error si guardarProgramacion falló
+        console.error("No se pudo crear la carpeta.");
+    }
+}
+
+
+    function saveProg() { localStorage.setItem('gn_programados', JSON.stringify(programaciones)); }
+// Guardar programación - SOLO EL DIRECTOR (ADMIN) PUEDE CREAR
+async function guardarProgramacion(prog) {
+    // 1. Validación de rol
+    if (!isAdmin) {
+        alert("Solo el Director puede crear o modificar carpetas.");
+        return false;
+    }
+
+    try {
+        // 2. Clonamos y limpiamos el objeto antes de enviarlo
+        const dataParaEnviar = { ...prog };
+        const idExistente = dataParaEnviar.id;
+        
+        // Importante: Eliminar el ID del cuerpo de los datos para evitar errores en .update()
+        delete dataParaEnviar.id; 
+
+        const progData = {
+            ...dataParaEnviar,
+            creadoPor: auth.currentUser ? auth.currentUser.email : "Anónimo",
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        if (idExistente && idExistente.length > 15) {
+            // ACTUALIZAR carpeta existente
+            await db.collection("programaciones").doc(idExistente).update(progData);
+        } else {
+            // CREAR nueva carpeta con timestamp de creación
+            const docRef = await db.collection("programaciones").add({
+                ...progData,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            prog.id = docRef.id; // Asignamos el ID generado al objeto original
+        }
+        
+        await cargarProgramaciones();
+        return true;
+    } catch (e) {
+        console.error("Error guardando programación:", e);
+        alert("Error al guardar la carpeta en Firestore.");
+        return false;
+    }
+}
+
+// Cargar programaciones - Visible para todos
+async function cargarProgramaciones() {
+    // Es buena práctica limpiar el array local antes de la consulta
+    programaciones = []; 
+
+    try {
+        // Obtenemos todos los documentos ordenados por fecha
+        const snapshot = await db.collection("programaciones")
+            .orderBy("createdAt", "desc")
+            .get();
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            programaciones.push({
+                id: doc.id,
+                ...data,
+                // Garantizamos que 'cantos' siempre sea un array para evitar errores en .map() o .forEach()
+                cantos: Array.isArray(data.cantos) ? data.cantos : []
+            });
+        });
+        
+        if (typeof renderProgramados === "function") renderProgramados();
+    } catch (e) {
+        console.error("Error al obtener las programaciones globales:", e);
+        // Si hay error (por ejemplo, falta un índice), renderizamos la lista vacía
+        if (typeof renderProgramados === "function") renderProgramados();
+    }
+}
+// ====================== PERSISTENCIA DE TRANSPORTACIONES ======================
+
+
+const STORAGE_KEY_PROG_TRANSP = "gn_prog_transposes";
+
+// Objeto global para mantener las transportaciones en memoria
+
+
+/**
+ * Carga las transportaciones guardadas desde localStorage al iniciar la app
+ */
+function cargarTransposesProgramados() {
+    const saved = localStorage.getItem(STORAGE_KEY_PROG_TRANSP);
+    if (saved) {
+        try {
+            currentProgTransposes = JSON.parse(saved);
+        } catch (e) {
+            console.error("Error cargando transposes:", e);
+            currentProgTransposes = {};
+        }
+    }
+}
+
+/**
+ * Guarda el estado actual de currentProgTransposes en localStorage
+ */
+function guardarTransposesProgramados() {
+    localStorage.setItem(STORAGE_KEY_PROG_TRANSP, JSON.stringify(currentProgTransposes));
+}
+
+/**
+ * Limpiar transportaciones de una carpeta (opcional)
+ */
+function limpiarTransposesDeProg(progId) {
+    Object.keys(currentProgTransposes).forEach(songId => {
+        // Lógica para filtrar por ID de programa si fuera necesario
+    });
+    guardarTransposesProgramados();
+}
+
+// ====================== INTEGRACIÓN EN EL FLUJO ======================
+
+/**
+ * Ejemplo de cómo deberías llamar a estas funciones al modificar un tono:
+ * * function actualizarTono(songId, nuevoTono) {
+ * currentProgTransposes[songId] = nuevoTono;
+ * guardarTransposesProgramados(); // <--- Llamada para persistir
+ * }
+ */
+
+// Inicialización automática al cargar el script
+cargarTransposesProgramados();
+
+
+    function limpiarExpirados() {
+        const ahora = Date.now();
+        const inicial = programaciones.length;
+        programaciones = programaciones.filter(p => !p.expira || ahora < p.expira);
+        if (programaciones.length !== inicial) saveProg();
+    }
+
+function renderProgramados() {
+    // 1. Asegúrate de que limpiarExpirados maneje bien los datos de Firestore
+    if (typeof limpiarExpirados === "function") limpiarExpirados();
+    
+    const container = document.getElementById('progContainer');
+    if (!container) return; // Seguridad por si el elemento no existe en el DOM
+    
+    container.innerHTML = "";
+
+    if (programaciones.length === 0) {
+        container.innerHTML = `
+            <p style='color:#888; text-align:center; padding:40px;'>
+                No tienes carpetas programadas.<br><br>¡Crea una nueva!
+            </p>`;
+        return;
+    }
+
+    programaciones.forEach(p => {
+        // Manejo de fecha de expiración
+        const fechaTxt = p.expira 
+            ? ` - <small style="color:#888">Expira: ${new Date(p.expira).toLocaleDateString('es-ES')}</small>` 
+            : "";
+        
+        // CORRECCIÓN: Se usa ${p.nombre} en lugar de \( {p.nombre} \)
+        container.innerHTML += `
+            <div class="prog-item" style="cursor:pointer;" onclick="verListaProgramada('${p.id}')">
+                <div class="prog-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="display:flex; align-items:center; gap:10px; margin:0;">
+                        <i class="fas fa-folder-open" style="color:var(--accent)"></i> 
+                        <div>${p.nombre}${fechaTxt}</div>
+                    </h3>
+                    <i class="fas fa-trash-alt" style="color:#e74c3c; cursor:pointer; padding:10px;" 
+                       onclick="event.stopPropagation(); borrarProgFirestore('${p.id}')"></i>
+                </div>
+            </div>`;
+    });
+}
+
+
+async function verListaProgramada(progId) {
+    const p = programaciones.find(x => x.id === progId);
+    if (!p) return;
+
+    currentProgId = progId;
+    document.getElementById('categoryTitle').innerText = p.nombre;
+    
+    const container = document.getElementById('songsContainer');
+    container.innerHTML = "";
+
+    // Mapeamos los IDs a los objetos de cantos reales
+    const cantosEnProg = p.cantos.map(songId => 
+        cantos.find(item => item.id === songId)
+    ).filter(c => c !== undefined);
+
+    if (cantosEnProg.length === 0) {
+        container.innerHTML = "<p style='text-align:center; padding:40px;'>Esta carpeta está vacía</p>";
+    } else {
+        cantosEnProg.forEach(c => {
+            const idx = cantos.indexOf(c);
+            const color = getColorTiempo(c.tiempoLiturgico);
+
+            // CORRECCIÓN: Uso de ${} y manejo de comillas en los parámetros de las funciones
+            container.innerHTML += `
+                <div class="song-row" onclick="verDetailInList(${idx}, '${p.id}')">
+                    <div>
+                        <strong>${c.titulo}</strong>
+                        <br>
+                        <small>${c.tonalidad} • <span style="color:${color}">${c.momentoMisa}</span></small>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <i class="fas fa-trash" style="color:#e74c3c; font-size:1.1rem; padding:10px;" 
+                           onclick="event.stopPropagation(); quitarDeProg('${p.id}', '${c.id}')"></i>
+                        <i class="fas fa-play-circle" style="color:var(--accent); font-size:1.5rem;"></i>
+                    </div>
+                </div>`;
+        });
+    }
+    showView('listView');
+}
+
+
+    function verDetailInList(idx, progId) { 
+        currentProgId = progId;
+        const prog = programaciones.find(p => p.id === progId);
+        if (prog) {
+            currentProgSongIndices = prog.cantos.map(id => cantos.findIndex(c => c.id === id)).filter(i => i >= 0);
+        } else {
+            currentProgSongIndices = [];
+        }
+        verDetalle(idx); 
+    }
+    function borrarProg(id) { if(confirm("¿Borrar esta programación?")) { programaciones = programaciones.filter(p => p.id !== id); saveProg(); renderProgramados(); } }
+    
+// ==================== AGREGAR CANTOS A PROGRAMADOS - VERSIÓN FIJA ====================
+
+let songIdParaAgregar = null;
+
+// 1. ABRIR MODAL
+function agregarAProg(songId) {
+    songIdParaAgregar = songId;
+    const modal = document.getElementById('agregarProgModal');
+    const container = document.getElementById('progListModal');
+    const mensaje = document.getElementById('modalProgMensaje');
+
+    if (programaciones.length === 0) {
+        mostrarFormNuevaCarpeta(true);
+        return;
+    }
+
+    container.innerHTML = "";
+    mensaje.innerHTML = "Selecciona la carpeta donde quieres añadir el canto:";
+
+    programaciones.forEach(prog => {
+        const fecha = prog.expira 
+            ? `<small class="fecha">Expira: ${new Date(prog.expira).toLocaleDateString('es-ES')}</small>` 
+            : `<small class="fecha">Sin vencimiento</small>`;
+
+        const div = document.createElement('div');
+        div.className = "prog-modal-item";
+        div.innerHTML = `
+            <div>
+                <div class="nombre">${prog.nombre}</div>
+                ${fecha}
+            </div>
+            <i class="fas fa-arrow-right" style="font-size:1.3rem; opacity:0.6;"></i>
+        `;
+        div.onclick = () => agregarCancionACarpeta(prog.id);   // ← Esta es la clave
+        container.appendChild(div);
+    });
+
+    modal.style.display = 'flex';
+}
+
+// 2. AÑADIR A CARPETA EXISTENTE
+async function agregarCancionACarpeta(progId) {
+    // 1. Buscamos la carpeta en el array local
+    const prog = programaciones.find(p => p.id === progId);
+    
+    // 2. CORRECCIÓN: Asegúrate de que 'songIdParaAgregar' exista globalmente 
+    // o pásalo como parámetro a la función.
+    if (!prog || !songIdParaAgregar) return;
+
+    // 3. Verificamos si el canto ya está en la carpeta
+    if (!prog.cantos.includes(songIdParaAgregar)) {
+        prog.cantos.push(songIdParaAgregar);
+        
+        try {
+            // 4. Guardar en Firestore (tu función ya maneja la actualización)
+            await guardarProgramacion(prog);
+            
+            // 5. Feedback al usuario
+            if (typeof mostrarMensajeExito === "function") {
+                mostrarMensajeExito(prog.nombre);
+            }
+        } catch (error) {
+            console.error("Error al añadir el canto:", error);
+            alert("No se pudo actualizar la carpeta en la nube.");
+        }
+    } else {
+        if (typeof mostrarMensajeDuplicado === "function") {
+            mostrarMensajeDuplicado();
+        }
+    }
+
+    // 6. Cerrar el modal después de la operación
+    if (typeof cerrarAgregarProgModal === "function") {
+        cerrarAgregarProgModal();
+    }
+}
+
+
+// 3. MOSTRAR FORMULARIO NUEVA CARPETA
+function mostrarFormNuevaCarpeta(desdeVacio = false) {
+    const modal = document.getElementById('agregarProgModal');
+    const container = document.getElementById('progListModal');
+    const mensaje = document.getElementById('modalProgMensaje');
+
+    container.innerHTML = `
+        <div style="background:var(--surface); border-radius:14px; padding:20px;">
+            <label style="font-size:0.75rem; font-weight:700; color:var(--accent);">Nombre de la nueva carpeta</label>
+            <input type="text" id="modalNewProgName" placeholder="Ej: Misa de Domingo" class="input-styled" style="margin-top:6px; font-size:1.1rem;">
+
+            <label style="font-size:0.75rem; font-weight:700; color:var(--accent); margin-top:18px; display:block;">Fecha de vencimiento (opcional)</label>
+            <input type="datetime-local" id="modalNewProgExpire" class="input-styled">
+
+            <div style="margin-top:25px; display:flex; gap:10px;">
+                <button onclick="cerrarAgregarProgModal()" class="btn btn-dark btn-sm" style="flex:1;">CANCELAR</button>
+                <button onclick="crearYAgregarNuevaCarpeta()" class="btn btn-gold" style="flex:2;">
+                    <i class="fas fa-save"></i> CREAR Y AÑADIR
+                </button>
+            </div>
+        </div>
+    `;
+
+    if (desdeVacio) {
+        mensaje.innerHTML = `<strong>¡Aún no tienes carpetas!</strong><br>Crea una ahora y añade el canto`;
+    } else {
+        mensaje.innerHTML = "Crea una nueva carpeta";
+    }
+
+    modal.style.display = 'flex';
+}
+
+// 4. CREAR NUEVA CARPETA
+function crearYAgregarNuevaCarpeta() {
+    const nombreInput = document.getElementById('modalNewProgName');
+    const nombre = nombreInput.value.trim();
+    if (!nombre) {
+        mostrarNotificacion("Error", "Por favor escribe un nombre para la carpeta", "error");
+        return;
+    }
+
+    const expireVal = document.getElementById('modalNewProgExpire').value;
+    const expireDate = expireVal ? new Date(expireVal).getTime() : null;
+
+    const nuevaProg = {
+        id: Date.now(),
+        nombre: nombre,
+        cantos: songIdParaAgregar ? [songIdParaAgregar] : [],
+        expira: expireDate
+    };
+
+    programaciones.push(nuevaProg);
+    saveProg();
+
+    mostrarMensajeCarpetaCreada(nombre);
+
+    cerrarAgregarProgModal();
+    songIdParaAgregar = null;
+
+    if (document.getElementById('programadosView').style.display === 'block') {
+        renderProgramados();
+    }
+}
+
+// 5. CERRAR MODAL
+function cerrarAgregarProgModal() {
+    document.getElementById('agregarProgModal').style.display = 'none';
+    songIdParaAgregar = null;
+}
+    function quitarDeProg(progId, songId) {
+        let p = programaciones.find(x => x.id === progId);
+        if(p) { p.cantos = p.cantos.filter(id => id !== songId); saveProg(); verListaProgramada(progId); }
+    }
+
+    let isScrolling = false, scrollAnimationFrame = null;
+
+    function smoothScroll() {
+        if (!isScrolling) return;
+        const speed = parseInt(document.getElementById('scrollSpeed').value);
+        const scrollTarget = document.fullscreenElement ? document.getElementById('detailView') : window;
+        const currentY = document.fullscreenElement ? scrollTarget.scrollTop : window.scrollY;
+        const step = speed / 50; 
+        if (speed > 0) {
+            if (document.fullscreenElement) scrollTarget.scrollTop += step;
+            else window.scrollBy(0, step);
+            const maxScroll = document.fullscreenElement ? (scrollTarget.scrollHeight - scrollTarget.clientHeight) : (document.documentElement.scrollHeight - window.innerHeight);
+            if (currentY >= maxScroll - 1) { stopAutoScroll(); return; }
+            scrollAnimationFrame = requestAnimationFrame(smoothScroll);
+        }
+    }
+
+    function stopAutoScroll() {
+        isScrolling = false; cancelAnimationFrame(scrollAnimationFrame);
+        document.getElementById('scrollSpeed').value = 0;
+        document.getElementById('speedVal').innerText = "Off";
+    }
+
+    window.addEventListener('touchstart', () => { if(isScrolling) stopAutoScroll(); });
+    window.addEventListener('wheel', () => { if(isScrolling) stopAutoScroll(); });
+
+    document.getElementById('scrollSpeed').oninput = (e) => {
+        const s = parseInt(e.target.value);
+        document.getElementById('speedVal').innerText = s > 0 ? s : "Off";
+        if (s > 0) { if (!isScrolling) { isScrolling = true; scrollAnimationFrame = requestAnimationFrame(smoothScroll); } } 
+        else { stopAutoScroll(); }
+    };
+// ====================== METRÓNOMO CON VIBRACIÓN HÁPTICA + DETECCIÓN DE COMPÁS ======================
+let metroInterval = null;
+let metroActive = false;
+let currentBpm = 120;
+let beatsPerBar = 4;           // Compás actual (se detectará automáticamente)
+let currentBeat = 0;
+
+function detectarCompas(ritmo, tempo) {
+    const ritmoLower = (ritmo || "").toLowerCase();
+    const bpm = parseInt(tempo) || 120;
+
+    // Detección por palabras clave en el campo "Ritmo"
+    if (ritmoLower.includes("vals") || ritmoLower.includes("3/4") || ritmoLower.includes("tres por cuatro")) {
+        return 3;
+    }
+    if (ritmoLower.includes("6/8") || ritmoLower.includes("seis por ocho") || ritmoLower.includes("compound")) {
+        return 6;
+    }
+    if (ritmoLower.includes("2/4") || ritmoLower.includes("marcha") || ritmoLower.includes("dos por cuatro")) {
+        return 2;
+    }
+    if (ritmoLower.includes("cut time") || ritmoLower.includes("2/2")) {
+        return 2;
+    }
+
+    // Detección aproximada por tempo (regla común)
+    if (bpm > 160) return 2;           // Muy rápido → usualmente 2/4 o 4/4 simple
+    if (bpm < 70) return 4;            // Muy lento → casi siempre 4/4
+
+    // Por defecto: 4/4 (el más común en cantos litúrgicos)
+    return 4;
+}
+
+function toggleMetronome() {
+    const c = (currentCantoId !== null) ? cantos[currentCantoId] : tempCanto;
+    if (!c) return;
+
+    const bpm = parseInt(c.tempo) || 120;
+
+    if (!metroActive) {
+        if (bpm < 40 || bpm > 220) {
+            alert("Tempo debe estar entre 40 y 220 BPM");
+            return;
+        }
+
+        beatsPerBar = detectarCompas(c.ritmo, c.tempo);
+        currentBpm = bpm;
+        metroActive = true;
+
+        document.getElementById('metBtn').style.background = "#2E7D32";
+        document.getElementById('metronome').style.display = "block";
+
+        startMetronomeWithHaptic(bpm, beatsPerBar);
+        
+        // Mostrar información del compás actual
+        console.log(`Metrónomo activado: ${bpm} BPM - ${beatsPerBar}/4`);
+    } else {
+        stopMetronome();
+    }
+    
+    toggleTools();
+}
+
+function startMetronomeWithHaptic(bpm, beats) {
+    clearInterval(metroInterval);
+    currentBeat = 0;
+    
+    const intervalMs = 60000 / bpm;
+
+    const metEl = document.getElementById('metronome');
+
+    function tick() {
+        currentBeat = (currentBeat % beats) + 1;
+
+        // Flash visual más fuerte en el primer tiempo
+        metEl.classList.remove('metronome-flash');
+        void metEl.offsetWidth;
+        metEl.classList.add('metronome-flash');
+
+        // === VIBRACIÓN HÁPTICA ===
+        if (navigator.vibrate) {
+            if (currentBeat === 1) {
+                // Primer tiempo → vibración FUERTE
+                navigator.vibrate([90, 50, 70]);     // patrón fuerte y claro
+            } else {
+                // Tiempos débiles → vibración corta y suave
+                navigator.vibrate(35);
+            }
+        }
+    }
+
+    tick(); // primer tick inmediato
+    metroInterval = setInterval(tick, intervalMs);
+}
+
+function stopMetronome() {
+    clearInterval(metroInterval);
+    if (navigator.vibrate) navigator.vibrate(0); // parar vibración
+
+    const metEl = document.getElementById('metronome');
+    metEl.style.display = "none";
+    metEl.classList.remove('metronome-flash');
+
+    document.getElementById('metBtn').style.background = "var(--primary)";
+    metroActive = false;
+    currentBeat = 0;
+}
+
+    let tesseractWorker = null;
+    async function getTesseractWorker() {
+        if (tesseractWorker) return tesseractWorker;
+        tesseractWorker = await Tesseract.createWorker('spa', 1, { logger: m => console.log(m.status + ": " + Math.round(m.progress * 100) + "%") });
+        await tesseractWorker.setParameters({ tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK });
+        return tesseractWorker;
+    }
+
+    async function importarImagen(input) {
+        const file = input.files[0]; if (!file) return;
+        const editorLetra = document.getElementById('letra');
+        const originalText = editorLetra.value;
+        editorLetra.value = "⏳ Escaneando...";
+        try {
+            const worker = await getTesseractWorker();
+            const { data: { text } } = await worker.recognize(file);
+            editorLetra.value = text;
+        } catch (e) { 
+            editorLetra.value = originalText;
+            alert("Error al escanear imagen.");
+        } finally { input.value = ""; }
+    }
+
+    window.onpopstate = function(event) { if (viewStack.length > 1) { viewStack.pop(); showView(viewStack[viewStack.length - 1], true); } };
+    
+    // REDIRECCIÓN SI ESTÁ EN LA PANTALLA PRINCIPAL
+    function goBack() { 
+        if (viewStack.length === 1 && viewStack[0] === 'homeView') {
+            window.location.href = "index.html";
+            return;
+        }
+        estrofaCounter = 1; 
+        window.history.back(); 
+    }
+
+    function showView(id, isBack = false, fromSave = false) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        const targetView = document.getElementById(id);
+        if(targetView) targetView.classList.add('active');
+        if(id === 'settingsView') document.getElementById('mainTabs').style.display = 'none';
+        else if(id === 'homeView' || id === 'listView') document.getElementById('mainTabs').style.display = 'flex';
+        if(id !== 'detailView') { stopAutoScroll(); stopMetronome(); document.getElementById('previewBadge').style.display = 'none'; document.getElementById('toolsMenu').classList.remove('active'); document.getElementById('scrollIndicator').style.display = 'none'; document.getElementById('shareMenu').classList.remove('active'); }
+        document.getElementById('mainFab').style.display = (id === 'homeView' && isAdmin) ? 'flex' : 'none';
+        if (!isBack) { if (fromSave) { viewStack.pop(); viewStack.push(id); window.history.replaceState({view: id}, ""); } else if (viewStack[viewStack.length - 1] !== id) { viewStack.push(id); window.history.pushState({view: id}, ""); } }
+    }
+
+    function toggleTools() { 
+        document.getElementById('toolsMenu').classList.toggle('active');
+        if (document.getElementById('toolsMenu').classList.contains('active')) {
+            document.getElementById('shareMenu').classList.remove('active');
+        }
+    }
+    function toggleScrollPanel() { const panel = document.getElementById('scrollIndicator'); panel.style.display = panel.style.display === 'flex' ? 'none' : 'flex'; toggleTools(); }
+    function getColorTiempo(tiempo) {
+        if (!tiempo) return "var(--accent)";
+        const t = tiempo.toLowerCase();
+        if (t.includes("adviento") || t.includes("cuaresma")) return "purple";
+        if (t.includes("ordinario de la misa")) return "darkred";
+        if (t.includes("ordinario")) return "green";
+        if (t.includes("santos")) return "#FFD700"; 
+        if (t.includes("triduo pascual")) return "#B22222"; 
+        if (t.includes("pascua") || t.includes("navidad")) return "#D4AF37"; 
+        if (t.includes("francisco")) return "#5D4037"; 
+        if (t.includes("corazón")) return "#D32F2F"; 
+        if (t.includes("virgen") || t.includes("purísima")) return "#4FC3F7"; 
+        if (t.includes("pentecostés")) return "#FF4500"; 
+        if (t.includes("libitum")) return "blue";
+        return "var(--accent)";
+    }
+
+    function toggleFilterMenu() { document.getElementById('filterMenu').classList.toggle('active'); }
+
+function ejecutarFiltros() { // 'function' siempre en minúscula
+    const normalizeStr = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    
+    const busqueda = normalizeStr(document.getElementById('searchInput').value);
+    const fTono = document.getElementById('fTono').value;
+    const fTiempoLiturgico = document.getElementById('fTiempoLiturgico').value;   
+    const fMomento = document.getElementById('fMomento').value;
+    const fRitmo = normalizeStr(document.getElementById('fRitmo').value);
+    const fTempo = document.getElementById('fTempo').value;
+
+    const hayFiltros = busqueda || fTono || fTiempoLiturgico || fMomento || fRitmo || fTempo;
+
+    if (!hayFiltros) {
+        document.getElementById('searchResults').style.display = 'none';
+        document.getElementById('tiemposGrid').style.display = 'grid';
+        return;
+    }
+
+    const filtrados = cantos.filter(c => {
+        const tituloNorm = normalizeStr(c.titulo);
+        const letraNorm = normalizeStr(c.letra);
+        const ritmoNorm = normalizeStr(c.ritmo || "");
+
+        return (
+            (!busqueda || tituloNorm.includes(busqueda) || letraNorm.includes(busqueda)) &&
+            (!fTono || c.tonalidad === fTono) &&
+            (!fTiempoLiturgico || c.tiempoLiturgico === fTiempoLiturgico) &&   
+            (!fMomento || c.momentoMisa === fMomento) &&
+            (!fRitmo || ritmoNorm.includes(fRitmo)) &&
+            (!fTempo || (c.tempo && c.tempo.toString() === fTempo))
+        );
+    });
+
+    // Ocultar vistas previas
+    document.getElementById('tiemposGrid').style.display = 'none';
+    if(document.getElementById('momentosGrid')) document.getElementById('momentosGrid').style.display = 'none';
+    if(document.getElementById('favoritosGrid')) document.getElementById('favoritosGrid').style.display = 'none';
+    if(document.getElementById('programadosView')) document.getElementById('programadosView').style.display = 'none';
+    
+    const resultsContainer = document.getElementById('resultsContainer');
+    const searchResults = document.getElementById('searchResults');
+    
+    searchResults.style.display = 'block';
+    resultsContainer.innerHTML = filtrados.length 
+        ? "" 
+        : "<p style='color:#888; padding:20px;'>No se encontraron cantos.</p>";
+
+    filtrados.forEach(c => {
+        const idx = cantos.indexOf(c);
+        const color = getColorTiempo(c.tiempoLiturgico);
+        // Corregido el uso de ${} para que las variables se muestren
+        resultsContainer.innerHTML += `
+            <div class="song-row" onclick="verDetalle(${idx})">
+                <div>
+                    <strong>${c.titulo}</strong>
+                    <small>${c.tonalidad} • <span style="color: ${color}">${c.tiempoLiturgico}</span> • ${c.momentoMisa}</small>
+                </div>
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <i class="fas fa-plus-circle add-to-prog" onclick="event.stopPropagation(); agregarAProg('${c.id}')"></i>
+                    <i class="fas fa-play-circle" style="color:var(--accent); font-size:1.5rem;"></i>
+                </div>
+            </div>`;
+    });
+}
+
+function limpiarFiltros() { // 'function' debe ir en minúscula
+    // Limpiar los inputs de texto y selectores
+    document.getElementById('searchInput').value = "";
+    document.getElementById('fTono').value = "";
+    document.getElementById('fTiempoLiturgico').value = ""; 
+    document.getElementById('fMomento').value = "";
+    document.getElementById('fRitmo').value = "";
+    document.getElementById('fTempo').value = "";
+    
+    // Si toggleFilterMenu solo cierra el menú, está bien aquí
+    if (typeof toggleFilterMenu === "function") {
+        toggleFilterMenu();
+    }
+
+    // Volver a ejecutar los filtros para mostrar la lista completa
+    ejecutarFiltros();
+}
+
+
+    async function importarPDF(input) {
+        const file = input.files[0]; if (!file) return;
+        const editorLetra = document.getElementById('letra'); editorLetra.value = "Leyendo PDF...";
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+            let fullText = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                fullText += textContent.items.map(item => item.str).join(" ") + "\n";
+            }
+            editorLetra.value = fullText;
+        } catch (e) { editorLetra.value = "Error"; }
+    }
+
+    function switchTab(type) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('#tabTiempos img').src = "Iconos/tiempos.png"; document.querySelector('#tabMomentos img').src = "Iconos/momentos.png"; document.querySelector('#tabProgramados img').src = "Iconos/programados.png"; document.querySelector('#tabFavoritos img').src = "Iconos/favoritos.png";
+        document.getElementById('tiemposGrid').style.display = 'none'; document.getElementById('momentosGrid').style.display = 'none'; document.getElementById('favoritosGrid').style.display = 'none'; document.getElementById('programadosView').style.display = 'block'; document.getElementById('searchResults').style.display = 'none';
+        if(type === 'tiempos') { document.getElementById('tabTiempos').classList.add('active'); document.querySelector('#tabTiempos img').src = "Iconos/tiempos1.png"; document.getElementById('tiemposGrid').style.display = 'grid'; }
+        else if(type === 'momentos') { document.getElementById('tabMomentos').classList.add('active'); document.querySelector('#tabMomentos img').src = "Iconos/momentos1.png"; document.getElementById('momentosGrid').style.display = 'grid'; }
+        else if(type === 'favoritos') { document.getElementById('tabFavoritos').classList.add('active'); document.querySelector('#tabFavoritos img').src = "Iconos/favoritos1.png"; verFavoritos(); }
+        else if(type === 'programados') { document.getElementById('tabProgramados').classList.add('active'); document.querySelector('#tabProgramados img').src = "Iconos/pro1.png"; document.getElementById('programadosView').style.display = 'block'; renderProgramados(); }
+    }
+
+async function init() {
+    const tGrid = document.getElementById('tiemposGrid'), mGrid = document.getElementById('momentosGrid');
+    const selectTiempo = document.getElementById('tiempoLiturgico'), selectMomento = document.getElementById('momentoMisa');
+    const selectTono = document.getElementById('tonalidad'), selectTonoSec = document.getElementById('tonalidadSec'), selectTonoPers = document.getElementById('tonalidadPersonal');
+    const fTono = document.getElementById('fTono'), fTonoSec = document.getElementById('fTonoSec'), fTonoPers = document.getElementById('fTonoPers'), fMomento = document.getElementById('fMomento');
+    // Llenar filtro de Tiempo Litúrgico
+    const fTiempo = document.getElementById('fTiempoLiturgico');
+
+    // Limpiamos el select primero para evitar duplicados si la función se ejecuta dos veces
+    fTiempo.innerHTML = '<option value="">Todos</option>'; 
+
+    defTiempos.forEach(cat => {
+        // Corregido: sintaxis ${variable} para los backticks
+        fTiempo.innerHTML += `<option value="${cat}">${cat}</option>`;
+    });
+
+    tGrid.innerHTML = ""; mGrid.innerHTML = "";
+    selectTiempo.innerHTML = '<option value="" disabled selected>T. Litúrgico</option>';
+    selectMomento.innerHTML = '<option value="" disabled selected>Momento</option>';
+    fMomento.innerHTML = '<option value="">Todos</option>';
+    const iconosTiempos = { "Ad Libitum": "ad.png", "Adviento": "adviento.png", "Navidad": "navidad.png", "Cuaresma": "cuaresma.png", "Pascua": "pascua.png", "Ordinario": "ordinario.png", "Ordinario de la Misa": "misa.png", "Pentecostés": "pentecostes.png", "Purísima": "purisima.png", "Sagrado Corazón": "corazon.png", "San Francisco": "francisco.png", "Santos": "santos.png", "Triduo Pascual": "triduo.png", "Virgen María": "maria.png" };
+    
+    defTiempos.sort().forEach(cat => { 
+        const imgFile = iconosTiempos[cat] || "logo.png";
+        tGrid.innerHTML += `
+<div class="card" onclick="verCategoria('${cat}', 'tiempo')">
+    <img src="Iconos/${imgFile}" alt="${cat}">
+    <div class="card-title">${cat}</div>
+</div>`; 
+        selectTiempo.innerHTML += `<option value="${cat}">${cat}</option>`; 
+    });
+
+    const momentosConfig = [{ n: "Entrada", i: "entrada.png" }, { n: "Kyrie", i: "kyrie.png" }, { n: "Gloria", i: "gloria.png" }, { n: "Salmos", i: "salmos.png" }, { n: "Aleluya", i: "aleluya.png" }, { n: "Tracto", i: "honor.png" }, { n: "Ofertorio", i: "ofertorio.png" }, { n: "Sanctus", i: "santo.png" }, { n: "Doxología", i: "doxologia.png" }, { n: "Padre Nuestro", i: "padre.png" }, { n: "Agnus Dei", i: "cordero.png" }, { n: "Comunión", i: "comunion.png" }, { n: "Adoración", i: "adoración.png" }, { n: "Salida", i: "salida.png" }, { n: "Alabanzas", i: "alabanzas.png" }, { n: "Exequias", i: "difuntos.png" }, { n: "Varios", i: "varios.png" }];
+    
+    momentosConfig.forEach(m => {
+        mGrid.innerHTML += `
+<div class="card" onclick="verCategoria('${m.n}', 'momento')">
+    <img src="Iconos/${m.i}" alt="${m.n}">
+    <div class="card-title">${m.n}</div>
+</div>`;
+        selectMomento.innerHTML += `<option value="${m.n}">${m.n}</option>`; 
+        fMomento.innerHTML += `<option value="${m.n}">${m.n}</option>`; 
+    });
+
+    opcionesTonos.forEach(t => { 
+        selectTono.innerHTML += `<option value="${t}">${t}</option>`; 
+        selectTonoSec.innerHTML += `<option value="${t}">${t}</option>`; 
+        fTono.innerHTML += `<option value="${t}">${t}</option>`; 
+    });
+    
+    // --- INTEGRACIÓN SOLICITADA ---
+    console.log("selectTonoPers encontrado:", !!selectTonoPers);
+
+    if (!selectTonoPers) {
+        console.error("¡No se encontró el select de MG (Modo)!");
+        return;
+    }
+
+    selectTonoPers.innerHTML = '<option value="">Normal</option>';
+    fTonoPers.innerHTML = '<option value="">Todos</option>';
+    
+    const opcionesModosCopia = [
+        "Mayor (Jónico)", "Menor (Eólico)", "Jónico", "Dórico", 
+        "Frigio", "Lidio", "Mixolidio", "Eólico", "Locrio"
+    ];
+
+    opcionesModosCopia.forEach(m => {
+        selectTonoPers.innerHTML += `<option value="${m}">${m}</option>`;
+        fTonoPers.innerHTML += `<option value="${m}">${m}</option>`;
+    });
+    // --- FIN DE INTEGRACIÓN ---
+
+    selectTonoPers.onchange = actualizarAcordesInteligentes;
+
+    // Activar Wake Lock al iniciar la aplicación
+    requestWakeLock();
+
+    // Dentro de init(), al final:
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            await cargarProgramaciones();
+            renderProgramados();
+        }
+    });
+}
+
+
+
+
+    // --- INTEGRACIÓN DE TONAL.JS PARA TRANSPOSICIÓN Y RECONOCIMIENTO ---
+    function transposeNote(notaOriginal, semitonos) {
+        if (!notaOriginal) return "";
+        try {
+            // Normalizar nota (convertir Do -> C, etc.)
+            let notaC = americanas[notaOriginal] || notaOriginal;
+            // Transponer usando Tonal
+            let nuevaNota = Tonal.Note.transpose(notaC, Tonal.Interval.fromSemitones(semitonos));
+            // Simplificar enarmónicos (ej: G# -> Ab si es necesario para legibilidad)
+            nuevaNota = Tonal.Note.simplify(nuevaNota);
+            
+            if (isAmerican) return nuevaNota;
+            return latinas[nuevaNota] || nuevaNota;
+        } catch (e) {
+            return notaOriginal;
+        }
+    }
+
+    // FUNCIÓN PARA ALTERNAR MODO VISTA
+    function toggleModoVista() {
+        modoVistaCorista = !modoVistaCorista;
+        const btn = document.getElementById('btnModoVista');
+        const visor = document.getElementById('viewLetra');
+        
+        if (modoVistaCorista) {
+            btn.innerText = "MC";
+            visor.classList.add('hide-chords');
+        } else {
+            btn.innerText = "MA";
+            visor.classList.remove('hide-chords');
+        }
+        toggleTools();
+    }
+let ws; 
+let wsRegions;
+let abPoints = [];
+
+// --- UTILIDAD: GENERADOR DE DIAGRAMA DE PIANO SVG PROFESIONAL CON TONAL.JS ---
+function generarPianoSVG(nombreAcorde) {
+    const acordeInfo = Tonal.Chord.get(nombreAcorde);
+    const notasAResaltar = acordeInfo.notes.map(n => Tonal.Note.chroma(n));
+
+    const teclasBlancas = [0, 2, 4, 5, 7, 9, 11]; 
+    const teclasNegras = [1, 3, 6, 8, 10];      
+    
+    let svg = `<svg width="140" height="65" viewBox="0 0 140 65" xmlns="http://www.w3.org/2000/svg" style="border-radius:6px; background: white; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2));">`;
+    
+    for (let i = 0; i < 7; i++) {
+        const x = i * 20;
+        const notaIndex = teclasBlancas[i];
+        const fill = notasAResaltar.includes(notaIndex) ? "#FFD700" : "#FFFFFF";
+        svg += `<rect x="${x}" y="0" width="20" height="60" fill="${fill}" stroke="#333" stroke-width="0.5" />`;
+    }
+
+    const posicionesNegras = [14, 34, 74, 94, 114];
+    teclasNegras.forEach((notaIndex, i) => {
+        const fill = notasAResaltar.includes(notaIndex) ? "#FFD700" : "#000000";
+        svg += `<rect x="${posicionesNegras[i]}" y="0" width="12" height="38" fill="${fill}" stroke="black" rx="1" ry="1" />`;
+    });
+
+    svg += `</svg>`;
+    return svg;
+}
+
+// Función para mostrar/quitar el popover de digitación (Toggle y Control de bordes)
+function mostrarDigitacion(e, acorde) {
+    e.stopPropagation();
+    let existing = document.getElementById('piano-popover');
+    
+    // Si ya existe y es el mismo acorde, lo quitamos (Toggle)
+    if (existing) {
+        const acordePrevio = existing.getAttribute('data-acorde');
+        existing.remove();
+        if (acordePrevio === acorde) return;
+    }
+
+    const popover = document.createElement('div');
+    popover.id = 'piano-popover';
+    popover.setAttribute('data-acorde', acorde);
+    popover.style.cssText = `
+        position: absolute; 
+        z-index: 1000; 
+        background: white; 
+        padding: 8px; 
+        border-radius: 10px; 
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4); 
+        pointer-events: none;
+        transform: translateX(-50%);
+        transition: opacity 0.2s;
+    `;
+    
+    popover.innerHTML = `
+        <div style="font-size:11px; font-weight:bold; text-align:center; color:#6A1B9A; margin-bottom:4px; font-family: sans-serif;">${acorde}</div>
+        ${generarPianoSVG(acorde)}
+    `;
+    
+    document.body.appendChild(popover);
+
+    // Ajuste de posición y prevención de desborde
+    const popoverRect = popover.getBoundingClientRect();
+    let left = e.pageX;
+    let top = e.pageY - 95;
+
+    // Control horizontal (pantalla)
+    const margen = 10;
+    if (left - (popoverRect.width / 2) < margen) {
+        left = (popoverRect.width / 2) + margen;
+    } else if (left + (popoverRect.width / 2) > window.innerWidth - margen) {
+        left = window.innerWidth - (popoverRect.width / 2) - margen;
+    }
+
+    popover.style.left = `${left}px`;
+    popover.style.top = `${top}px`;
+
+    // Cerrar si se toca cualquier otra parte
+    const closeHandler = () => {
+        popover.remove();
+        document.removeEventListener('click', closeHandler);
+    };
+    setTimeout(() => document.addEventListener('click', closeHandler), 10);
+}
+// ====================== SUSTITUCIÓN AUTOMÁTICA DE ACORDES ======================
+
+function simplificarAcorde(acordeCompleto) {
+    if (!acordeCompleto) return "";
+
+    // Extraer solo la nota base (C, D, E, F, G, A, B, Do, Re, etc.)
+    const match = acordeCompleto.match(/^([A-G]|Do|Re|Mi|Fa|Sol|La|Si)(#|b|&)?/i);
+    if (!match) return acordeCompleto;
+
+    let notaBase = match[0];
+
+    // Convertir a notación americana si está en latina
+    if (/^(Do|Re|Mi|Fa|Sol|La|Si)/i.test(notaBase)) {
+        notaBase = americanas[notaBase.charAt(0).toUpperCase() + notaBase.slice(1)] || notaBase;
+    }
+
+    return notaBase;
+}
+
+function toggleSustitucionAcordes() {
+    sustitucionActiva = !sustitucionActiva;
+    
+    const btn = document.getElementById('btnSustitucion');
+    if (btn) {
+        if (sustitucionActiva) {
+            btn.style.background = "#2E7D32";
+            btn.style.color = "white";
+            btn.innerHTML = `<i class="fas fa-magic"></i> SIMPLE ✓`;
+        } else {
+            btn.style.background = "";
+            btn.style.color = "";
+            btn.innerHTML = `<i class="fas fa-magic"></i> SIMPLE`;
+        }
+    }
+
+    renderTexto(); // volver a renderizar la letra con el nuevo modo
+}
+function renderTexto() {
+    const c = (currentCantoId !== null) ? cantos[currentCantoId] : tempCanto; 
+    if (!c) return;
+    
+    const regexChords = /(?<=^|[\s\[\(\/,])([A-G]|Do|Re|Mi|Fa|Sol|La|Si)(#|b|&)?(maj|min|m|M|aug|dim|sus|add|ø|maj?\d+|min?\d+|\d+|[\+\-\(\)])*(\/([A-G]|Do|Re|Mi|Fa|Sol|La|Si)(#|b|&)?(maj|min|m|M|aug|dim|sus|add|ø|maj?\d+|min?\d+|\d+|[\+\-\(\)])*)?(?=$|[\s\]\)\.,\?])/g;
+    const sectionRules = [
+        { regex: /^INTRODUCCIÓN:/i, class: "m-introduccion" },
+        { regex: /^INICIO:/i, class: "m-inicio" },
+        { regex: /^CORO:/i, class: "m-coro" },
+        { regex: /^(ESTROFA|VERSO|V\d+)\s*\d*:/i, class: "m-estrofa" },
+        { regex: /^PUENTE:/i, class: "m-puente" },
+        { regex: /^FINAL:/i, class: "m-final" }
+    ];
+    const palabrasExcluidas = ["A", "La", "Si", "Do", "así", "mi", "re", "Sol", "Fa"];
+    let isChorusMode = false;
+    let isIntroMode = false;
+
+    const tieneSegunda = c.letra.includes('¢');
+
+    let htmlProcesado = c.letra.split('\n').map(linea => {
+        const lineaLimpia = linea.trim();
+        
+        // Detectar si es una línea de "Segunda" (texto entre ¢)
+        const esLineaSegunda = linea.includes('¢');
+
+        for(let rule of sectionRules) {
+            if(rule.regex.test(lineaLimpia)) {
+                isChorusMode = (rule.class === "m-coro");
+                if(rule.class === "m-introduccion") {
+                    isIntroMode = true;
+                    return `</div><span class="section-marker ${rule.class}" onclick="this.nextSibling.style.display = (this.nextSibling.style.display === 'none' ? 'block' : 'none')" style="cursor:pointer; background:#6A1B9A; color:white; display:block;">${lineaLimpia}</span><div class="intro-content" style="display:none;">`;
+                }
+                let prefijo = isIntroMode ? "</div>" : "";
+                isIntroMode = false;
+                return `${prefijo}<span class="section-marker ${rule.class}">${lineaLimpia}</span>`;
+            }
+        }
+        const matchesLine = linea.match(regexChords) || [];
+        const countAlfabeticos = (linea.match(/[a-z]/gi) || []).length;
+        const countEspacios = (linea.match(/\s/g) || []).length;
+        const longitudAcordesDetectados = matchesLine.join('').length;
+        const esLineaDeAcordes = matchesLine.length > 0 && ((countAlfabeticos < (longitudAcordesDetectados + 4)) || (countEspacios > linea.length * 0.3) || linea.includes('['));
+
+        if (modoVistaCorista && esLineaDeAcordes) {
+            return '';
+        }
+
+        let procesada = linea.replace(/\((.*?)\)/g, (m, con) => {
+            let contenidoTransformado = con.replace(regexChords, (match) => {
+                const partes = match.trim().split('/');
+                const resp = (tx) => {
+                    const nMatch = tx.match(/^(Do|Re|Mi|Fa|Sol|La|Si|[A-G])(#|b|&)?/);
+                    if (nMatch) {
+                        let nBase = nMatch[0];
+                        let ext = tx.substring(nBase.length);
+                        if (currentTranspose === 0) return tx;
+                        const esLatinoOriginal = /^(Do|Re|Mi|Fa|Sol|La|Si)/.test(nBase);
+                        return transposeNote(nBase, currentTranspose, esLatinoOriginal) + ext;
+                    }
+                    return tx;
+                };
+                let res = resp(partes[0]);
+                if (partes[1]) res += "/" + resp(partes[1]);
+                return `<span class="chord" onclick="mostrarDigitacion(event, '${res}')" style="color: #6A1B9A !important;">${res}</span>`;
+            });
+            return `(${contenidoTransformado})`;
+        });
+
+        // BLOQUE ACTUALIZADO: Reemplazo de acordes con lógica de simplificación
+        procesada = procesada.replace(regexChords, (match) => {
+            if (match.includes('style="color:')) return match; 
+
+            let acordeFinal = match.trim();
+
+            if (!esLineaDeAcordes) {
+                if (palabrasExcluidas.some(p => p.toLowerCase() === acordeFinal.toLowerCase())) return match;
+                if (acordeFinal.length <= 2 && !/[#b&7m\/]/.test(acordeFinal)) return match;
+            }
+
+            // Aplicar simplificación si está activado
+            if (typeof sustitucionActiva !== 'undefined' && sustitucionActiva) {
+                acordeFinal = simplificarAcorde(acordeFinal);
+            }
+
+            const partes = acordeFinal.split('/');
+            const proc = (tx) => {
+                const nMatch = tx.match(/^(Do|Re|Mi|Fa|Sol|La|Si|[A-G])(#|b|&)?/);
+                if (nMatch) {
+                    let nBase = nMatch[0];
+                    let ext = tx.substring(nBase.length);
+                    return transposeNote(nBase, currentTranspose) + ext;
+                }
+                return tx;
+            };
+
+            let res = proc(partes[0]);
+            if (partes[1]) res += "/" + proc(partes[1]);
+
+            return `<span class="chord" onclick="mostrarDigitacion(event, '${res}')">${res}</span>`;
+        });
+        
+        procesada = procesada.replace(/\*\*(.*?)\*\*/g, (m, p1) => `<span class="section-marker m-enfasis-rojo">${p1.toUpperCase()}</span>`)
+                            .replace(/_(.*?)_/g, (m, p1) => `<span class="section-marker m-enfasis-naranja">${p1.toUpperCase()}</span>`)
+                            .replace(/!!(.*?)!!/g, (m, p1) => `<span class="section-marker m-enfasis-morado">${p1.toUpperCase()}</span>`)
+                            .replace(/\*(.*?)\*/g, (m, p1) => `<span class="section-marker m-enfasis">${p1.toUpperCase()}</span>`);
+
+        if (esLineaSegunda) {
+            procesada = procesada.replace(/¢(.*?)¢/g, (m, p1) => `<span style="color: #2E7D32;">${p1}</span>`);
+            return `<div class="linea-clave-sol" style="display: none;">${procesada}</div>`;
+        }
+
+        if (isChorusMode && lineaLimpia !== "") return `<div class="chorus-content">${procesada}</div>`;
+        
+        if (lineaLimpia === "") return `<div style="min-height: 1em;"></div>`;
+
+        return `<div>${procesada}</div>`;
+    }).join('');
+
+    const visor = document.getElementById('viewLetra');
+    visor.innerHTML = htmlProcesado + "</div>";
+    visor.style.fontSize = fontSize + "px";
+    if (modoVistaCorista) visor.classList.add('hide-chords'); else visor.classList.remove('hide-chords');
+
+    let baseTono = c.tonalidad.replace(/m$/, ''); 
+    let esMenor = c.tonalidad.endsWith('m');
+    let nuevoTono = transposeNote(baseTono, currentTranspose) + (esMenor ? "m" : "");
+    const myKeySaved = localStorage.getItem(`myKey_${c.id}`);
+
+    let btnMyKeyHtml = `<button class="btn-my-key ${myKeySaved ? 'active' : ''}" onclick="seleccionarMiTono('${c.id}')"><i class="fas fa-music"></i> ${myKeySaved ? myKeySaved : 'MI TONO'}</button>`;
+    let tcBtnHtml = isAdmin ? `<button onclick="abrirTcModal()" class="btn-my-key" style="background:#2C211F; color:#E8D4A2; border:1px solid #D4AF37;"><i class="fas fa-comment-dots"></i> TC</button>` : '';
+    let transpoText = currentTranspose !== 0 ? (currentTranspose >= 0 ? "+" : "") + currentTranspose : "";
+    let originalBadge = `<div class="badge-original-track">${c.tonalidad} ${transpoText}</div>`;
+
+    let tcDisplayHtml = c.textoComplementario ? `<div style="margin:12px 0 8px;
+    padding:12px 16px; background:#fff5e6; border-radius:12px; border-left:5px
+    solid #B8860B; font-size:0.9rem; line-height:1.5;"><strong
+    style="color:#B8860B;"><i class="fas fa-comment-dots"></i>
+    Este canto sera tocado en:</strong><br>${c.textoComplementario}</div>` : '';
+    let btnPlayIntegrado = c.audioUrl ? `<button class="btn-reproducir-integrado" id="btnAudioIntegrado" style="display:flex;" onclick="togglePlayerModal()"><i class="fas fa-play-circle"></i> ESCUCHAR AUDIO</button>` : "";
+    
+    let btnSegunda = tieneSegunda ? `<button class="btn-my-key" onclick="Array.from(document.querySelectorAll('.linea-clave-sol')).forEach(el => el.style.display = el.style.display === 'none' ? 'block' : 'none')" style="background:#1B5E20; color:white;"><i class="fas fa-layer-group"></i> SEGUNDA</button>` : "";
+    
+    // Botón Padre Nuestro I - Solo visible en Sanctus
+    let btnPadreNuestro = (c.momentoMisa === "Sanctus") 
+        ? `<button class="btn-my-key" onclick="cargarCantoPorNombre('Padre Nuestro I')" 
+                   style="background:#0D47A1; color:white; font-size:0.82rem; padding:6px 12px;">
+            <i class="fas fa-cross"></i> P. NUESTRO I
+           </button>` 
+        : "";
+
+    document.getElementById('viewTonoBadge').innerHTML = `
+        <div style="display: flex; flex-direction: column; width: 100%;">
+            ${btnPlayIntegrado}
+            
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    ${btnSegunda}
+                    ${btnPadreNuestro}
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    ${tcBtnHtml} 
+                    ${originalBadge} 
+                    <span style="font-weight:bold;">${nuevoTono}</span> 
+                    ${btnMyKeyHtml}
+                </div>
+            </div>
+            
+            ${tcDisplayHtml}
+        </div>`;
+
+    document.getElementById('viewRitmoTempo').innerText = (c.ritmo ? `• ${c.ritmo} ` : "") + (c.tempo ? `• ${c.tempo} BPM` : "");
+    document.getElementById('viewAutor').innerText = c.autor ? "Autor: " + c.autor : "";
+    
+    if (c.audioUrl) { 
+        initWaveSurfer(c.audioUrl); 
+        llenarSelectorTono();
+        llenarSelectorVelocidad();
+    } else if (ws) { ws.destroy(); }
+}
+
+function toggleTextoClaveSol() {
+    const elementos = document.querySelectorAll('.texto-clave-sol');
+    elementos.forEach(el => {
+        el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'inline' : 'none';
+    });
+}
+
+// --- FUNCIONES SOPORTE DEL REPRODUCTOR ---
+
+function llenarSelectorTono() {
+    const s = document.getElementById('pitchSelect');
+    if (!s) return;
+    s.innerHTML = "";
+    for (let t = -12; t <= 12; t++) {
+        let opt = document.createElement('option');
+        opt.value = t;
+        opt.innerText = (t > 0 ? "+" + t : t) + " sem";
+        if (t === 0) opt.selected = true;
+        s.appendChild(opt);
+    }
+}
+
+function llenarSelectorVelocidad() {
+    const s = document.getElementById('speedSelect');
+    if (!s) return;
+    s.innerHTML = "";
+    for (let v = 0.5; v <= 2.01; v += 0.05) {
+        let opt = document.createElement('option');
+        opt.value = v.toFixed(2);
+        opt.innerText = v.toFixed(2) + "x";
+        if (v.toFixed(1) == 1.0) opt.selected = true;
+        s.appendChild(opt);
+    }
+}
+
+function initWaveSurfer(url) {
+    if (ws) ws.destroy();
+    abPoints = []; 
+    ws = WaveSurfer.create({
+        container: '#waveform',
+        waveColor: '#d1d1d1',
+        progressColor: '#B8860B',
+        cursorColor: '#2C211F',
+        barWidth: 2, height: 70, url: url,
+    });
+    wsRegions = ws.registerPlugin(WaveSurfer.Regions.create());
+
+    // Vigilancia A-B
+    ws.on('timeupdate', (time) => {
+        if (abPoints.length === 2) {
+            const start = Math.min(...abPoints);
+            const end = Math.max(...abPoints);
+            if (time >= end || time < start - 0.1) ws.setTime(start);
+        }
+    });
+
+    ws.on('play', () => document.getElementById('playBtn').innerHTML = '<i class="fas fa-pause"></i>');
+    ws.on('pause', () => document.getElementById('playBtn').innerHTML = '<i class="fas fa-play"></i>');
+}
+
+function changePitch(val) {
+    const audio = ws.getMediaElement();
+    if (audio) {
+        audio.preservesPitch = false; 
+        const rate = Math.pow(1.05946, parseInt(val));
+        ws.setPlaybackRate(rate);
+    }
+}
+
+function setPointAB() {
+    const time = ws.getCurrentTime();
+    const btn = document.getElementById('abBtn');
+    if (abPoints.length >= 2) {
+        abPoints = []; wsRegions.clearRegions();
+        btn.classList.remove('active'); return;
+    }
+    abPoints.push(time);
+    if (abPoints.length === 2) {
+        const s = Math.min(...abPoints), e = Math.max(...abPoints);
+        wsRegions.addRegion({ start: s, end: e, color: 'rgba(184, 134, 11, 0.3)', drag: false, resize: false });
+        btn.classList.add('active'); ws.setTime(s);
+    } else { btn.classList.add('active'); }
+}
+
+function togglePlayerModal(nombreCanto) {
+    const modal = document.getElementById('playerModal');
+    const tituloElemento = document.getElementById('songTitle');
+    
+    modal.classList.toggle('active');
+
+    // Solo actualiza si el modal se está abriendo y recibimos un nombre
+    if (modal.classList.contains('active') && nombreCanto) {
+        tituloElemento.innerText = nombreCanto.toUpperCase();
+    }
+}
+
+
+
+let cantoIdActualMiTono = null;
+
+function seleccionarMiTono(cantoId) {
+    cantoIdActualMiTono = cantoId;
+    const modal = document.getElementById('miTonoModal');
+    const tonoGuardado = localStorage.getItem(`myKey_${cantoId}`) || "";
+
+    // Título y tono actual
+    document.getElementById('miTonoActual').innerHTML = 
+        tonoGuardado ? tonoGuardado : '<span style="color:#aaa; font-style:italic;">Ninguno</span>';
+
+    // Limpiar input custom
+    document.getElementById('inputMiTonoCustom').value = tonoGuardado;
+
+    // Generar grid de tonos
+    const grid = document.getElementById('tonosGrid');
+    grid.innerHTML = "";
+    
+    opcionesTonos.forEach(tono => {
+        const btn = document.createElement('div');
+        btn.className = `tono-btn ${tono === tonoGuardado ? 'selected' : ''}`;
+        btn.textContent = tono;
+        btn.onclick = () => {
+            // Quitar selección anterior
+            document.querySelectorAll('.tono-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            document.getElementById('inputMiTonoCustom').value = tono;
+        };
+        grid.appendChild(btn);
+    });
+
+    modal.style.display = 'flex';
+}
+
+// ====================== FUNCIONES DEL MODAL ======================
+function guardarMiTono() {
+    const valor = document.getElementById('inputMiTonoCustom').value.trim();
+    
+    if (valor === "") {
+        localStorage.removeItem(`myKey_${cantoIdActualMiTono}`);
+    } else {
+        localStorage.setItem(`myKey_${cantoIdActualMiTono}`, valor);
+    }
+    
+    cerrarMiTonoModal();
+    renderTexto(); // actualiza el badge en la vista del canto
+}
+
+function borrarMiTono() {
+    if (confirm("¿Borrar tu tono personal?")) {
+        localStorage.removeItem(`myKey_${cantoIdActualMiTono}`);
+        cerrarMiTonoModal();
+        renderTexto();
+    }
+}
+
+function cerrarMiTonoModal() {
+    const modal = document.getElementById('miTonoModal');
+    modal.style.display = 'none';
+    cantoIdActualMiTono = null;
+}
+
+    function changeZoom(n) { fontSize += n; renderTexto(); }
+    function toggleFullScreen() {
+        const detailView = document.getElementById('detailView');
+        if (!document.fullscreenElement) { if (detailView.requestFullscreen) detailView.requestFullscreen(); else if (detailView.webkitRequestFullscreen) detailView.webkitRequestFullscreen(); } else { if (document.exitFullscreen) document.exitFullscreen(); }
+        toggleTools();
+    }
+
+    function verCategoria(nombre, tipo) {
+        document.getElementById('categoryTitle').innerText = nombre;
+        const container = document.getElementById('songsContainer'); container.innerHTML = "";
+        cantos.filter(c => tipo === 'tiempo' ? c.tiempoLiturgico === nombre : c.momentoMisa === nombre).forEach(c => { const idx = cantos.indexOf(c); const color = getColorTiempo(c.tiempoLiturgico); container.innerHTML += `<div class="song-row" onclick="verDetalle(${idx})"><div><strong>${c.titulo}</strong><small>${c.tonalidad} • <span style="color:${color}">${c.tiempoLiturgico}</span></small></div><div style="display:flex; align-items:center; gap:15px;"><i class="fas fa-plus-circle add-to-prog" onclick="event.stopPropagation(); agregarAProg('${c.id}')"></i><i class="fas fa-play-circle" style="color:var(--accent); font-size:1.5rem;"></i></div></div>`; });
+        showView('listView');
+    }
+
+    function verFavoritos() {
+        document.getElementById('categoryTitle').innerText = "Mis Favoritos";
+        const container = document.getElementById('songsContainer'); container.innerHTML = "";
+        cantos.filter(c => c.favorito).forEach(c => { const idx = cantos.indexOf(c); const color = getColorTiempo(c.tiempoLiturgico); container.innerHTML += `<div class="song-row" onclick="verDetalle(${idx})"><div><strong>${c.titulo}</strong><small>${c.tonalidad} • <span style="color:${color}">${c.tiempoLiturgico}</span></small></div><div style="display:flex; align-items:center; gap:15px;"><i class="fas fa-plus-circle add-to-prog" onclick="event.stopPropagation(); agregarAProg('${c.id}')"></i><i class="fas fa-star" style="color:var(--accent);"></i></div></div>`; });
+        showView('listView');
+    }
+
+    async function toggleFavorite() { const c = cantos[currentCantoId]; await db.collection("cantos").doc(c.id).update({ favorito: !c.favorito }); c.favorito = !c.favorito; renderTexto(); toggleTools(); }
+
+function verDetalle(idx, fromSave = false) { // "function" corregido a minúscula
+    currentCantoId = idx;
+    const c = cantos[idx];
+
+    if (!c) return; // Validación de seguridad: evita errores si idx no existe
+
+    // === CARGAR TRANSPORTE PERSISTENTE ===
+    const songId = c.id;
+
+    if (currentProgId !== null) {
+        currentTranspose = currentProgTransposes[songId] || 0;
+    } 
+    else if (currentCategoryKey !== null) {
+        // Asegúrate de que currentCategoryTransposes tenga cargada la data de la categoría actual
+        currentTranspose = currentCategoryTransposes[songId] || 0;
+    } 
+    else {
+        currentTranspose = 0;
+    }
+
+    // --- Gestión del Tono Personalizado ---
+    const storageKey = `tonoPers_${c.titulo.replace(/\s+/g, '_')}`;
+    c.tonoPersonal = localStorage.getItem(storageKey) || "";
+
+    // Actualizar Interfaz
+    document.getElementById('viewTitulo').innerText = c.titulo;
+    renderTexto();
+    showView('detailView', false, fromSave);
+}
+
+
+
+    function previsualizarCanto() { currentCantoId = null; document.getElementById('previewBadge').style.display = 'block'; tempCanto = { titulo: document.getElementById('titulo').value || "Vista Previa", autor: document.getElementById('autor').value, letra: document.getElementById('letra').value, tonalidad: document.getElementById('tonalidad').value, tonalidadSec: document.getElementById('tonalidadSec').value, tiempoLiturgico: document.getElementById('tiempoLiturgico').value, momentoMisa: document.getElementById('momentoMisa').value, ritmo: document.getElementById('ritmo').value, tempo: document.getElementById('tempo').value, favorito: false, audioUrl: audioUrlSubido, tonoPersonal: document.getElementById('tonalidadPersonal').value,classificatio: document.getElementById('classificatioHidden').value}; renderTexto(); showView('detailView'); }
+
+    async function guardarCanto() {
+        if(!isAdmin) return alert("No tienes permisos.");
+        const titulo = document.getElementById('titulo').value.trim();
+        const obj = { 
+            titulo: titulo, 
+            autor: document.getElementById('autor').value.trim(),
+            tiempoLiturgico: document.getElementById('tiempoLiturgico').value, 
+            momentoMisa: document.getElementById('momentoMisa').value, 
+            tonalidad: document.getElementById('tonalidad').value, 
+            tonalidadSec: document.getElementById('tonalidadSec').value, 
+            ritmo: document.getElementById('ritmo').value.trim(), 
+            tempo: document.getElementById('tempo').value.trim(), 
+            letra: document.getElementById('letra').value, 
+            favorito: currentFirebaseId ? (cantos.find(c => c.id === currentFirebaseId)?.favorito || false) : false,
+            audioUrl: audioUrlSubido || (currentFirebaseId ? (cantos.find(c => c.id === currentFirebaseId)?.audioUrl || null) : null),
+classificatio: document.getElementById('classificatioHidden').value
+        };
+        if(!obj.titulo || !obj.tiempoLiturgico) return alert("Faltan datos");
+        const storageKey = `tonoPers_${titulo.replace(/\s+/g, '_')}`;
+        if(document.getElementById('tonalidadPersonal').value) localStorage.setItem(storageKey, document.getElementById('tonalidadPersonal').value);
+        else localStorage.removeItem(storageKey);
+        let id = currentFirebaseId; 
+        if(id) await db.collection("cantos").doc(id).update(obj);
+        else { const r = await db.collection("cantos").add(obj); id = r.id; }
+        audioUrlSubido = null;
+        document.getElementById('audioBtn').style.background = "var(--accent)";
+        document.getElementById('audioBtn').innerHTML = '<i class="fas fa-microphone"></i> AUDIO';
+        estrofaCounter = 1; 
+        setTimeout(() => { const newIdx = cantos.findIndex(c => c.id === id); if(newIdx !== -1) verDetalle(newIdx, true); else showView('homeView'); }, 500);
+          const notas = document.getElementById('notasMelodia').value;
+// Agrega 'notasMelodia: notas' al objeto que envías a db.collection("cantos").add(...) o set(...)
+    }
+
+    async function borrarCantoActual() {
+        if(!isAdmin) return;
+        const c = cantos[currentCantoId];
+        if(confirm(`¿Estás seguro de que deseas eliminar permanentemente "${c.titulo}"? Esta acción no se puede deshacer.`)) {
+            try {
+                await db.collection("cantos").doc(c.id).delete();
+                alert("Canto eliminado correctamente.");
+                goBack();
+            } catch (e) {
+                alert("Error al eliminar: " + e.message);
+            }
+        }
+        toggleTools();
+    }
+
+    function toggleTheme() { const isDark = document.body.getAttribute('data-theme') === 'dark'; document.body.setAttribute('data-theme', isDark ? 'light' : 'dark'); document.getElementById('themeIcon').src = isDark ? 'Iconos/luna.png' : 'Iconos/sol.png'; }
+    
+function transpose(n) { // "function" debe ir en minúscula
+    currentTranspose += n;
+
+    // Verificar que existan tanto el ID del canto como el objeto del canto
+    if (currentCantoId !== null && cantos[currentCantoId]) {
+        const c = cantos[currentCantoId];
+
+        // === PROGRAMADOS (Listas de reproducción/Carpetas) ===
+        if (currentProgId !== null) {
+            currentProgTransposes[c.id] = currentTranspose;
+            // Asegúrate de que esta función esté definida en tu archivo de persistencia
+            guardarTransposesProgramados(); 
+        }
+        // === CATEGORÍAS (Tiempos / Momentos / Índices) ===
+        else if (currentCategoryKey !== null) {
+            // Inicializar el objeto de la categoría si no existe para evitar errores
+            if (!currentCategoryTransposes[currentCategoryKey]) {
+                currentCategoryTransposes[currentCategoryKey] = {};
+            }
+            
+            // Guardar la transportación específica para este canto dentro de esta categoría
+            currentCategoryTransposes[currentCategoryKey][c.id] = currentTranspose;
+            
+            // Opcional: Persistir categorías si tienes una función similar
+            // guardarCategoryTransposes();
+        }
+    }
+
+    renderTexto();
+}
+
+function toggleNotation() { 
+    isAmerican = !isAmerican; 
+    // Actualizamos el texto del botón basándonos en el nuevo estado
+    document.getElementById('notBtn').innerText = isAmerican ? "NOTACIÓN: Do" : "NOTACIÓN: C"; 
+    
+    // Si tienes una función para acordes inteligentes, se ejecuta
+    if(typeof actualizarAcordesInteligentes === 'function') actualizarAcordesInteligentes(); 
+    
+    renderTexto(); 
+    toggleTools(); 
+}
+
+    function abrirFormulario() { 
+        if(!isAdmin) return; 
+        currentFirebaseId = null; audioUrlSubido = null; estrofaCounter = 1; 
+        document.getElementById('audioBtn').style.background = "var(--accent)";
+        document.getElementById('audioBtn').innerHTML = '<i class="fas fa-microphone"></i> AUDIO';
+        document.getElementById('titulo').value = ""; document.getElementById('letra').value = ""; 
+        document.getElementById('autor').value = "";
+        document.getElementById('tonalidad').value = ""; document.getElementById('tonalidadPersonal').value = ""; 
+document.getElementById('classificatioHidden').value = "Liturgicum";
+        document.getElementById('classificatioValue').textContent = "Liturgicum";
+        actualizarAcordesInteligentes(); showView('formView'); 
+    }
+
+    function editarActual() {
+        if(!isAdmin) return;
+        const c = cantos[currentCantoId]; currentFirebaseId = c.id; estrofaCounter = 1; 
+        document.getElementById('titulo').value = c.titulo; document.getElementById('letra').value = c.letra;
+        document.getElementById('autor').value = c.autor || "";
+        document.getElementById('tiempoLiturgico').value = c.tiempoLiturgico; document.getElementById('momentoMisa').value = c.momentoMisa;
+        document.getElementById('tonalidad').value = c.tonalidad; document.getElementById('tonalidadSec').value = c.tonalidadSec || "";
+        document.getElementById('ritmo').value = c.ritmo || ""; document.getElementById('tempo').value = c.tempo || "";
+document.getElementById('classificatioHidden').value = c.classificatio || "Liturgicum";
+document.getElementById('classificatioValue').textContent = c.classificatio || "Liturgicum";
+        document.getElementById('tonalidadPersonal').value = localStorage.getItem(`tonoPers_${c.titulo.replace(/\s+/g, '_')}`) || "";
+        if (c.audioUrl) { document.getElementById('audioBtn').style.background = "#2e7d32"; document.getElementById('audioBtn').innerHTML = '<i class="fas fa-check"></i> AUDIO EXISTENTE'; } else { document.getElementById('audioBtn').style.background = "var(--accent)"; document.getElementById('audioBtn').innerHTML = '<i class="fas fa-microphone"></i> AUDIO'; }
+        actualizarAcordesInteligentes(); showView('formView'); toggleTools();
+        document.getElementById('notasMelodia').value = c.notasMelodia || "";
+    }
+// Función para navegación por swipe en cantos de programados
+function enableSwipeNavigation() {
+    const detailView = document.getElementById('detailView');
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    function handleSwipe() {
+        if (currentProgSongIndices.length <= 1 || currentCantoId === null) return;
+        const currentIndexInProg = currentProgSongIndices.indexOf(currentCantoId);
+        if (currentIndexInProg === -1) return;
+
+        const deltaX = touchEndX - touchStartX;
+
+        if (deltaX > 100) { // swipe derecha → canto anterior
+            const prevIdx = currentIndexInProg - 1;
+            if (prevIdx >= 0) {
+                verDetalle(currentProgSongIndices[prevIdx]);
+            }
+        } 
+        else if (deltaX < -100) { // swipe izquierda → canto siguiente
+            const nextIdx = currentIndexInProg + 1;
+            if (nextIdx < currentProgSongIndices.length) {
+                verDetalle(currentProgSongIndices[nextIdx]);
+            }
+        }
+    }
+
+    // ←←← ESTO FALTABA
+    detailView.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    detailView.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    }, { passive: true });
+}
+// ==================== MODAL DE NOTIFICACIÓN BONITO ====================
+
+function mostrarNotificacion(titulo, mensaje, tipo = "success") {
+    const modal = document.getElementById('notificationModal');
+    const icon = document.getElementById('notificationIcon');
+    const titleEl = document.getElementById('notificationTitle');
+    const msgEl = document.getElementById('notificationMessage');
+
+    // Configurar según tipo
+    if (tipo === "success") {
+        icon.innerHTML = '✅';
+        titleEl.style.color = 'var(--accent)';
+    } else if (tipo === "error") {
+        icon.innerHTML = '⚠️';
+        titleEl.style.color = '#b71c1c';
+    } else if (tipo === "info") {
+        icon.innerHTML = 'ℹ️';
+        titleEl.style.color = '#1976d2';
+    }
+
+    titleEl.textContent = titulo;
+    msgEl.textContent = mensaje;
+
+    modal.style.display = 'flex';
+}
+
+function cerrarNotificationModal() {
+    document.getElementById('notificationModal').style.display = 'none';
+}
+
+// ==================== REEMPLAZAR LOS ALERT() EXISTENTES ====================
+
+// Reemplaza todos los alert() relacionados con programados por estas funciones:
+
+function mostrarMensajeExito(carpetaNombre) {
+    mostrarNotificacion(
+        "¡Añadido!", 
+        `El canto ha sido guardado correctamente en la carpeta "${carpetaNombre}"`, 
+        "success"
+    );
+}
+
+function mostrarMensajeDuplicado() {
+    mostrarNotificacion(
+        "Ya existe", 
+        "Este canto ya estaba en la carpeta seleccionada.", 
+        "info"
+    );
+}
+
+function mostrarMensajeCarpetaCreada(nombre) {
+    mostrarNotificacion(
+        "¡Carpeta creada!", 
+        `La carpeta "${nombre}" se ha creado correctamente.`, 
+        "success"
+    );
+}
+// ==================== CLASSIFICATIO MODAL (estilo MI TONO) ====================
+const classificatioOpciones = [
+    { value: "Liturgicum", label: "Liturgicum", desc: "Canto litúrgico oficial" },
+    { value: "Non liturgicum", label: "Non liturgicum", desc: "Canto devocional" },
+    { value: "Non relatum", label: "Non relatum", desc: "No relacionado / Libre" }
+];
+
+function abrirClassificatioModal() {
+    const modal = document.getElementById('classificatioModal');
+    const currentVal = document.getElementById('classificatioHidden').value || "Liturgicum";
+    const grid = document.getElementById('classificatioOptionsGrid');
+    grid.innerHTML = '';
+
+    classificatioOpciones.forEach(opt => {
+        const isSelected = opt.value === currentVal;
+        const div = document.createElement('div');
+        div.style.cssText = `
+            background: ${isSelected ? 'var(--accent)' : 'var(--surface)'};
+            border: 2px solid ${isSelected ? 'var(--accent)' : 'var(--accent-light)'};
+            color: ${isSelected ? 'white' : 'var(--primary)'};
+            padding: 20px 15px;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        `;
+        div.innerHTML = `
+            <span style="font-size: 2.2rem;">${opt.value === "Liturgicum" ? "📖" : opt.value === "Non liturgicum" ? "🎵" : "❓"}</span>
+            <strong style="font-family:'Cinzel',serif; font-size:1.1rem;">${opt.label}</strong>
+            <small style="opacity: 0.8; line-height:1.2;">${opt.desc}</small>
+        `;
+        div.onclick = () => {
+            document.getElementById('classificatioHidden').value = opt.value;
+            document.getElementById('classificatioValue').textContent = opt.label;
+            cerrarClassificatioModal();
+        };
+        grid.appendChild(div);
+    });
+
+    modal.style.display = 'flex';
+}
+
+function cerrarClassificatioModal() {
+    document.getElementById('classificatioModal').style.display = 'none';
+}
+// Registrar Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('✅ Service Worker del Cantoral activado (funciona sin internet)'))
+      .catch(err => console.log('SW error:', err));
+  });
+}
+// ====================== TEXTO COMPLEMENTARIO (TC) ======================
+
+function abrirTcModal() {
+    if (!isAdmin) {
+        alert("Solo el director puede determinar la tonalidad en que sera tocado este canto.");
+        return;
+    }
+
+    const c = cantos[currentCantoId];
+    if (!c) return;
+
+    document.getElementById('tcTextarea').value = c.textoComplementario || "";
+    document.getElementById('tcModal').style.display = 'flex';
+}
+
+function cerrarTcModal() {
+    document.getElementById('tcModal').style.display = 'none';
+}
+
+async function guardarTextoComplementario() {
+    if (!isAdmin || currentCantoId === null) return;
+
+    const texto = document.getElementById('tcTextarea').value.trim();
+    const c = cantos[currentCantoId];
+
+    try {
+        await db.collection("cantos").doc(c.id).update({
+            textoComplementario: texto
+        });
+
+        // Actualizar en memoria
+        c.textoComplementario = texto;
+
+        cerrarTcModal();
+        renderTexto(); // refresca la vista
+
+        mostrarNotificacion("¡Guardado!", "Texto complementario actualizado correctamente.", "success");
+    } catch (e) {
+        alert("Error al guardar: " + e.message);
+    }
+}
+// ====================== PREVENIR QUE LA PANTALLA SE APAGUE ======================
+
+async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) {
+        console.log("Screen Wake Lock API no es soportada en este navegador.");
+        return;
+    }
+
+    try {
+        screenWakeLock = await navigator.wakeLock.request('screen');
+        console.log("✅ Wake Lock activado - La pantalla se mantendrá encendida");
+        
+        // Re-solicitar el wake lock si la página se vuelve visible nuevamente
+        screenWakeLock.addEventListener('release', () => {
+            console.log("Wake Lock liberado");
+            screenWakeLock = null;
+        });
+    } catch (err) {
+        console.error("Error al activar Wake Lock:", err);
+    }
+}
+
+async function releaseWakeLock() {
+    if (screenWakeLock !== null) {
+        try {
+            await screenWakeLock.release();
+            screenWakeLock = null;
+            console.log("Wake Lock liberado correctamente");
+        } catch (err) {
+            console.error("Error al liberar Wake Lock:", err);
+        }
+    }
+}
+function cargarCantoPorNombre(nombreBuscado) {
+    // Buscamos el ID del canto que coincida con el nombre
+    // Se asume que 'cantos' es un objeto donde las llaves son IDs
+    const idEncontrado = Object.keys(cantos).find(id => 
+        cantos[id].titulo.trim().toLowerCase() === nombreBuscado.toLowerCase()
+    );
+
+    if (idEncontrado) {
+        currentCantoId = idEncontrado;
+        currentTranspose = 0; // Resetear transposición al cambiar de canto
+        renderTexto(); // Volver a renderizar con el nuevo canto
+        window.scrollTo(0, 0); // Ir arriba
+    } else {
+        console.error("No se encontró el canto: " + nombreBuscado);
+        alert("Canto no encontrado: " + nombreBuscado);
+    }
+}
+// Proteger imágenes contra descarga y arrastre
+function protegerImagenes() {
+    document.querySelectorAll('img').forEach(img => {
+        img.setAttribute('draggable', 'false');
+        
+        img.addEventListener('contextmenu', function(e) {
+            if (e.target.tagName === 'IMG') {
+                e.preventDefault();
+            }
+        }, false);
+
+        img.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+        }, false);
+    });
+}
+async function borrarProgFirestore(progId) {
+    // 1. Validación de rol (Director)
+    if (!isAdmin) {
+        alert("Solo el director puede eliminar carpetas.");
+        return;
+    }
+
+    // 2. Validación de existencia de ID
+    if (!progId) {
+        console.error("ID de programación no proporcionado.");
+        return;
+    }
+
+    // 3. Confirmación de seguridad
+    if (!confirm("¿Eliminar esta carpeta permanentemente?")) return;
+
+    try {
+        // 4. Eliminación en Firestore
+        await db.collection("programaciones").doc(progId).delete();
+        
+        // 5. Refrescar la lista global y la interfaz
+        await cargarProgramaciones();
+        
+        // Opcional: Feedback visual si tienes la función de notificaciones
+        if (typeof mostrarNotificacion === "function") {
+            mostrarNotificacion("Eliminado", "La carpeta ha sido borrada con éxito.", "info");
+        }
+    } catch (e) {
+        console.error("Error al borrar en Firestore:", e);
+        alert("Error al eliminar la carpeta. Revisa tu conexión a internet.");
+    }
+}
+
+// Ejecutar al cargar y cada vez que se rendericen nuevas tarjetas
+window.addEventListener('load', protegerImagenes);
+
+// Re-ejecutar después de cambiar de pestaña o renderizar grids
+const originalSwitchTab = switchTab;
+switchTab = function(type) {
+    originalSwitchTab(type);
+    setTimeout(protegerImagenes, 300);
+};
+// Deshabilitar botón de crear si no es director
+auth.onAuthStateChanged(async (user) => {
+    const btnCrear = document.getElementById('btnCrearProg');
+    
+    if (user) {
+        // Sugerencia: Define aquí quién es admin basado en su correo
+        // Por ejemplo: isAdmin = (user.email === "tu-correo@gmail.com");
+        
+        if (btnCrear) {
+            btnCrear.style.display = isAdmin ? 'inline-flex' : 'none';
+        }
+
+        // Cargamos los datos una vez confirmada la sesión
+        await cargarProgramaciones();
+    } else {
+        // Si no hay usuario, ocultamos el botón y limpiamos datos
+        if (btnCrear) btnCrear.style.display = 'none';
+        programaciones = [];
+        renderProgramados();
+    }
+});
+
+   db.collection("cantos").onSnapshot(snap => {
+    cantos = [];
+    snap.forEach(doc => {
+        const d = doc.data();
+        d.id = doc.id;
+
+        // PEGA LA LÍNEA JUSTO AQUÍ:
+        d.notasMelodia = d.notasMelodia || "";
+
+        cantos.push(d);
+    });
+    renderCantos(cantos);
+});
+    init();
+   enableSwipeNavigation();
+   cargarCantosOffline();   // ← nueva línea
+// Liberar el Wake Lock cuando el usuario salga de la app o cambie de init();
+cargarProgramaciones();   // ← AÑADIR ESTA LÍNEA
+window.addEventListener('beforeunload', () => {
+    releaseWakeLock();
+});
+
+// Mejor manejo cuando la página pierde visibilidad (cambia de pestaña o minimiza)
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        requestWakeLock();        // Volver a activar si regresa
+    } else {
+        // Opcional: liberar cuando está en segundo plano
+        // releaseWakeLock();
+    }
+});
+  
+</script>
+</body>
+</html>
