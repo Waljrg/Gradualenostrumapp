@@ -1,0 +1,512 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Plataforma Musical | Inicio</title>
+    <meta name="theme-color" content="#261C1B">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        :root {
+            --primary: #2C211F; 
+            --accent: #B8860B;  
+            --text-light: #E8D4A2;
+            --surface: rgba(255, 255, 255, 0.95); 
+            --text-dark: #3E322E;
+            --radius-lg: 20px;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            --border-gold: 2px solid #D4AF37;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-color: #261C1B; 
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: url('Iconos/fondo.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            will-change: transform;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, #4E342E 100%);
+            color: white;
+            padding: 1.5rem 1rem 2.5rem;
+            text-align: center;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+            box-shadow: var(--shadow);
+            position: relative;
+            z-index: 10;
+        }
+
+        .header-logo {
+            width: 80px; 
+            height: auto;
+            margin-bottom: 10px;
+            filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.5));
+            animation: rotateLogo 8s infinite linear, shineLogo 3s infinite ease-in-out;
+        }
+
+        @keyframes rotateLogo {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        @keyframes shineLogo {
+            0%, 100% { filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.5)) brightness(1); }
+            50% { filter: drop-shadow(0px 0px 15px rgba(212, 175, 55, 0.8)) brightness(1.4); }
+        }
+
+        .title-img-container {
+            width: 90%;
+            max-width: 300px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .title-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .title-img-container::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                to right, 
+                rgba(212, 175, 55, 0) 0%, 
+                rgba(212, 175, 55, 0.4) 50%, 
+                rgba(212, 175, 55, 0) 100%
+            );
+            transform: skewX(-25deg);
+            animation: sweep 7s infinite ease-in-out;
+            z-index: 2;
+        }
+
+        @keyframes sweep {
+            0% { left: -150%; }
+            30% { left: 150%; }
+            100% { left: 150%; }
+        }
+
+        .subtitle-pax {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            margin-top: -2px;
+            letter-spacing: 3px;
+            font-weight: 400;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            background: linear-gradient(to right, #B8860B 20%, #FDFBF7 50%, #B8860B 80%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shineText 5s linear infinite;
+        }
+
+        @keyframes shineText {
+            to { background-position: 200% center; }
+        }
+
+        .hub-container {
+            padding: 10px;
+            max-width: 400px;
+            margin: -20px auto 0;
+            width: 100%;
+            flex: 1;
+            position: relative;
+            z-index: 20;
+        }
+
+        .grid-apps {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px;
+            padding: 10px;
+        }
+
+        .app-card {
+            background: rgba(255, 255, 255, 0.7); 
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.3) !important; 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15); 
+            border-radius: var(--radius-lg);
+            text-decoration: none;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            text-align: center;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .app-card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -150%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(
+                to right, 
+                rgba(212, 175, 55, 0) 0%, 
+                rgba(212, 175, 55, 0.15) 50%, 
+                rgba(212, 175, 55, 0) 100%
+            );
+            transform: skewX(-25deg);
+            animation: sweep 6s infinite ease-in-out;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .grid-apps a:nth-child(odd)::after { animation-delay: 0.5s; animation-duration: 6.5s; }
+        .grid-apps a:nth-child(even)::after { animation-delay: 1.5s; animation-duration: 7s; }
+        #btnDirector::after, #btnEvangelio::after { animation-delay: 2.5s; animation-duration: 5.5s; background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%); }
+
+        .app-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent) !important;
+            box-shadow: 0 12px 40px rgba(184, 134, 11, 0.2);
+        }
+
+        #btnDirector, #btnEvangelio {
+            display: none;
+            background: linear-gradient(135deg, #B8860B 0%, #8B6508 100%);
+            color: white !important;
+            border: none !important;
+            box-shadow: 0 0 15px rgba(184, 134, 11, 0.5);
+        }
+
+        #btnDirector i, #btnDirector span, #btnEvangelio i, #btnEvangelio span {
+            color: white !important;
+        }
+
+        .login-bar {
+            grid-column: span 2;
+            background: linear-gradient(145deg, #3e2f2c, #1f1716);
+            color: var(--text-light);
+            padding: 15px;
+            border-radius: 15px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 5px;
+            border: 1px solid var(--accent);
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.4);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: pointer;
+        }
+
+        .login-bar:active { 
+            transform: scale(0.98);
+        }
+        
+        .app-card:active { transform: scale(0.93); }
+
+        .app-card i { 
+            font-size: 1.5rem; 
+            color: var(--accent); 
+            margin-bottom: 6px;
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.2));
+            position: relative; z-index: 3;
+        }
+
+        .app-card span { 
+            font-family: 'Cinzel', serif; font-weight: 700; font-size: 0.6rem; 
+            text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.1; 
+            position: relative; z-index: 3;
+        }
+
+        footer {
+            padding: 15px; text-align: center;
+            background: rgba(253, 251, 247, 0.92); 
+            border-top: 1px solid rgba(184, 134, 11, 0.2);
+            margin-top: 20px;
+        }
+
+        .btn-vatican {
+            display: inline-block; text-decoration: none; color: var(--accent);
+            font-family: 'Cinzel', serif; font-size: 0.7rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+            padding: 4px 12px; border: 1px solid var(--accent); border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 8px; flex-wrap: wrap; }
+        .footer-links a { text-decoration: none; color: var(--text-dark); font-size: 0.6rem; font-weight: 600; text-transform: uppercase; opacity: 0.8; }
+        .copyright { font-size: 0.55rem; color: #666; margin: 0; line-height: 1.2; }
+/* === DESHABILITAR SELECCIÓN DE TEXTO EN MÓVIL === */
+body, 
+#viewLetra, 
+.lyrics-area, 
+.song-row, 
+.card, 
+.card-title,
+.notas-body,
+#letra {
+    -webkit-user-select: none;     /* Safari, Chrome, Opera en iOS/Android */
+    -moz-user-select: none;        /* Firefox */
+    -ms-user-select: none;         /* Internet Explorer / Edge */
+    user-select: none;             /* Estándar */
+    
+    -webkit-touch-callout: none;   /* Evita menú "Copiar" en iOS */
+    -khtml-user-select: none;
+}
+
+/* Permitir selección solo en campos de entrada y textarea (editor) */
+input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+/* Versión fuerte para cantoral - evita selección al tocar */
+#viewLetra * {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+}
+
+/* Solo permitir selección en el editor */
+#formView textarea#letra,
+#formView input {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+}
+/* Evitar selección en la vista de detalle (letra principal) */
+#detailView {
+    -webkit-user-select: none;
+    user-select: none;
+}
+/* === PROTECCIÓN DE IMÁGENES === 
+   Las imágenes no se pueden descargar ni arrastrar, 
+   pero los contenedores (cards y tabs) sí responden al clic */
+img {
+    -webkit-user-drag: none;
+    user-drag: none;
+    -webkit-touch-callout: none;     /* Evita menú "Guardar imagen" en iOS */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;            /* Desactiva interacción directa con la imagen */
+}
+
+/* Reactivamos los clics en los contenedores que sí deben ser clickeables */
+.card,
+.tab-btn,
+.card img,
+.tab-btn img {
+    pointer-events: auto;            /* Permite que el clic llegue al contenedor padre */
+}
+
+.card:hover img,
+.tab-btn:hover img {
+    transform: scale(1.07);          /* Mantiene el efecto hover */
+}
+    </style>
+</head>
+<body>
+
+<header id="main-header">
+    <div class="welcome-text">
+        <img src="Iconos/logo.png" alt="Logo" class="header-logo">
+        <div class="title-img-container">
+            <img src="Iconos/gn.png" alt="Graduale Nostrum" class="title-img">
+        </div>
+        <div class="subtitle-pax">Pax et Bonum</div>
+    </div>
+</header>
+
+<div class="hub-container" id="main-hub">
+    <div class="grid-apps">
+        <a href="cantoral.html" class="app-card">
+            <i class="fas fa-book-open"></i>
+            <span>Cantoral</span>
+        </a>
+        <a href="oraciones.html" class="app-card">
+            <i class="fas fa-hands-praying"></i>
+            <span>Oraciones</span>
+        </a>
+        <a href="agenda.html" class="app-card">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Agenda</span>
+        </a>
+        <a href="entrenamiento.html" class="app-card">
+            <i class="fas fa-dumbbell"></i>
+            <span>Entrenamiento</span>
+        </a>
+        <a href="piano.html" class="app-card">
+            <i class="fas fa-music"></i>
+            <span>Piano</span>
+        </a>
+        <a href="afinador.html" class="app-card">
+            <i class="fas fa-microphone"></i>
+            <span>Afinador</span>
+        </a>
+
+        <a href="Formación/Formación.html" class="app-card">
+            <i class="fas fa-graduation-cap"></i>
+            <span>Formación</span>
+        </a>
+        <a href="social.html" class="app-card">
+            <i class="fas fa-users"></i>
+            <span>Perfiles</span>
+        </a>
+        <a href="calendario.html" class="app-card">
+            <i class="fas fa-calendar-check"></i>
+            <span>Calendario</span>
+        </a>
+
+        <a id="btnEvangelio" href="evangelio.html" class="app-card">
+            <i class="fas fa-bible"></i>
+            <span>Evangelio</span>
+        </a>
+
+        <a id="btnDirector" href="director.html" class="app-card">
+            <i class="fas fa-star"></i>
+            <span>Director</span>
+        </a>
+
+        <div id="authBtn" class="login-bar" onclick="gestionarSesion()">
+            <i id="authIcon" class="fas fa-sign-in-alt"></i>
+            <span id="authText">INICIAR SESIÓN</span>
+        </div>
+    </div>
+</div>
+
+<footer id="main-footer">
+    <a href="vatican.html" class="btn-vatican">Vatican</a>
+    <div class="footer-links">
+        <a href="acercade.html">Acerca de</a>
+        <a href="pdp.html">Política de Privacidad</a>
+        <a href="terminos.html">Términos de Uso</a>
+    </div>
+    <p class="copyright">
+        &copy; 2026 Walter Reyes y Coro Parroquial San Francisco de Asís - Camoapa
+    </p>
+</footer>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registrado', reg))
+                .catch(err => console.warn('Error SW', err));
+        });
+    }
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCx_3nwwj3mKAEmtNVW0OaKamuaovhcM-w",
+        authDomain: "graduale-nostrum.firebaseapp.com",
+        projectId: "graduale-nostrum",
+        storageBucket: "graduale-nostrum.firebasestorage.app",
+        messagingSenderId: "534378937675",
+        appId: "1:534378937675:web:677bbc4eb55ef3e6ed7cce",
+        measurementId: "G-LJJLQXQXY1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const DIRECTOR_EMAIL = "waljrg@gmail.com";
+    const ADMIN_EMAIL = "admin@gmail.com"; // Puedes ajustar este correo si es diferente
+    let usuarioLogueado = false;
+
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .then(() => {
+        console.log("Persistencia de sesión configurada: LOCAL");
+    })
+    .catch((error) => {
+        console.error("Error configurando persistencia:", error);
+    });
+
+    auth.onAuthStateChanged((user) => {
+        const authText = document.getElementById('authText');
+        const authIcon = document.getElementById('authIcon');
+        const btnDirector = document.getElementById('btnDirector');
+        const btnEvangelio = document.getElementById('btnEvangelio');
+        
+        if (user) {
+            usuarioLogueado = true;
+            authText.innerText = "CERRAR SESIÓN";
+            authIcon.className = "fas fa-sign-out-alt";
+            
+            // Lógica para Director y Administrador
+            if (user.email === DIRECTOR_EMAIL || user.email === ADMIN_EMAIL) {
+                btnDirector.style.display = "flex";
+                btnEvangelio.style.display = "flex";
+            } else {
+                btnDirector.style.display = "none";
+                btnEvangelio.style.display = "none";
+            }
+            console.log("Sesión detectada para:", user.email);
+        } else {
+            usuarioLogueado = false;
+            authText.innerText = "INICIAR SESIÓN";
+            authIcon.className = "fas fa-sign-in-alt";
+            btnDirector.style.display = "none";
+            btnEvangelio.style.display = "none";
+            console.log("No hay sesión activa.");
+        }
+    });
+
+    function gestionarSesion() {
+        if (usuarioLogueado) {
+            auth.signOut().then(() => { alert("Has cerrado sesión."); });
+        } else {
+            window.location.href = "login.html";
+        }
+    }
+</script>
+
+</body>
+</html>
